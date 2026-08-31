@@ -1,0 +1,35 @@
+{
+  "Name": "80mm standard receipt",
+  "Sections": [
+    {
+      "Key": "business",
+      "Order": 10,
+      "Visible": true,
+      "Content": "{{BusinessName}}\n{{BusinessAddress}}\n{{RegistrationNumber}}"
+    },
+    {
+      "Key": "bill",
+      "Order": 20,
+      "Visible": true,
+      "Content": "Bill: {{BillNumber}}\nDate: {{BillDate}}\nOperator: {{Operator}}"
+    },
+    {
+      "Key": "items",
+      "Order": 30,
+      "Visible": true,
+      "Content": "{{ItemLines}}"
+    },
+    {
+      "Key": "tax",
+      "Order": 40,
+      "Visible": true,
+      "Content": "SST: {{TaxAmount}}\nTotal: {{GrandTotal}}"
+    },
+    {
+      "Key": "footer",
+      "Order": 50,
+      "Visible": true,
+      "Content": "{{FooterText}}"
+    }
+  ]
+}

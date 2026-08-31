@@ -1,0 +1,1298 @@
+Opening L:\New Restauraunt Pos\build\intermediate\RestaurantPOS14.CSharp\RestaurantPOS14.Intermediate.sln
+
+
+Begin converting RestaurantPOS14 at 22:19:51...
+
+
+Phase 1 of 2:
+
+* RestaurantPOS14\RPOS_DBDataSet1.cs - conversion started
+
+* RestaurantPOS14\frmWorkPeriod.cs - conversion started
+
+* RestaurantPOS14\frmPurchaseEntry.cs - conversion started
+
+* RestaurantPOS14\frmOnscreenKeyboard.cs - conversion started
+
+* RestaurantPOS14\frmMenuItem.cs - conversion started
+
+* RestaurantPOS14\frmAccountingReport.cs - conversion started
+
+* RestaurantPOS14\frmPizzaPOS.cs - conversion started
+
+* RestaurantPOS14\frmPOSReport_CRViewer1.cs - conversion started
+
+* RestaurantPOS14\RPOS_DBDataSet.cs - conversion started
+
+* RestaurantPOS14\frmBackOffice.cs - conversion started
+
+* RestaurantPOS14\frmPurchaseOrder.cs - conversion started
+
+* RestaurantPOS14\frmPOS.cs - conversion started
+
+* RestaurantPOS14\frmPOSReport.cs - conversion started
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\TableAdapterManager.cs - conversion started
+
+* RestaurantPOS14\My\MyProject.cs - conversion started
+
+* RestaurantPOS14\frmBillSplit.cs - conversion started
+
+* RestaurantPOS14\My\MyProject.cs - conversion succeeded
+
+* RestaurantPOS14\frmPOSReport_CRViewer.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmMenuItem.cs - conversion succeeded
+
+* RestaurantPOS14\frmProduct.cs - conversion started
+
+* RestaurantPOS14\frmPizzaPOS.cs - conversion has errors: 
+    WARNING: Expression at character 36347 contained the checked keyword before conversion
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\RestaurantPOS_BillingInfoKOTTableAdapter.cs - conversion started
+
+* RestaurantPOS14\frmPurchaseOrder.cs - conversion succeeded
+
+* RestaurantPOS14\frmPayroll_HB.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmPayroll_MB.cs - conversion started
+
+* RestaurantPOS14\frmPOSReport_CRViewer1.cs - conversion has errors: 
+    System.ArgumentOutOfRangeException: Exception of type 'System.ArgumentOutOfRangeException' was thrown. (Parameter 'node')
+    Actual value was CrystalDecisions.CrystalReports.Engine.TextObject { Text: var text } textObject.
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertToVariableDeclaratorOrNull(IsPatternExpressionSyntax node) in /_/CodeConverter/VB/CommonConversions.cs:line 175
+       at System.Linq.Enumerable.SelectListIterator`2.MoveNext()
+       at System.Linq.Enumerable.WhereEnumerableIterator`1.MoveNext()
+       at System.Collections.Generic.LargeArrayBuilder`1.AddRange(IEnumerable`1 items)
+       at System.Collections.Generic.SparseArrayBuilder`1.ReserveOrAdd(IEnumerable`1 items)
+       at System.Linq.Enumerable.Concat2Iterator`1.ToArray()
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertToDeclarationStatement(List`1 des, List`1 isPatternExpressions) in /_/CodeConverter/VB/CommonConversions.cs:line 105
+       at ICSharpCode.CodeConverter.VB.CommonConversions.InsertRequiredDeclarations(SyntaxList`1 convertedStatements, CSharpSyntaxNode originaNode) in /_/CodeConverter/VB/CommonConversions.cs:line 89
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertStatement(StatementSyntax statement, CSharpSyntaxVisitor`1 methodBodyVisitor) in /_/CodeConverter/VB/CommonConversions.cs:line 75
+       at ICSharpCode.CodeConverter.VB.CommonConversions.<>c__DisplayClass10_0.<ConvertStatements>b__0(StatementSyntax s) in /_/CodeConverter/VB/CommonConversions.cs:line 69
+       at System.Linq.Enumerable.SelectManySingleSelectorIterator`2.MoveNext()
+       at Microsoft.CodeAnalysis.SyntaxList`1.CreateNode(IEnumerable`1 nodes)
+       at ICSharpCode.CodeConverter.VB.NodesVisitor.VisitMethodDeclaration(MethodDeclarationSyntax node) in /_/CodeConverter/VB/NodesVisitor.cs:line 424
+       at Microsoft.CodeAnalysis.CSharp.CSharpSyntaxVisitor`1.Visit(SyntaxNode node)
+       at ICSharpCode.CodeConverter.VB.CommentConvertingVisitorWrapper`1.Accept(SyntaxNode csNode, Boolean addSourceMapping) in /_/CodeConverter/VB/CommentConvertingVisitorWrapper.cs:line 20
+    System.ArgumentOutOfRangeException: Exception of type 'System.ArgumentOutOfRangeException' was thrown. (Parameter 'node')
+    Actual value was CrystalDecisions.CrystalReports.Engine.TextObject { Text: { } text } textObject.
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertToVariableDeclaratorOrNull(IsPatternExpressionSyntax node) in /_/CodeConverter/VB/CommonConversions.cs:line 175
+       at System.Linq.Enumerable.SelectListIterator`2.MoveNext()
+       at System.Linq.Enumerable.WhereEnumerableIterator`1.MoveNext()
+       at System.Collections.Generic.LargeArrayBuilder`1.AddRange(IEnumerable`1 items)
+       at System.Collections.Generic.SparseArrayBuilder`1.ReserveOrAdd(IEnumerable`1 items)
+       at System.Linq.Enumerable.Concat2Iterator`1.ToArray()
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertToDeclarationStatement(List`1 des, List`1 isPatternExpressions) in /_/CodeConverter/VB/CommonConversions.cs:line 105
+       at ICSharpCode.CodeConverter.VB.CommonConversions.InsertRequiredDeclarations(SyntaxList`1 convertedStatements, CSharpSyntaxNode originaNode) in /_/CodeConverter/VB/CommonConversions.cs:line 89
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertStatement(StatementSyntax statement, CSharpSyntaxVisitor`1 methodBodyVisitor) in /_/CodeConverter/VB/CommonConversions.cs:line 75
+       at ICSharpCode.CodeConverter.VB.CommonConversions.<>c__DisplayClass10_0.<ConvertStatements>b__0(StatementSyntax s) in /_/CodeConverter/VB/CommonConversions.cs:line 69
+       at System.Linq.Enumerable.SelectManySingleSelectorIterator`2.MoveNext()
+       at Microsoft.CodeAnalysis.SyntaxList`1.CreateNode(IEnumerable`1 nodes)
+       at ICSharpCode.CodeConverter.VB.NodesVisitor.VisitMethodDeclaration(MethodDeclarationSyntax node) in /_/CodeConverter/VB/NodesVisitor.cs:line 424
+       at Microsoft.CodeAnalysis.CSharp.CSharpSyntaxVisitor`1.Visit(SyntaxNode node)
+       at ICSharpCode.CodeConverter.VB.CommentConvertingVisitorWrapper`1.Accept(SyntaxNode csNode, Boolean addSourceMapping) in /_/CodeConverter/VB/CommentConvertingVisitorWrapper.cs:line 20
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmAccountingReport.cs - conversion succeeded
+
+* RestaurantPOS14\frmWPReport_CRViewer.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmOnscreenKeyboard.cs - conversion succeeded
+
+* RestaurantPOS14\frmItemsTransfer.cs - conversion started
+
+* RestaurantPOS14\frmTableReservation.cs - conversion started
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\RestaurantPOS_BillingInfoKOTTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 3032 contained the checked keyword before conversion
+    WARNING: Expression at character 3570 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmPurchaseEntry.cs - conversion succeeded
+
+* RestaurantPOS14\frmTerminalSetting.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmProduct.cs - conversion succeeded
+
+* RestaurantPOS14\frmStockTransfer.cs - conversion started
+
+* RestaurantPOS14\frmPayroll_HB.cs - conversion succeeded
+
+* RestaurantPOS14\frmFundTransfer.cs - conversion started
+
+* RestaurantPOS14\frmPOSReport_CRViewer.cs - conversion has errors: 
+    System.ArgumentOutOfRangeException: Exception of type 'System.ArgumentOutOfRangeException' was thrown. (Parameter 'node')
+    Actual value was CrystalDecisions.CrystalReports.Engine.TextObject { Text: { } text } textObject.
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertToVariableDeclaratorOrNull(IsPatternExpressionSyntax node) in /_/CodeConverter/VB/CommonConversions.cs:line 175
+       at System.Linq.Enumerable.SelectListIterator`2.MoveNext()
+       at System.Linq.Enumerable.WhereEnumerableIterator`1.MoveNext()
+       at System.Collections.Generic.LargeArrayBuilder`1.AddRange(IEnumerable`1 items)
+       at System.Collections.Generic.SparseArrayBuilder`1.ReserveOrAdd(IEnumerable`1 items)
+       at System.Linq.Enumerable.Concat2Iterator`1.ToArray()
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertToDeclarationStatement(List`1 des, List`1 isPatternExpressions) in /_/CodeConverter/VB/CommonConversions.cs:line 105
+       at ICSharpCode.CodeConverter.VB.CommonConversions.InsertRequiredDeclarations(SyntaxList`1 convertedStatements, CSharpSyntaxNode originaNode) in /_/CodeConverter/VB/CommonConversions.cs:line 89
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertStatement(StatementSyntax statement, CSharpSyntaxVisitor`1 methodBodyVisitor) in /_/CodeConverter/VB/CommonConversions.cs:line 75
+       at ICSharpCode.CodeConverter.VB.CommonConversions.<>c__DisplayClass10_0.<ConvertStatements>b__0(StatementSyntax s) in /_/CodeConverter/VB/CommonConversions.cs:line 69
+       at System.Linq.Enumerable.SelectManySingleSelectorIterator`2.MoveNext()
+       at Microsoft.CodeAnalysis.SyntaxList`1.CreateNode(IEnumerable`1 nodes)
+       at ICSharpCode.CodeConverter.VB.NodesVisitor.VisitMethodDeclaration(MethodDeclarationSyntax node) in /_/CodeConverter/VB/NodesVisitor.cs:line 424
+       at Microsoft.CodeAnalysis.CSharp.CSharpSyntaxVisitor`1.Visit(SyntaxNode node)
+       at ICSharpCode.CodeConverter.VB.CommentConvertingVisitorWrapper`1.Accept(SyntaxNode csNode, Boolean addSourceMapping) in /_/CodeConverter/VB/CommentConvertingVisitorWrapper.cs:line 20
+    System.ArgumentOutOfRangeException: Exception of type 'System.ArgumentOutOfRangeException' was thrown. (Parameter 'node')
+    Actual value was CrystalDecisions.CrystalReports.Engine.TextObject { Text: { } text } textObject.
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertToVariableDeclaratorOrNull(IsPatternExpressionSyntax node) in /_/CodeConverter/VB/CommonConversions.cs:line 175
+       at System.Linq.Enumerable.SelectListIterator`2.MoveNext()
+       at System.Linq.Enumerable.WhereEnumerableIterator`1.MoveNext()
+       at System.Collections.Generic.LargeArrayBuilder`1.AddRange(IEnumerable`1 items)
+       at System.Collections.Generic.SparseArrayBuilder`1.ReserveOrAdd(IEnumerable`1 items)
+       at System.Linq.Enumerable.Concat2Iterator`1.ToArray()
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertToDeclarationStatement(List`1 des, List`1 isPatternExpressions) in /_/CodeConverter/VB/CommonConversions.cs:line 105
+       at ICSharpCode.CodeConverter.VB.CommonConversions.InsertRequiredDeclarations(SyntaxList`1 convertedStatements, CSharpSyntaxNode originaNode) in /_/CodeConverter/VB/CommonConversions.cs:line 89
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertStatement(StatementSyntax statement, CSharpSyntaxVisitor`1 methodBodyVisitor) in /_/CodeConverter/VB/CommonConversions.cs:line 75
+       at ICSharpCode.CodeConverter.VB.CommonConversions.<>c__DisplayClass10_0.<ConvertStatements>b__0(StatementSyntax s) in /_/CodeConverter/VB/CommonConversions.cs:line 69
+       at System.Linq.Enumerable.SelectManySingleSelectorIterator`2.MoveNext()
+       at Microsoft.CodeAnalysis.SyntaxList`1.CreateNode(IEnumerable`1 nodes)
+       at ICSharpCode.CodeConverter.VB.NodesVisitor.VisitMethodDeclaration(MethodDeclarationSyntax node) in /_/CodeConverter/VB/NodesVisitor.cs:line 424
+       at Microsoft.CodeAnalysis.CSharp.CSharpSyntaxVisitor`1.Visit(SyntaxNode node)
+       at ICSharpCode.CodeConverter.VB.CommentConvertingVisitorWrapper`1.Accept(SyntaxNode csNode, Boolean addSourceMapping) in /_/CodeConverter/VB/CommentConvertingVisitorWrapper.cs:line 20
+
+* RestaurantPOS14\frmRestaurantMaster.cs - conversion started
+
+* RestaurantPOS14\frmBackOffice.cs - conversion has errors: 
+    WARNING: Expression at character 56384 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmBankAccountRegistration.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmPayroll_MB.cs - conversion has errors: 
+    WARNING: Expression at character 48835 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmOthersSetting.cs - conversion started
+
+* RestaurantPOS14\frmItemsTransfer.cs - conversion succeeded
+
+* RestaurantPOS14\frmFundDeposit.cs - conversion started
+
+* RestaurantPOS14\frmTerminalSetting.cs - conversion succeeded
+
+* RestaurantPOS14\frmRecipe.cs - conversion started
+
+* RestaurantPOS14\frmTableReservation.cs - conversion succeeded
+
+* RestaurantPOS14\frmPayment_Withdrawal.cs - conversion started
+
+* RestaurantPOS14\frmPOSReport.cs - conversion has errors: 
+    System.ArgumentOutOfRangeException: Exception of type 'System.ArgumentOutOfRangeException' was thrown. (Parameter 'node')
+    Actual value was CrystalDecisions.CrystalReports.Engine.TextObject { Text: { } text } textObject.
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertToVariableDeclaratorOrNull(IsPatternExpressionSyntax node) in /_/CodeConverter/VB/CommonConversions.cs:line 175
+       at System.Linq.Enumerable.SelectListIterator`2.MoveNext()
+       at System.Linq.Enumerable.WhereEnumerableIterator`1.MoveNext()
+       at System.Collections.Generic.LargeArrayBuilder`1.AddRange(IEnumerable`1 items)
+       at System.Collections.Generic.SparseArrayBuilder`1.ReserveOrAdd(IEnumerable`1 items)
+       at System.Linq.Enumerable.Concat2Iterator`1.ToArray()
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertToDeclarationStatement(List`1 des, List`1 isPatternExpressions) in /_/CodeConverter/VB/CommonConversions.cs:line 105
+       at ICSharpCode.CodeConverter.VB.CommonConversions.InsertRequiredDeclarations(SyntaxList`1 convertedStatements, CSharpSyntaxNode originaNode) in /_/CodeConverter/VB/CommonConversions.cs:line 89
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertStatement(StatementSyntax statement, CSharpSyntaxVisitor`1 methodBodyVisitor) in /_/CodeConverter/VB/CommonConversions.cs:line 75
+       at ICSharpCode.CodeConverter.VB.CommonConversions.<>c__DisplayClass10_0.<ConvertStatements>b__0(StatementSyntax s) in /_/CodeConverter/VB/CommonConversions.cs:line 69
+       at System.Linq.Enumerable.SelectManySingleSelectorIterator`2.MoveNext()
+       at Microsoft.CodeAnalysis.SyntaxList`1.CreateNode(IEnumerable`1 nodes)
+       at ICSharpCode.CodeConverter.VB.NodesVisitor.VisitMethodDeclaration(MethodDeclarationSyntax node) in /_/CodeConverter/VB/NodesVisitor.cs:line 424
+       at Microsoft.CodeAnalysis.CSharp.CSharpSyntaxVisitor`1.Visit(SyntaxNode node)
+       at ICSharpCode.CodeConverter.VB.CommentConvertingVisitorWrapper`1.Accept(SyntaxNode csNode, Boolean addSourceMapping) in /_/CodeConverter/VB/CommentConvertingVisitorWrapper.cs:line 20
+    System.ArgumentOutOfRangeException: Exception of type 'System.ArgumentOutOfRangeException' was thrown. (Parameter 'node')
+    Actual value was CrystalDecisions.CrystalReports.Engine.TextObject { Text: { } text } textObject.
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertToVariableDeclaratorOrNull(IsPatternExpressionSyntax node) in /_/CodeConverter/VB/CommonConversions.cs:line 175
+       at System.Linq.Enumerable.SelectListIterator`2.MoveNext()
+       at System.Linq.Enumerable.WhereEnumerableIterator`1.MoveNext()
+       at System.Collections.Generic.LargeArrayBuilder`1.AddRange(IEnumerable`1 items)
+       at System.Collections.Generic.SparseArrayBuilder`1.ReserveOrAdd(IEnumerable`1 items)
+       at System.Linq.Enumerable.Concat2Iterator`1.ToArray()
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertToDeclarationStatement(List`1 des, List`1 isPatternExpressions) in /_/CodeConverter/VB/CommonConversions.cs:line 105
+       at ICSharpCode.CodeConverter.VB.CommonConversions.InsertRequiredDeclarations(SyntaxList`1 convertedStatements, CSharpSyntaxNode originaNode) in /_/CodeConverter/VB/CommonConversions.cs:line 89
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertStatement(StatementSyntax statement, CSharpSyntaxVisitor`1 methodBodyVisitor) in /_/CodeConverter/VB/CommonConversions.cs:line 75
+       at ICSharpCode.CodeConverter.VB.CommonConversions.<>c__DisplayClass10_0.<ConvertStatements>b__0(StatementSyntax s) in /_/CodeConverter/VB/CommonConversions.cs:line 69
+       at System.Linq.Enumerable.SelectManySingleSelectorIterator`2.MoveNext()
+       at Microsoft.CodeAnalysis.SyntaxList`1.CreateNode(IEnumerable`1 nodes)
+       at ICSharpCode.CodeConverter.VB.NodesVisitor.VisitMethodDeclaration(MethodDeclarationSyntax node) in /_/CodeConverter/VB/NodesVisitor.cs:line 424
+       at Microsoft.CodeAnalysis.CSharp.CSharpSyntaxVisitor`1.Visit(SyntaxNode node)
+       at ICSharpCode.CodeConverter.VB.CommentConvertingVisitorWrapper`1.Accept(SyntaxNode csNode, Boolean addSourceMapping) in /_/CodeConverter/VB/CommentConvertingVisitorWrapper.cs:line 20
+    System.ArgumentOutOfRangeException: Exception of type 'System.ArgumentOutOfRangeException' was thrown. (Parameter 'node')
+    Actual value was CrystalDecisions.CrystalReports.Engine.TextObject { Text: { } text } textObject.
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertToVariableDeclaratorOrNull(IsPatternExpressionSyntax node) in /_/CodeConverter/VB/CommonConversions.cs:line 175
+       at System.Linq.Enumerable.SelectListIterator`2.MoveNext()
+       at System.Linq.Enumerable.WhereEnumerableIterator`1.MoveNext()
+       at System.Collections.Generic.LargeArrayBuilder`1.AddRange(IEnumerable`1 items)
+       at System.Collections.Generic.SparseArrayBuilder`1.ReserveOrAdd(IEnumerable`1 items)
+       at System.Linq.Enumerable.Concat2Iterator`1.ToArray()
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertToDeclarationStatement(List`1 des, List`1 isPatternExpressions) in /_/CodeConverter/VB/CommonConversions.cs:line 105
+       at ICSharpCode.CodeConverter.VB.CommonConversions.InsertRequiredDeclarations(SyntaxList`1 convertedStatements, CSharpSyntaxNode originaNode) in /_/CodeConverter/VB/CommonConversions.cs:line 89
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertStatement(StatementSyntax statement, CSharpSyntaxVisitor`1 methodBodyVisitor) in /_/CodeConverter/VB/CommonConversions.cs:line 75
+       at ICSharpCode.CodeConverter.VB.CommonConversions.<>c__DisplayClass10_0.<ConvertStatements>b__0(StatementSyntax s) in /_/CodeConverter/VB/CommonConversions.cs:line 69
+       at System.Linq.Enumerable.SelectManySingleSelectorIterator`2.MoveNext()
+       at Microsoft.CodeAnalysis.SyntaxList`1.CreateNode(IEnumerable`1 nodes)
+       at ICSharpCode.CodeConverter.VB.NodesVisitor.VisitMethodDeclaration(MethodDeclarationSyntax node) in /_/CodeConverter/VB/NodesVisitor.cs:line 424
+       at Microsoft.CodeAnalysis.CSharp.CSharpSyntaxVisitor`1.Visit(SyntaxNode node)
+       at ICSharpCode.CodeConverter.VB.CommentConvertingVisitorWrapper`1.Accept(SyntaxNode csNode, Boolean addSourceMapping) in /_/CodeConverter/VB/CommentConvertingVisitorWrapper.cs:line 20
+    System.ArgumentOutOfRangeException: Exception of type 'System.ArgumentOutOfRangeException' was thrown. (Parameter 'node')
+    Actual value was CrystalDecisions.CrystalReports.Engine.TextObject { Text: { } text } textObject.
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertToVariableDeclaratorOrNull(IsPatternExpressionSyntax node) in /_/CodeConverter/VB/CommonConversions.cs:line 175
+       at System.Linq.Enumerable.SelectListIterator`2.MoveNext()
+       at System.Linq.Enumerable.WhereEnumerableIterator`1.MoveNext()
+       at System.Collections.Generic.LargeArrayBuilder`1.AddRange(IEnumerable`1 items)
+       at System.Collections.Generic.SparseArrayBuilder`1.ReserveOrAdd(IEnumerable`1 items)
+       at System.Linq.Enumerable.Concat2Iterator`1.ToArray()
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertToDeclarationStatement(List`1 des, List`1 isPatternExpressions) in /_/CodeConverter/VB/CommonConversions.cs:line 105
+       at ICSharpCode.CodeConverter.VB.CommonConversions.InsertRequiredDeclarations(SyntaxList`1 convertedStatements, CSharpSyntaxNode originaNode) in /_/CodeConverter/VB/CommonConversions.cs:line 89
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertStatement(StatementSyntax statement, CSharpSyntaxVisitor`1 methodBodyVisitor) in /_/CodeConverter/VB/CommonConversions.cs:line 75
+       at ICSharpCode.CodeConverter.VB.CommonConversions.<>c__DisplayClass10_0.<ConvertStatements>b__0(StatementSyntax s) in /_/CodeConverter/VB/CommonConversions.cs:line 69
+       at System.Linq.Enumerable.SelectManySingleSelectorIterator`2.MoveNext()
+       at Microsoft.CodeAnalysis.SyntaxList`1.CreateNode(IEnumerable`1 nodes)
+       at ICSharpCode.CodeConverter.VB.NodesVisitor.VisitMethodDeclaration(MethodDeclarationSyntax node) in /_/CodeConverter/VB/NodesVisitor.cs:line 424
+       at Microsoft.CodeAnalysis.CSharp.CSharpSyntaxVisitor`1.Visit(SyntaxNode node)
+       at ICSharpCode.CodeConverter.VB.CommentConvertingVisitorWrapper`1.Accept(SyntaxNode csNode, Boolean addSourceMapping) in /_/CodeConverter/VB/CommentConvertingVisitorWrapper.cs:line 20
+    System.ArgumentOutOfRangeException: Exception of type 'System.ArgumentOutOfRangeException' was thrown. (Parameter 'node')
+    Actual value was CrystalDecisions.CrystalReports.Engine.TextObject { Text: { } text } textObject.
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertToVariableDeclaratorOrNull(IsPatternExpressionSyntax node) in /_/CodeConverter/VB/CommonConversions.cs:line 175
+       at System.Linq.Enumerable.SelectListIterator`2.MoveNext()
+       at System.Linq.Enumerable.WhereEnumerableIterator`1.MoveNext()
+       at System.Collections.Generic.LargeArrayBuilder`1.AddRange(IEnumerable`1 items)
+       at System.Collections.Generic.SparseArrayBuilder`1.ReserveOrAdd(IEnumerable`1 items)
+       at System.Linq.Enumerable.Concat2Iterator`1.ToArray()
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertToDeclarationStatement(List`1 des, List`1 isPatternExpressions) in /_/CodeConverter/VB/CommonConversions.cs:line 105
+       at ICSharpCode.CodeConverter.VB.CommonConversions.InsertRequiredDeclarations(SyntaxList`1 convertedStatements, CSharpSyntaxNode originaNode) in /_/CodeConverter/VB/CommonConversions.cs:line 89
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertStatement(StatementSyntax statement, CSharpSyntaxVisitor`1 methodBodyVisitor) in /_/CodeConverter/VB/CommonConversions.cs:line 75
+       at ICSharpCode.CodeConverter.VB.CommonConversions.<>c__DisplayClass10_0.<ConvertStatements>b__0(StatementSyntax s) in /_/CodeConverter/VB/CommonConversions.cs:line 69
+       at System.Linq.Enumerable.SelectManySingleSelectorIterator`2.MoveNext()
+       at Microsoft.CodeAnalysis.SyntaxList`1.CreateNode(IEnumerable`1 nodes)
+       at ICSharpCode.CodeConverter.VB.NodesVisitor.VisitMethodDeclaration(MethodDeclarationSyntax node) in /_/CodeConverter/VB/NodesVisitor.cs:line 424
+       at Microsoft.CodeAnalysis.CSharp.CSharpSyntaxVisitor`1.Visit(SyntaxNode node)
+       at ICSharpCode.CodeConverter.VB.CommentConvertingVisitorWrapper`1.Accept(SyntaxNode csNode, Boolean addSourceMapping) in /_/CodeConverter/VB/CommentConvertingVisitorWrapper.cs:line 20
+
+* RestaurantPOS14\frmRegistration.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmBillSplit.cs - conversion has errors: 
+    WARNING: Expression at character 77574 contained the checked keyword before conversion
+    WARNING: Expression at character 79789 contained the checked keyword before conversion
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\RestaurantPOS_BillingInfoTATableAdapter.cs - conversion started
+
+* RestaurantPOS14\frmWorkPeriod.cs - conversion succeeded
+
+* RestaurantPOS14\frmLogin.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmBankAccountRegistration.cs - conversion succeeded
+
+* RestaurantPOS14\frmSupplier.cs - conversion started
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\TempRestaurantPOS_BillingInfoKOTTableAdapter.cs - conversion started
+
+* RestaurantPOS14\frmRestaurantMaster.cs - conversion succeeded
+
+* RestaurantPOS14\frmStockTransfer.cs - conversion succeeded
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\RestaurantPOS_BillingInfoEBTableAdapter.cs - conversion started
+
+* RestaurantPOS14\frmFundTransfer.cs - conversion succeeded
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\RestaurantPOS_BillingInfoHDTableAdapter.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmOthersSetting.cs - conversion succeeded
+
+* RestaurantPOS14\frmJournalEntries.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\RestaurantPOS_BillingInfoTATableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2924 contained the checked keyword before conversion
+    WARNING: Expression at character 3462 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmSystemInfo.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmFundDeposit.cs - conversion succeeded
+
+* RestaurantPOS14\frmCreditCustomerRegistration.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\TableAdapterManager.cs - conversion has errors: 
+    WARNING: Expression at character 3890 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmRestaurantPOSKOTFinalBillRecord_Unpaid.cs - conversion started
+
+* RestaurantPOS14\frmPayment_Withdrawal.cs - conversion succeeded
+
+* RestaurantPOS14\frmVoucher.cs - conversion started
+
+* RestaurantPOS14\frmRecipe.cs - conversion succeeded
+
+* RestaurantPOS14\frmRestaurantPOSTARecord_Unpaid.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmRegistration.cs - conversion succeeded
+
+* RestaurantPOS14\frmWorkPeriodReport.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmLogin.cs - conversion succeeded
+
+* RestaurantPOS14\frmChangeQty.cs - conversion started
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\TempRestaurantPOS_BillingInfoKOTTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 3036 contained the checked keyword before conversion
+    WARNING: Expression at character 3574 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmChangeRate.cs - conversion started
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\RestaurantPOS_BillingInfoHDTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2924 contained the checked keyword before conversion
+    WARNING: Expression at character 3462 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmPayment.cs - conversion started
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\RestaurantPOS_BillingInfoEBTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 3031 contained the checked keyword before conversion
+    WARNING: Expression at character 3569 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmRestaurantPOSHDRecord.cs - conversion started
+
+* RestaurantPOS14\frmWPReport_CRViewer.cs - conversion succeeded
+
+* RestaurantPOS14\frmRestaurantPOSEBRecord_Unpaid.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmSupplier.cs - conversion succeeded
+
+* RestaurantPOS14\frmRestaurantPOSTARecord.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmRestaurantPOSKOTFinalBillRecord_Unpaid.cs - conversion succeeded
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\OtherSettingTableAdapter.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmCreditCustomerRegistration.cs - conversion succeeded
+
+* RestaurantPOS14\frmCreditCustomerReceipt.cs - conversion started
+
+* RestaurantPOS14\frmRestaurantPOSTARecord_Unpaid.cs - conversion succeeded
+
+* RestaurantPOS14\frmSettings.cs - conversion started
+
+* RestaurantPOS14\frmSystemInfo.cs - conversion succeeded
+
+* RestaurantPOS14\frmRestaurantPOSHDRecord1.cs - conversion started
+
+* RestaurantPOS14\frmJournalEntries.cs - conversion succeeded
+
+* RestaurantPOS14\frmRestaurantPOSKOTFinalBillRecord.cs - conversion started
+
+* RestaurantPOS14\frmVoucher.cs - conversion succeeded
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\SupplierTableAdapter.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmRestaurantPOSHDRecord.cs - conversion succeeded
+
+* RestaurantPOS14\frmRestaurantPOSEBRecord.cs - conversion started
+
+* RestaurantPOS14\frmRestaurantPOSEBRecord_Unpaid.cs - conversion succeeded
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\SupplierTableAdapter.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmPayment.cs - conversion succeeded
+
+* RestaurantPOS14\frmPromotion.cs - conversion started
+
+* RestaurantPOS14\frmRestaurantPOSTARecord.cs - conversion succeeded
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\RestaurantPOS_OrderedProductKOTTableAdapter.cs - conversion started
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\OtherSettingTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2909 contained the checked keyword before conversion
+    WARNING: Expression at character 3447 contained the checked keyword before conversion
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\RestaurantPOS_OrderedProductBillEBTableAdapter.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmChangeQty.cs - conversion succeeded
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\RestaurantPOS_OrderedProductBillTATableAdapter.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\SupplierTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2905 contained the checked keyword before conversion
+    WARNING: Expression at character 3443 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmPizzaMaster.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmRestaurantPOSHDRecord1.cs - conversion succeeded
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\RestaurantPOS_OrderedProductBillKOTTableAdapter.cs - conversion started
+
+* RestaurantPOS14\frmCreditCustomerReceipt.cs - conversion succeeded
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\TempRestaurantPOS_OrderedProductBillKOTTableAdapter.cs - conversion started
+
+* RestaurantPOS14\frmRestaurantPOSKOTFinalBillRecord.cs - conversion succeeded
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\RestaurantPOS_OrderedProductBillHDTableAdapter.cs - conversion started
+
+* RestaurantPOS14\frmSettings.cs - conversion succeeded
+
+* RestaurantPOS14\frmMenuItemsCategory.cs - conversion started
+
+* RestaurantPOS14\frmWorkPeriodReport.cs - conversion succeeded
+
+* RestaurantPOS14\frmPizzaModifiers.cs - conversion started
+
+* RestaurantPOS14\frmChangeRate.cs - conversion succeeded
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\RestaurantPOS_BillingInfoTATableAdapter.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\SupplierTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2803 contained the checked keyword before conversion
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\PayrollTableAdapter.cs - conversion started
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\RestaurantPOS_OrderedProductKOTTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 3035 contained the checked keyword before conversion
+    WARNING: Expression at character 3573 contained the checked keyword before conversion
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\Payroll_MBTableAdapter.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmRestaurantPOSEBRecord.cs - conversion succeeded
+
+* RestaurantPOS14\frmStockAdjustment_Warehouse.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\RestaurantPOS_OrderedProductBillEBTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 3038 contained the checked keyword before conversion
+    WARNING: Expression at character 3576 contained the checked keyword before conversion
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\RestaurantPOS_OrderedProductKOTTableAdapter.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmPromotion.cs - conversion succeeded
+
+* RestaurantPOS14\frmMenuItemsModifiers.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\RestaurantPOS_OrderedProductBillHDTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2931 contained the checked keyword before conversion
+    WARNING: Expression at character 3469 contained the checked keyword before conversion
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\HoldItemsTableAdapter.cs - conversion started
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\RestaurantPOS_OrderedProductBillKOTTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 3039 contained the checked keyword before conversion
+    WARNING: Expression at character 3577 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmPizzaToppings.cs - conversion started
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\RestaurantPOS_OrderedProductBillTATableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2931 contained the checked keyword before conversion
+    WARNING: Expression at character 3469 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmUserRights.cs - conversion started
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\TempRestaurantPOS_OrderedProductBillKOTTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2936 contained the checked keyword before conversion
+    WARNING: Expression at character 3474 contained the checked keyword before conversion
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\RestaurantPOS_OrderedProductBillKOTTableAdapter.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\RestaurantPOS_BillingInfoTATableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2822 contained the checked keyword before conversion
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\PosGrouping1TableAdapter.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\PayrollTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 3011 contained the checked keyword before conversion
+    WARNING: Expression at character 3549 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmSupplierRecord.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmMenuItemsCategory.cs - conversion succeeded
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\RestaurantPOS_BillingInfoHDTableAdapter.cs - conversion started
+
+* RestaurantPOS14\frmPizzaMaster.cs - conversion succeeded
+
+* RestaurantPOS14\frmPurchaseRecord.cs - conversion started
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\Payroll_MBTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2907 contained the checked keyword before conversion
+    WARNING: Expression at character 3445 contained the checked keyword before conversion
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\RestaurantPOS_OrderedProductBillEBTableAdapter.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmPizzaModifiers.cs - conversion succeeded
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\PosPrinterSettingTableAdapter.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\RestaurantPOS_OrderedProductKOTTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2933 contained the checked keyword before conversion
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\RestaurantPOS_OrderedProductBillHDTableAdapter.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmStockAdjustment_Warehouse.cs - conversion succeeded
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\RestaurantPOS_OrderedProductBillTATableAdapter.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\HoldItemsTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2906 contained the checked keyword before conversion
+    WARNING: Expression at character 3444 contained the checked keyword before conversion
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\HotelTableAdapter.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\RestaurantPOS_OrderedProductBillKOTTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2937 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmLoyaltyMember.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\PosGrouping1TableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2909 contained the checked keyword before conversion
+    WARNING: Expression at character 3447 contained the checked keyword before conversion
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\PosGroupingTableAdapter.cs - conversion started
+
+* RestaurantPOS14\frmMenuItemsModifiers.cs - conversion succeeded
+
+* RestaurantPOS14\frmFrontOffice.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmPizzaToppings.cs - conversion succeeded
+
+* RestaurantPOS14\frmStockAdjustment_Store.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\RestaurantPOS_BillingInfoHDTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2822 contained the checked keyword before conversion
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\RestaurantPOS_BillingInfoEBTableAdapter.cs - conversion started
+
+* RestaurantPOS14\frmUserRights.cs - conversion has errors: 
+    WARNING: Expression at character 25027 contained the checked keyword before conversion
+    WARNING: Expression at character 25671 contained the checked keyword before conversion
+    WARNING: Expression at character 26315 contained the checked keyword before conversion
+    WARNING: Expression at character 26959 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmImportExportExcel_Supplier.cs - conversion started
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\RestaurantPOS_OrderedProductBillEBTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2936 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmStock_Store.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmPurchaseRecord.cs - conversion succeeded
+
+* RestaurantPOS14\frmSqlServerSetting.cs - conversion started
+
+* RestaurantPOS14\frmSupplierRecord.cs - conversion succeeded
+
+* RestaurantPOS14\frmEmailSetting.cs - conversion started
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\PosPrinterSettingTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 3021 contained the checked keyword before conversion
+    WARNING: Expression at character 3559 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmEnterQty.cs - conversion started
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\RestaurantPOS_OrderedProductBillHDTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2829 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmEnterQtyX.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\RestaurantPOS_OrderedProductBillTATableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2829 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmModifiersList.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\HotelTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 3009 contained the checked keyword before conversion
+    WARNING: Expression at character 3547 contained the checked keyword before conversion
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\PosGrouping1TableAdapter.cs - conversion started
+
+* RestaurantPOS14\frmLoyaltyMember.cs - conversion succeeded
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\PosGroupingTableAdapter.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\PosGroupingTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 3015 contained the checked keyword before conversion
+    WARNING: Expression at character 3553 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmImportExportExcel_Products.cs - conversion started
+
+* RestaurantPOS14\frmFrontOffice.cs - conversion succeeded
+
+* RestaurantPOS14\frmMember.cs - conversion started
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\RestaurantPOS_BillingInfoEBTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2929 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmAddFunds.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmSqlServerSetting.cs - conversion succeeded
+
+* RestaurantPOS14\frmMenuItemsExportImport.cs - conversion started
+
+* RestaurantPOS14\frmStockAdjustment_Store.cs - conversion succeeded
+
+* RestaurantPOS14\frmPurchaseOrderRecord.cs - conversion started
+
+* RestaurantPOS14\frmImportExportExcel_Supplier.cs - conversion succeeded
+
+* RestaurantPOS14\frmRefundMoney.cs - conversion started
+
+* RestaurantPOS14\frmStock_Store.cs - conversion succeeded
+
+* RestaurantPOS14\frmEmployeeRegistration.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmEmailSetting.cs - conversion succeeded
+
+* RestaurantPOS14\frmWarehouse.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmEnterQty.cs - conversion succeeded
+
+* RestaurantPOS14\frmBranchMaster_Bank.cs - conversion started
+
+* RestaurantPOS14\frmEnterQtyX.cs - conversion succeeded
+
+* RestaurantPOS14\frmTable.cs - conversion started
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\PosGrouping1TableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2914 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmStockAdjustment_MI.cs - conversion started
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\PosGroupingTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2806 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmCustomer.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmImportExportExcel_Products.cs - conversion succeeded
+
+* RestaurantPOS14\frmKitchen_Section.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmAddFunds.cs - conversion has errors: 
+    WARNING: Expression at character 23808 contained the checked keyword before conversion
+    WARNING: Expression at character 26006 contained the checked keyword before conversion
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\RestaurantPOS_BillingInfoKOTTableAdapter.cs - conversion started
+
+* RestaurantPOS14\frmMember.cs - conversion succeeded
+
+* RestaurantPOS14\frmRestaurantPOSKOTRecord.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmPurchaseOrderRecord.cs - conversion succeeded
+
+* RestaurantPOS14\frmPOSRecord.cs - conversion started
+
+* RestaurantPOS14\frmMenuItemsExportImport.cs - conversion succeeded
+
+* RestaurantPOS14\frmOpenTicketsRecord.cs - conversion started
+
+* RestaurantPOS14\frmRefundMoney.cs - conversion has errors: 
+    WARNING: Expression at character 23829 contained the checked keyword before conversion
+    WARNING: Expression at character 25979 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmToppingsList.cs - conversion started
+
+* RestaurantPOS14\frmEmployeeRegistration.cs - conversion succeeded
+
+* RestaurantPOS14\frmToppingsList1.cs - conversion started
+
+* RestaurantPOS14\frmWarehouse.cs - conversion succeeded
+
+* RestaurantPOS14\frmGiftCard.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmModifiersList.cs - conversion has errors: 
+    WARNING: Expression at character 15062 contained the checked keyword before conversion
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\HotelTableAdapter.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmBranchMaster_Bank.cs - conversion succeeded
+
+* RestaurantPOS14\frmLogs.cs - conversion started
+
+* RestaurantPOS14\frmTable.cs - conversion succeeded
+
+* RestaurantPOS14\frmTableMapping_Waiter.cs - conversion started
+
+* RestaurantPOS14\frmCustomer.cs - conversion succeeded
+
+* RestaurantPOS14\frmPaymentRecord.cs - conversion started
+
+* RestaurantPOS14\frmStockAdjustment_MI.cs - conversion succeeded
+
+* RestaurantPOS14\frmCreditCustomerReceiptRecord.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\RestaurantPOS_BillingInfoKOTTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2930 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmStockAdjustment_Warehouse_Record.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmRestaurantPOSKOTRecord.cs - conversion succeeded
+
+* RestaurantPOS14\frmCurrency.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmKitchen_Section.cs - conversion succeeded
+
+* RestaurantPOS14\frmSetDiscount.cs - conversion started
+
+* RestaurantPOS14\frmPOSRecord.cs - conversion succeeded
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\PurchaseTableAdapter.cs - conversion started
+
+* RestaurantPOS14\frmOpenTicketsRecord.cs - conversion has errors: 
+    WARNING: Expression at character 33640 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmStockAdjustment_Store_Record.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmToppingsList1.cs - conversion has errors: 
+    WARNING: Expression at character 20211 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmCustomersRecord.cs - conversion started
+
+* RestaurantPOS14\frmToppingsList.cs - conversion has errors: 
+    WARNING: Expression at character 20230 contained the checked keyword before conversion
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\PurchaseTableAdapter.cs - conversion started
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\HotelTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2907 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmProductRecord.cs - conversion started
+
+* RestaurantPOS14\frmGiftCard.cs - conversion has errors: 
+    WARNING: Expression at character 18611 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmLoyaltySetting.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmTableMapping_Waiter.cs - conversion succeeded
+
+* RestaurantPOS14\frmCreditCustomerLedger.cs - conversion started
+
+* RestaurantPOS14\frmPaymentRecord.cs - conversion succeeded
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\DishTableAdapter.cs - conversion started
+
+* RestaurantPOS14\frmCreditCustomerReceiptRecord.cs - conversion succeeded
+
+* RestaurantPOS14\frmExpense.cs - conversion started
+
+* RestaurantPOS14\frmLogs.cs - conversion succeeded
+
+* RestaurantPOS14\ModFunc.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\PurchaseTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 3012 contained the checked keyword before conversion
+    WARNING: Expression at character 3550 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmStockAdjustment_MI_Record.cs - conversion started
+
+* RestaurantPOS14\frmStockAdjustment_Warehouse_Record.cs - conversion succeeded
+
+* RestaurantPOS14\frmSetNOP.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\PurchaseTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2910 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmPizzaModifiersList.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmCurrency.cs - conversion succeeded
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\RestaurantPOS_OrderInfoKOTTableAdapter.cs - conversion started
+
+* RestaurantPOS14\frmStockAdjustment_Store_Record.cs - conversion succeeded
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\RegistrationTableAdapter.cs - conversion started
+
+* RestaurantPOS14\frmCustomersRecord.cs - conversion succeeded
+
+* RestaurantPOS14\frmPizzaModifiersList_AutoPopUp.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmProductRecord.cs - conversion succeeded
+
+* RestaurantPOS14\frmCustomersExportImport.cs - conversion started
+
+* RestaurantPOS14\frmSetDiscount.cs - conversion succeeded
+
+* RestaurantPOS14\frmLoyaltyCardMemberLedger.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmLoyaltySetting.cs - conversion succeeded
+
+* RestaurantPOS14\frmStockTransferRecord.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\DishTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 3008 contained the checked keyword before conversion
+    WARNING: Expression at character 3546 contained the checked keyword before conversion
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\DeletedInvoicesTableAdapter.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmExpense.cs - conversion succeeded
+
+* RestaurantPOS14\frmMemberBalance.cs - conversion started
+
+* RestaurantPOS14\frmCreditCustomerLedger.cs - conversion succeeded
+
+* RestaurantPOS14\frmCreditCustomerBalance.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmStockAdjustment_MI_Record.cs - conversion succeeded
+
+* RestaurantPOS14\frmMemberLedger.cs - conversion started
+
+* RestaurantPOS14\frmPizzaModifiersList.cs - conversion has errors: 
+    WARNING: Expression at character 17134 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmPizzasExportImport.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmSetNOP.cs - conversion succeeded
+
+* RestaurantPOS14\frmAddFundsRecord.cs - conversion started
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\RestaurantPOS_OrderInfoKOTTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2923 contained the checked keyword before conversion
+    WARNING: Expression at character 3461 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmStockInRecord.cs - conversion started
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\RegistrationTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2909 contained the checked keyword before conversion
+    WARNING: Expression at character 3447 contained the checked keyword before conversion
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\OtherSettingTableAdapter.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmCustomersExportImport.cs - conversion succeeded
+
+* RestaurantPOS14\frmRefundMoneyRecord.cs - conversion started
+
+* RestaurantPOS14\frmPizzaModifiersList_AutoPopUp.cs - conversion has errors: 
+    WARNING: Expression at character 17153 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmPayrollRecord_HB.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmLoyaltyCardMemberLedger.cs - conversion succeeded
+
+* RestaurantPOS14\frmEmployeeSession.cs - conversion started
+
+* RestaurantPOS14\ModFunc.cs - conversion has errors: 
+    WARNING: Expression at character 5690 contained the checked keyword before conversion
+    System.ArgumentOutOfRangeException: Exception of type 'System.ArgumentOutOfRangeException' was thrown. (Parameter 'node')
+    Actual value was CrystalDecisions.CrystalReports.Engine.TextObject { Text: { } text } textObject.
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertToVariableDeclaratorOrNull(IsPatternExpressionSyntax node) in /_/CodeConverter/VB/CommonConversions.cs:line 175
+       at System.Linq.Enumerable.SelectListIterator`2.MoveNext()
+       at System.Linq.Enumerable.WhereEnumerableIterator`1.MoveNext()
+       at System.Collections.Generic.LargeArrayBuilder`1.AddRange(IEnumerable`1 items)
+       at System.Collections.Generic.SparseArrayBuilder`1.ReserveOrAdd(IEnumerable`1 items)
+       at System.Linq.Enumerable.Concat2Iterator`1.ToArray()
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertToDeclarationStatement(List`1 des, List`1 isPatternExpressions) in /_/CodeConverter/VB/CommonConversions.cs:line 105
+       at ICSharpCode.CodeConverter.VB.CommonConversions.InsertRequiredDeclarations(SyntaxList`1 convertedStatements, CSharpSyntaxNode originaNode) in /_/CodeConverter/VB/CommonConversions.cs:line 89
+       at ICSharpCode.CodeConverter.VB.CommonConversions.ConvertStatement(StatementSyntax statement, CSharpSyntaxVisitor`1 methodBodyVisitor) in /_/CodeConverter/VB/CommonConversions.cs:line 75
+       at ICSharpCode.CodeConverter.VB.CommonConversions.<>c__DisplayClass10_0.<ConvertStatements>b__0(StatementSyntax s) in /_/CodeConverter/VB/CommonConversions.cs:line 69
+       at System.Linq.Enumerable.SelectManySingleSelectorIterator`2.MoveNext()
+       at Microsoft.CodeAnalysis.SyntaxList`1.CreateNode(IEnumerable`1 nodes)
+       at ICSharpCode.CodeConverter.VB.NodesVisitor.VisitMethodDeclaration(MethodDeclarationSyntax node) in /_/CodeConverter/VB/NodesVisitor.cs:line 424
+       at Microsoft.CodeAnalysis.CSharp.CSharpSyntaxVisitor`1.Visit(SyntaxNode node)
+       at ICSharpCode.CodeConverter.VB.CommentConvertingVisitorWrapper`1.Accept(SyntaxNode csNode, Boolean addSourceMapping) in /_/CodeConverter/VB/CommentConvertingVisitorWrapper.cs:line 20
+
+* RestaurantPOS14\frmPayroll_MBRecord.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmStockTransferRecord.cs - conversion succeeded
+
+* RestaurantPOS14\frmLoyaltyCardMemberPoints.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\DeletedInvoicesTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 3019 contained the checked keyword before conversion
+    WARNING: Expression at character 3557 contained the checked keyword before conversion
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\PurchaseOrderTableAdapter.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmPizzasExportImport.cs - conversion succeeded
+
+* RestaurantPOS14\frmSMSSetting.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\OtherSettingTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2914 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmExpiredProductsRecord.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmStockInRecord.cs - conversion succeeded
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\TableReservationTableAdapter.cs - conversion started
+
+* RestaurantPOS14\frmMemberBalance.cs - conversion succeeded
+
+* RestaurantPOS14\frmCategoriesExportImport.cs - conversion started
+
+* RestaurantPOS14\frmCreditCustomerBalance.cs - conversion succeeded
+
+* RestaurantPOS14\frmRawMaterialsCategory.cs - conversion started
+
+* RestaurantPOS14\frmAddFundsRecord.cs - conversion succeeded
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\HoldBillTableAdapter.cs - conversion started
+
+* RestaurantPOS14\frmMemberLedger.cs - conversion succeeded
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmVoucherRecord.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmRefundMoneyRecord.cs - conversion succeeded
+
+* RestaurantPOS14\frmPizzaToppingsExportImport.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\PosPrinterSettingTableAdapter.cs - conversion started
+
+* RestaurantPOS14\frmPayrollRecord_HB.cs - conversion succeeded
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmEmployeeSession.cs - conversion succeeded
+
+* RestaurantPOS14\RPOS_DBDataSetTableAdapters\DishTableAdapter.cs - conversion started
+
+* RestaurantPOS14\frmPayroll_MBRecord.cs - conversion succeeded
+
+* RestaurantPOS14\frmUnit.cs - conversion started
+
+* RestaurantPOS14\frmLoyaltyCardMemberPoints.cs - conversion succeeded
+
+* RestaurantPOS14\frmEmployeesRecord.cs - conversion started
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\PurchaseOrderTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 3017 contained the checked keyword before conversion
+    WARNING: Expression at character 3555 contained the checked keyword before conversion
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\LedgerBookTableAdapter.cs - conversion started
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmStock_StoreRecord.cs - conversion started
+
+* RestaurantPOS14\frmSMSSetting.cs - conversion succeeded
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* Timeout expired - falling back to basic formatting. If within Visual Studio you can adjust the timeout in Tools -> Options -> Code Converter.
+
+* RestaurantPOS14\frmModifiersExportImport.cs - conversion started
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\TableReservationTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 2913 contained the checked keyword before conversion
+    WARNING: Expression at character 3451 contained the checked keyword before conversion
+
+* RestaurantPOS14\frmCategoriesExportImport.cs - conversion succeeded
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\CreditCustomerTableAdapter.cs - conversion started
+
+* RestaurantPOS14\frmExpiredProductsRecord.cs - conversion succeeded
+
+* RestaurantPOS14\frmDeliveryPersonLedger.cs - conversion started
+
+* RestaurantPOS14\frmWalletList.cs - conversion started
+
+* RestaurantPOS14\RPOS_DBDataSet1TableAdapters\HoldBillTableAdapter.cs - conversion has errors: 
+    WARNING: Expression at character 3012 contained the checked keyword before conversion
+    WARNING: Expression at character 3550 contained the checked keyword before conversion

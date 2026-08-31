@@ -1,0 +1,105 @@
+{
+  "Database": {
+    "ConnectionStringSecretKey": "Database.ConnectionString",
+    "DefaultCatalog": "RPOS_DB",
+    "CommandTimeoutSeconds": 0,
+    "ConnectionTimeoutSeconds": 15
+  },
+  "Printing": {
+    "DefaultPrinterName": "Receipt Printer",
+    "KitchenPrinterName": "Kitchen Printer",
+    "ThermalPaperWidthMm": 80,
+    "CustomerDisplayPort": "COM1",
+    "CallerIdPort": "COM2",
+    "CallerIdDiagnosticPort": "COM5",
+    "WeighingScalePort": "COM3",
+    "PaymentTerminalAddress": "127.0.0.1",
+    "PaymentTerminalPort": 0
+  },
+  "Tax": {
+    "SstRatePercent": 0.0,
+    "ServiceChargeRatePercent": 0.0,
+    "CurrencySymbol": "RM",
+    "CurrencyCode": "MYR",
+    "DecimalPlaces": 2,
+    "RoundingMode": "ToEven",
+    "RoundingIncrement": 0.01
+  },
+  "Receipt": {
+    "BusinessName": "",
+    "HeaderText": "",
+    "FooterText": "Thank you",
+    "ShowTaxBreakdown": true,
+    "ShowOperator": true
+  },
+  "EInvoice": {
+    "BaseUrl": "https://preprod-api.myinvois.hasil.gov.my",
+    "Environment": "Sandbox",
+    "RequestTimeoutSeconds": 30,
+    "ClientIdSecretKey": "EInvoice.ClientId",
+    "ClientSecretSecretKey": "EInvoice.ClientSecret"
+  },
+  "OnlineOrders": {
+    "BaseUrl": "",
+    "PollIntervalSeconds": 30,
+    "RequestTimeoutSeconds": 30,
+    "ApiKeySecretKey": "OnlineOrders.ApiKey",
+    "SharedSecretSecretKey": "OnlineOrders.SharedSecret"
+  },
+  "Features": {
+    "Checklist": false,
+    "EInvoicing": false,
+    "OnlineOrders": false,
+    "WeighingScale": false,
+    "IngenicoTerminal": true
+  },
+  "Ui": {
+    "ThemeName": "Aqua",
+    "FontSizePoints": 9.0,
+    "TouchScale": 1.0,
+    "ButtonWidth": 110,
+    "ButtonHeight": 72,
+    "CultureName": "en-MY",
+    "ColorOverrides": {
+      "btnPay": "#00897B"
+    },
+    "PosLayout": {
+      "CategoryButtonWidth": 115,
+      "CategoryButtonHeight": 60,
+      "ImagePanelWidth": 110,
+      "ImagePanelHeight": 140,
+      "ImageButtonWidth": 108,
+      "ImageButtonHeight": 90,
+      "RatePanelWidth": 110,
+      "RatePanelHeight": 97,
+      "RateButtonWidth": 105,
+      "RateButtonHeight": 70,
+      "ButtonOverrides": {
+        "Beverages": {
+          "BackColorArgb": -16744320,
+          "SortOrder": 1,
+          "Row": 0,
+          "Column": 0,
+          "Visible": true
+        }
+      }
+    }
+  },
+  "Paths": {
+    "ReportOutputDirectory": "PDF Reports",
+    "MenuImageDirectory": "Menu Items Image",
+    "SecondaryDisplayImageDirectory": "Secondary Display Images",
+    "ExportDirectory": "",
+    "BackupDirectory": ""
+  },
+  "Reports": {
+    "DefaultExportFormat": "PDF",
+    "KeepCrystalReportsAsDefault": true,
+    "PrinterAssignments": {
+      "KitchenOrder": "Kitchen Printer"
+    },
+    "ExportFormats": {
+      "DailySales": "Excel"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+.vs/
+**/bin/
+**/obj/
+*.suo
+*.user
+
+# Local reverse-engineering work products and generated packages.
+/build/intermediate/
+/build/tools/
+/build/fidelity/
+/build/phase2/
+/build/delivery/
+/build/phase3/*.exe
+/build/phase3/*.pdb
+
+# Original installation/binary inputs are retained locally but are not source.
+/RestaurantPOS14/
+/RestaurantPos14 offical/
+/RestaurantPos14 offical.zip
+/CRRuntime_32bit_13_0_24.msi
