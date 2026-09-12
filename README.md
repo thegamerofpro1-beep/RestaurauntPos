@@ -8,7 +8,7 @@ The current source includes the SST and service-charge receipt work, legacy-data
 
 1. Sign in to GitHub and Codex with an account that can access this private repository.
 2. Clone the repository in Codex or with `git clone <repository-url>`.
-3. Open `New Restauraunt Pos.sln` from `src/RestaurantPOS14`.
+3. Open `src/RestaurantPOS14/RestaurantPOS14.sln`.
 4. Read `AGENTS.md`, `docs/BUILD.md`, `docs/CONFIGURATION.md` and `docs/DATABASE_UPGRADES.md` before changing or running the application.
 
 Machine-specific database credentials are not stored in Git. Configure them locally through the application or an ignored `appsettings.json`. Generated installers, runtime prerequisites, build output, logs and temporary receipt/PDF output are intentionally excluded.
