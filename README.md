@@ -11,6 +11,8 @@ The current source includes the SST and service-charge receipt work, legacy-data
 3. Open `src/RestaurantPOS14/RestaurantPOS14.sln`.
 4. Read `AGENTS.md`, `docs/BUILD.md`, `docs/CONFIGURATION.md` and `docs/DATABASE_UPGRADES.md` before changing or running the application.
 
+The durable project and conversation handoff is in [`docs/PROJECT_HANDOFF.md`](docs/PROJECT_HANDOFF.md). A new Codex task should read it before starting work.
+
 Machine-specific database credentials are not stored in Git. Configure them locally through the application or an ignored `appsettings.json`. Generated installers, runtime prerequisites, build output, logs and temporary receipt/PDF output are intentionally excluded.
 
 ## Build
