@@ -1,11 +1,11 @@
 # RestaurantPOS14 project handoff
 
-Last updated: 12 September 2026  
-Repository: `https://github.com/thegamerofpro1-beep/RestaurauntPos`  
-Default branch: `main`  
-Application file version: `14.1.5.10`  
-Assembly version: `14.1.5.0`  
-Database schema version: `6`
+- Last updated: 12 September 2026
+- Repository: `https://github.com/thegamerofpro1-beep/RestaurauntPos`
+- Default branch: `main`
+- Application file version: `14.1.5.10`
+- Assembly version: `14.1.5.0`
+- Database schema version: `6`
 
 ## Purpose
 
