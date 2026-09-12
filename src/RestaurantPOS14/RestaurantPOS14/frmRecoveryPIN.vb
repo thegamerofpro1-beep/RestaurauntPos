@@ -283,25 +283,40 @@ Namespace RestaurantPOS14
 
                 MyBase.Cursor = System.Windows.Forms.Cursors.WaitCursor
                 Me.Timer1.Enabled = True
-                RestaurantPOS14.ModClasses.ds = New System.Data.DataSet()
-                RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
-                RestaurantPOS14.ModClasses.con.Open()
-                Dim sqlCommand As System.Data.SqlClient.SqlCommand = New System.Data.SqlClient.SqlCommand("SELECT Password FROM Registration Where EmailID='" & Me.txtEmailID.Text & "'", RestaurantPOS14.ModClasses.con)
-                Call New System.Data.SqlClient.SqlDataAdapter(CType((sqlCommand), System.Data.SqlClient.SqlCommand)).Fill(RestaurantPOS14.ModClasses.ds)
-                If RestaurantPOS14.ModClasses.ds.Tables(CInt((0))).Rows.Count > 0 Then
-                    RestaurantPOS14.ModClasses.rdr = sqlCommand.ExecuteReader()
-                    RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
-                    RestaurantPOS14.ModClasses.con.Open()
-                    RestaurantPOS14.ModClasses.rdr = New System.Data.SqlClient.SqlCommand(CStr(("select RTRIM(Username),RTRIM(Password),RTRIM(SMTPAddress),(Port) from EmailSetting where IsDefault='Yes' and IsActive='Yes'"))) With {.Connection = RestaurantPOS14.ModClasses.con}.ExecuteReader()
-                    If RestaurantPOS14.ModClasses.rdr.Read() Then
-                        RestaurantPOS14.ModFunc.SendMail(Microsoft.VisualBasic.CompilerServices.Conversions.ToString(RestaurantPOS14.ModClasses.rdr.GetValue(0)), Me.txtEmailID.Text, "Your PIN: " & RestaurantPOS14.ModFunc.Decrypt(System.Convert.ToString(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.ds.Tables(CInt((0))).Rows(0)("Password")))), "Password", Microsoft.VisualBasic.CompilerServices.Conversions.ToString(RestaurantPOS14.ModClasses.rdr.GetValue(2)), Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(RestaurantPOS14.ModClasses.rdr.GetValue(3)), Microsoft.VisualBasic.CompilerServices.Conversions.ToString(RestaurantPOS14.ModClasses.rdr.GetValue(0)), RestaurantPOS14.ModFunc.Decrypt(Microsoft.VisualBasic.CompilerServices.Conversions.ToString(RestaurantPOS14.ModClasses.rdr.GetValue(1))))
-                        If RestaurantPOS14.ModClasses.rdr IsNot Nothing Then
-                            RestaurantPOS14.ModClasses.rdr.Close()
-                        End If
-                    End If
-                End If
+                Dim smtpUser As String = Nothing
+                Dim smtpPassword As String = Nothing
+                Dim smtpAddress As String = Nothing
+                Dim smtpPort As Integer
+                Using connection As New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
+                    connection.Open()
+                    Using command As New System.Data.SqlClient.SqlCommand("select TOP 1 RTRIM(Username),RTRIM(Password),RTRIM(SMTPAddress),(Port) from EmailSetting where IsDefault='Yes' and IsActive='Yes'", connection)
+                        Using reader = command.ExecuteReader(System.Data.CommandBehavior.SingleRow)
+                            If Not reader.Read() Then
+                                Call RestaurantPOS14.My.MyProject.Forms.frmCustomDialog15.ShowDialog()
+                                Return
+                            End If
+                            smtpUser = If(reader.IsDBNull(0), String.Empty, reader.GetString(0).Trim())
+                            smtpPassword = If(reader.IsDBNull(1), String.Empty, RestaurantPOS14.ModFunc.Decrypt(reader.GetString(1).Trim()))
+                            smtpAddress = If(reader.IsDBNull(2), String.Empty, reader.GetString(2).Trim())
+                            smtpPort = If(reader.IsDBNull(3), 0, Convert.ToInt32(reader.GetValue(3)))
+                        End Using
+                    End Using
+                End Using
 
-                Call System.Windows.Forms.MessageBox.Show("PIN Successfully sent " & Global.Microsoft.VisualBasic.Constants.vbCrLf & "Please check your mail", "Thank you", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Asterisk)
+                Dim temporaryPin = RestaurantPOS14.Security.PinSecurity.CreateTemporaryPin()
+                Dim sent = RestaurantPOS14.ModFunc.SendMail(smtpUser, Me.txtEmailID.Text.Trim(), "Your temporary PIN: " & temporaryPin & ". Change it after signing in.", "Temporary PIN", smtpAddress, smtpPort, smtpUser, smtpPassword)
+                If Not sent Then Return
+
+                Using connection As New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
+                    connection.Open()
+                    Using command As New System.Data.SqlClient.SqlCommand("UPDATE Registration SET Password=@password WHERE EmailID=@email", connection)
+                        command.Parameters.Add("@password", System.Data.SqlDbType.NChar, 50).Value = RestaurantPOS14.Security.PinSecurity.HashPin(temporaryPin)
+                        command.Parameters.Add("@email", System.Data.SqlDbType.NChar, 150).Value = Me.txtEmailID.Text.Trim()
+                        If command.ExecuteNonQuery() <> 1 Then Throw New InvalidOperationException("The user PIN could not be updated.")
+                    End Using
+                End Using
+
+                Call System.Windows.Forms.MessageBox.Show("A temporary PIN was sent." & Global.Microsoft.VisualBasic.Constants.vbCrLf & "Please check your mail.", "Thank you", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Asterisk)
                 MyBase.Hide()
                 Call RestaurantPOS14.My.MyProject.Forms.frmLogin.Show()
                 RestaurantPOS14.My.MyProject.Forms.frmLogin.UserID.Text = ""

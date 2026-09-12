@@ -379,7 +379,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select RTRIM(MemberID),RTRIM(Name),RTRIM(Address),RTRIM(ContactNo) from LoyaltyMember where Name like N'%" & Me.txtMemberName.Text & "%' order by Name", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select RTRIM(MemberID),RTRIM(Name),RTRIM(Address),RTRIM(ContactNo) from LoyaltyMember where Name like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtMemberName.Text) & "%' order by Name", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader()
                 Me.listView1.Items.Clear()
                 While RestaurantPOS14.ModClasses.rdr.Read()
@@ -414,7 +414,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select RTRIM(MemberID),RTRIM(Name),RTRIM(Address),RTRIM(ContactNo) from LoyaltyMember where MemberID like '" & Me.txtMemberID.Text & "%'  order by Name", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select RTRIM(MemberID),RTRIM(Name),RTRIM(Address),RTRIM(ContactNo) from LoyaltyMember where MemberID like '" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtMemberID.Text) & "%'  order by Name", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader()
                 Me.listView1.Items.Clear()
                 While RestaurantPOS14.ModClasses.rdr.Read()

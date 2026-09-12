@@ -1191,7 +1191,7 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModClasses.con.Close()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into StockTransfer_Join(StockTransferID,Warehouse,ProductID,ExpiryDate,Qty) VALUES (" & Me.txtID.Text & ",@d1,@d2,@d3,@d4)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into StockTransfer_Join(StockTransferID,Warehouse,ProductID,ExpiryDate,Qty) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtID.Text, "Record ID") & ",@d1,@d2,@d3,@d4)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow3 As System.Windows.Forms.DataGridViewRow In CType(Me.dgw.Rows, System.Collections.IEnumerable)
@@ -1354,6 +1354,7 @@ Namespace RestaurantPOS14
         Private Sub DataGridView1_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Me.DataGridView1.Rows.Count > 0 Then
+                    If Me.DataGridView1.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView1.SelectedRows(0)
                     Me.txtWarehouse.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                     Me.txtProductID.Text = dataGridViewRow.Cells(CInt((1))).Value.ToString()
@@ -1474,7 +1475,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(WareHouse),RTRIM(ProductID),RTRIM(ProductName),RTRIM(Unit),RTRIM(ExpiryDate),Qty from Temp_Stock,Product where Temp_Stock.ProductID=Product.PID and Productname like N'%" & Me.txtSearchByProductName.Text & "%' and Qty > 0 order by ProductName", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(WareHouse),RTRIM(ProductID),RTRIM(ProductName),RTRIM(Unit),RTRIM(ExpiryDate),Qty from Temp_Stock,Product where Temp_Stock.ProductID=Product.PID and Productname like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtSearchByProductName.Text) & "%' and Qty > 0 order by ProductName", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.DataGridView1.Rows.Clear()
                 While RestaurantPOS14.ModClasses.rdr.Read()

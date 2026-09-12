@@ -141,6 +141,9 @@ Namespace RestaurantPOS14
         <System.Runtime.CompilerServices.AccessedThroughPropertyAttribute("chkTLAP")>
         Private _chkTLAP As System.Windows.Forms.CheckBox
 
+        <System.Runtime.CompilerServices.AccessedThroughPropertyAttribute("chkShowSSTOnSecondaryDisplay")>
+        Private _chkShowSSTOnSecondaryDisplay As System.Windows.Forms.CheckBox
+
         <System.Runtime.CompilerServices.AccessedThroughPropertyAttribute("Column3")>
         Private _Column3 As System.Windows.Forms.DataGridViewTextBoxColumn
 
@@ -203,6 +206,9 @@ Namespace RestaurantPOS14
 
         <System.Runtime.CompilerServices.AccessedThroughPropertyAttribute("Column21")>
         Private _Column21 As System.Windows.Forms.DataGridViewTextBoxColumn
+
+        <System.Runtime.CompilerServices.AccessedThroughPropertyAttribute("Column22")>
+        Private _Column22 As System.Windows.Forms.DataGridViewTextBoxColumn
 
         Private st1 As String
 
@@ -857,6 +863,19 @@ Namespace RestaurantPOS14
             End Set
         End Property
 
+        Friend Overridable Property chkShowSSTOnSecondaryDisplay As System.Windows.Forms.CheckBox
+            <System.Diagnostics.DebuggerNonUserCodeAttribute>
+            Get
+                Return Me._chkShowSSTOnSecondaryDisplay
+            End Get
+
+            <System.Runtime.CompilerServices.MethodImplAttribute(System.Runtime.CompilerServices.MethodImplOptions.Synchronized)>
+            <System.Diagnostics.DebuggerNonUserCodeAttribute>
+            Set(value As System.Windows.Forms.CheckBox)
+                Me._chkShowSSTOnSecondaryDisplay = value
+            End Set
+        End Property
+
         Friend Overridable Property Column3 As System.Windows.Forms.DataGridViewTextBoxColumn
             <System.Diagnostics.DebuggerNonUserCodeAttribute>
             Get
@@ -1130,6 +1149,19 @@ Namespace RestaurantPOS14
             End Set
         End Property
 
+        Friend Overridable Property Column22 As System.Windows.Forms.DataGridViewTextBoxColumn
+            <System.Diagnostics.DebuggerNonUserCodeAttribute>
+            Get
+                Return Me._Column22
+            End Get
+
+            <System.Runtime.CompilerServices.MethodImplAttribute(System.Runtime.CompilerServices.MethodImplOptions.Synchronized)>
+            <System.Diagnostics.DebuggerNonUserCodeAttribute>
+            Set(value As System.Windows.Forms.DataGridViewTextBoxColumn)
+                Me._Column22 = value
+            End Set
+        End Property
+
         <System.Diagnostics.DebuggerNonUserCodeAttribute>
         Public Sub New()
             Call RestaurantPOS14.frmOthersSetting.__ENCAddToList(Me)
@@ -1206,6 +1238,7 @@ Namespace RestaurantPOS14
             Me.chkA1.Checked = False
             Me.chkANB.Checked = False
             Me.chkTLAP.Checked = False
+            Me.chkShowSSTOnSecondaryDisplay.Checked = True
         End Sub
 
         Private Sub btnClose_Click(sender As Object, e As System.EventArgs)
@@ -1213,6 +1246,10 @@ Namespace RestaurantPOS14
         End Sub
 
         Private Sub btnSave_Click(sender As Object, e As System.EventArgs)
+            If Not Me.ValidateChargePercentages() Then
+                Return
+            End If
+
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
@@ -1314,7 +1351,7 @@ Namespace RestaurantPOS14
 
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into OtherSetting(ParcelCharges,HomeDeliveryCharges,VAT,ServiceTax,ServiceCharges,TA,HD,EB,KG,TaxType,PDP,TL,ECDI, ECDB, ECTA, ECHD, ECEB,A1,ANB,TLAP) VALUES (@d1,@d2,@d3,@d4,@d5,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16,@d17,@d18,@d19,@d20,@d21)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SET XACT_ABORT ON; BEGIN TRANSACTION; insert into OtherSetting(ParcelCharges,HomeDeliveryCharges,VAT,ServiceTax,ServiceCharges,TA,HD,EB,KG,TaxType,PDP,TL,ECDI, ECDB, ECTA, ECHD, ECEB,A1,ANB,TLAP,ShowSSTOnSecondaryDisplay) VALUES (@d1,@d2,@d3,@d4,@d5,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16,@d17,@d18,@d19,@d20,@d21,@d22); UPDATE Category SET ST=@d4; COMMIT TRANSACTION")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Microsoft.VisualBasic.Conversion.Val(Me.txtParcelCharges.Text))
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", Microsoft.VisualBasic.Conversion.Val(Me.txtHDCharges.Text))
@@ -1336,8 +1373,10 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d19", Me.st8)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d20", Me.st9)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d21", Me.st10)
-                RestaurantPOS14.ModClasses.cmd.ExecuteReader()
+                RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d22", If(Me.chkShowSSTOnSecondaryDisplay.Checked, "Yes", "No"))
+                RestaurantPOS14.ModClasses.cmd.ExecuteNonQuery()
                 RestaurantPOS14.ModClasses.con.Close()
+                RestaurantPOS14.Configuration.SecondaryDisplayOptions.SetShowSstColumn(Me.chkShowSSTOnSecondaryDisplay.Checked)
                 Dim text As String = "added the others setting info"
                 RestaurantPOS14.ModFunc.LogFunc(Me.lblUser.Text, text)
                 Call System.Windows.Forms.MessageBox.Show("Successfully saved", "Record", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Asterisk)
@@ -1383,6 +1422,10 @@ Namespace RestaurantPOS14
         End Sub
 
         Private Sub btnUpdate_Click(sender As Object, e As System.EventArgs)
+            If Not Me.ValidateChargePercentages() Then
+                Return
+            End If
+
             Try
                 If Me.chkTA.Checked Then
                     Me.st2 = "Yes"
@@ -1476,7 +1519,7 @@ Namespace RestaurantPOS14
 
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Update OtherSetting set ParcelCharges=@d1,HomeDeliveryCharges=@d2,VAT=@d3,ServiceTax=@d4,ServiceCharges=@d5,TA=@d7,HD=@d8,EB=@d9,KG=@d10,TaxType=@d11,PDP=@d12,TL=@d13,ECDI=@d14, ECDB=@d15, ECTA=@d16, ECHD=@d17, ECEB=@d18,A1=@d19,ANB=@d20,TLAP=@d21 where ID=" & Me.txtID.Text)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SET XACT_ABORT ON; BEGIN TRANSACTION; Update OtherSetting set ParcelCharges=@d1,HomeDeliveryCharges=@d2,VAT=@d3,ServiceTax=@d4,ServiceCharges=@d5,TA=@d7,HD=@d8,EB=@d9,KG=@d10,TaxType=@d11,PDP=@d12,TL=@d13,ECDI=@d14, ECDB=@d15, ECTA=@d16, ECHD=@d17, ECEB=@d18,A1=@d19,ANB=@d20,TLAP=@d21,ShowSSTOnSecondaryDisplay=@d22 where ID=" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtID.Text, "Record ID") & "; UPDATE Category SET ST=@d4; COMMIT TRANSACTION")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Microsoft.VisualBasic.Conversion.Val(Me.txtParcelCharges.Text))
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", Microsoft.VisualBasic.Conversion.Val(Me.txtHDCharges.Text))
@@ -1498,8 +1541,10 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d19", Me.st8)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d20", Me.st9)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d21", Me.st10)
-                RestaurantPOS14.ModClasses.cmd.ExecuteReader()
+                RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d22", If(Me.chkShowSSTOnSecondaryDisplay.Checked, "Yes", "No"))
+                RestaurantPOS14.ModClasses.cmd.ExecuteNonQuery()
                 RestaurantPOS14.ModClasses.con.Close()
+                RestaurantPOS14.Configuration.SecondaryDisplayOptions.SetShowSstColumn(Me.chkShowSSTOnSecondaryDisplay.Checked)
                 Dim text As String = "Updated the others setting info"
                 RestaurantPOS14.ModFunc.LogFunc(Me.lblUser.Text, text)
                 Call System.Windows.Forms.MessageBox.Show("Successfully updated", "Record", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Asterisk)
@@ -1513,11 +1558,11 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT ID,(ParcelCharges),(HomeDeliveryCharges),ServiceTax,VAT,ServiceCharges,RTRIM(TA),RTRIM(HD),RTRIM(EB),RTRIM(KG),RTRIM(TaxType),RTRIM(PDP),RTRIM(TL),RTRIM(ECDI), RTRIM(ECDB), RTRIM(ECTA), RTRIM(ECHD), RTRIM(ECEB),RTRIM(A1),RTRIM(ANB),RTRIM(TLAP) from OtherSetting", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT ID,(ParcelCharges),(HomeDeliveryCharges),ServiceTax,VAT,ServiceCharges,RTRIM(TA),RTRIM(HD),RTRIM(EB),RTRIM(KG),RTRIM(TaxType),RTRIM(PDP),RTRIM(TL),RTRIM(ECDI), RTRIM(ECDB), RTRIM(ECTA), RTRIM(ECHD), RTRIM(ECEB),RTRIM(A1),RTRIM(ANB),RTRIM(TLAP),RTRIM(ISNULL(ShowSSTOnSecondaryDisplay,N'Yes')) from OtherSetting", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()
                 While RestaurantPOS14.ModClasses.rdr.Read()
-                    Me.dgw.Rows.Add(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(0)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(1)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(2)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(3)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(4)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(5)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(6)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(7)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(8)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(9)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(10)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(11)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(12)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(13)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(14)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(15)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(16)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(17)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(18)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(19)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(20)))
+                    Me.dgw.Rows.Add(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(0)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(1)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(2)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(3)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(4)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(5)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(6)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(7)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(8)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(9)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(10)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(11)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(12)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(13)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(14)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(15)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(16)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(17)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(18)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(19)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(20)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(21)))
                 End While
 
                 RestaurantPOS14.ModClasses.con.Close()
@@ -1526,6 +1571,24 @@ Namespace RestaurantPOS14
             End Try
         End Sub
 
+        Private Function ValidateChargePercentages() As Boolean
+            Dim sstPercent As Double = Microsoft.VisualBasic.Conversion.Val(Me.txtSTPer.Text)
+            If sstPercent < 0.0 OrElse sstPercent > 100.0 Then
+                Call System.Windows.Forms.MessageBox.Show("SST charge must be between 0 and 100 percent.", "Invalid SST Charge", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Exclamation)
+                Me.txtSTPer.Focus()
+                Return False
+            End If
+
+            Dim serviceChargePercent As Double = Microsoft.VisualBasic.Conversion.Val(Me.txVATPer.Text)
+            If serviceChargePercent < 0.0 OrElse serviceChargePercent > 100.0 Then
+                Call System.Windows.Forms.MessageBox.Show("Service charge must be between 0 and 100 percent.", "Invalid Service Charge", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Exclamation)
+                Me.txVATPer.Focus()
+                Return False
+            End If
+
+            Return True
+        End Function
+
         Private Sub btnNew_Click(sender As Object, e As System.EventArgs)
             Me.Reset()
         End Sub
@@ -1533,6 +1596,7 @@ Namespace RestaurantPOS14
         Private Sub dgw_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Me.dgw.Rows.Count > 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     Dim v0 As Object = dataGridViewRow.Cells(CInt((1))).Value
                     Me.txtParcelCharges.Text =(If((v0 Is Nothing OrElse v0 Is System.DBNull.Value), String.Empty, v0.ToString()))
@@ -1590,6 +1654,9 @@ Namespace RestaurantPOS14
                     Dim v20 As Object = dataGridViewRow.Cells(CInt((20))).Value
                     Dim s20 As String =(If((v20 Is Nothing OrElse v20 Is System.DBNull.Value), String.Empty, v20.ToString()))
                     Me.chkTLAP.Checked = Microsoft.VisualBasic.CompilerServices.Operators.CompareString(s20, "Yes", TextCompare:=False) = 0
+                    Dim v21 As Object = dataGridViewRow.Cells(CInt((21))).Value
+                    Dim s21 As String =(If((v21 Is Nothing OrElse v21 Is System.DBNull.Value), "Yes", v21.ToString()))
+                    Me.chkShowSSTOnSecondaryDisplay.Checked = Not String.Equals(s21.Trim(), "No", StringComparison.OrdinalIgnoreCase)
                     If RestaurantPOS14.ModFunc.IsDeleteAllowed(Me.lblUser.Text, "Settings") Then
                         Me.btnDelete.Enabled = True
                     Else
@@ -1814,6 +1881,7 @@ Namespace RestaurantPOS14
             Me.txtSTPer = New System.Windows.Forms.TextBox()
             Me.Label3 = New System.Windows.Forms.Label()
             Me.chkTLAP = New System.Windows.Forms.CheckBox()
+            Me.chkShowSSTOnSecondaryDisplay = New System.Windows.Forms.CheckBox()
             Me.Column3 = New System.Windows.Forms.DataGridViewTextBoxColumn()
             Me.Column1 = New System.Windows.Forms.DataGridViewTextBoxColumn()
             Me.Column2 = New System.Windows.Forms.DataGridViewTextBoxColumn()
@@ -1835,6 +1903,7 @@ Namespace RestaurantPOS14
             Me.Column19 = New System.Windows.Forms.DataGridViewTextBoxColumn()
             Me.Column20 = New System.Windows.Forms.DataGridViewTextBoxColumn()
             Me.Column21 = New System.Windows.Forms.DataGridViewTextBoxColumn()
+            Me.Column22 = New System.Windows.Forms.DataGridViewTextBoxColumn()
             Me.Panel1.SuspendLayout()
             Me.GroupBox3.SuspendLayout()
             Me.GroupBox1.SuspendLayout()
@@ -1853,7 +1922,7 @@ Namespace RestaurantPOS14
             panel.Location = location
             Me.Panel1.Name = "Panel1"
             Dim panel2 As System.Windows.Forms.Panel = Me.Panel1
-            Dim size As System.Drawing.Size = New System.Drawing.Size(463, 618)
+            Dim size As System.Drawing.Size = New System.Drawing.Size(463, 641)
             panel2.Size = size
             Me.Panel1.TabIndex = 2
             Me.GroupBox3.Controls.Add(Me.btnDelete)
@@ -1929,6 +1998,7 @@ Namespace RestaurantPOS14
             Me.btnNew.Text = "New"
             Me.btnNew.TextAlign = System.Drawing.ContentAlignment.MiddleRight
             Me.btnNew.UseVisualStyleBackColor = True
+            Me.GroupBox1.Controls.Add(Me.chkShowSSTOnSecondaryDisplay)
             Me.GroupBox1.Controls.Add(Me.chkTLAP)
             Me.GroupBox1.Controls.Add(Me.chkANB)
             Me.GroupBox1.Controls.Add(Me.Label8)
@@ -1947,6 +2017,8 @@ Namespace RestaurantPOS14
             Me.GroupBox1.Controls.Add(Me.chkEB)
             Me.GroupBox1.Controls.Add(Me.chkHD)
             Me.GroupBox1.Controls.Add(Me.chkTA)
+            Me.GroupBox1.Controls.Add(Me.txtSTPer)
+            Me.GroupBox1.Controls.Add(Me.Label3)
             Me.GroupBox1.Controls.Add(Me.txVATPer)
             Me.GroupBox1.Controls.Add(Me.Label9)
             Me.GroupBox1.Controls.Add(Me.Label7)
@@ -1959,7 +2031,7 @@ Namespace RestaurantPOS14
             groupBox3.Location = location
             Me.GroupBox1.Name = "GroupBox1"
             Dim groupBox4 As System.Windows.Forms.GroupBox = Me.GroupBox1
-            size = New System.Drawing.Size(360, 471)
+            size = New System.Drawing.Size(360, 494)
             groupBox4.Size = size
             Me.GroupBox1.TabIndex = 0
             Me.GroupBox1.TabStop = False
@@ -2154,11 +2226,11 @@ Namespace RestaurantPOS14
             Me.txVATPer.BackColor = System.Drawing.Color.White
             Me.txVATPer.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0)
             Dim textBox As System.Windows.Forms.TextBox = Me.txVATPer
-            location = New System.Drawing.Point(157, 71)
+            location = New System.Drawing.Point(105, 71)
             textBox.Location = location
             Me.txVATPer.Name = "txVATPer"
             Dim textBox2 As System.Windows.Forms.TextBox = Me.txVATPer
-            size = New System.Drawing.Size(124, 20)
+            size = New System.Drawing.Size(60, 20)
             textBox2.Size = size
             Me.txVATPer.TabIndex = 2
             Me.txVATPer.Text = "0.00"
@@ -2166,14 +2238,14 @@ Namespace RestaurantPOS14
             Me.Label9.AutoSize = True
             Me.Label9.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0)
             Dim label7 As System.Windows.Forms.Label = Me.Label9
-            location = New System.Drawing.Point(27, 71)
+            location = New System.Drawing.Point(14, 71)
             label7.Location = location
             Me.Label9.Name = "Label9"
             Dim label8 As System.Windows.Forms.Label = Me.Label9
-            size = New System.Drawing.Size(45, 13)
+            size = New System.Drawing.Size(91, 13)
             label8.Size = size
             Me.Label9.TabIndex = 12
-            Me.Label9.Text = "service charge% :"
+            Me.Label9.Text = "Service Charge %:"
             Me.Label7.AutoSize = True
             Me.Label7.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0)
             Dim label9 As System.Windows.Forms.Label = Me.Label7
@@ -2261,12 +2333,12 @@ Namespace RestaurantPOS14
             dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
             Me.dgw.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2
             Me.dgw.ColumnHeadersHeight = 35
-            Me.dgw.Columns.AddRange(Me.Column3, Me.Column1, Me.Column2, Me.Column5, Me.Column6, Me.Column7, Me.Column8, Me.Column9, Me.Column10, Me.Column11, Me.Column4, Me.Column12, Me.Column13, Me.Column14, Me.Column15, Me.Column16, Me.Column17, Me.Column18, Me.Column19, Me.Column20, Me.Column21)
+            Me.dgw.Columns.AddRange(Me.Column3, Me.Column1, Me.Column2, Me.Column5, Me.Column6, Me.Column7, Me.Column8, Me.Column9, Me.Column10, Me.Column11, Me.Column4, Me.Column12, Me.Column13, Me.Column14, Me.Column15, Me.Column16, Me.Column17, Me.Column18, Me.Column19, Me.Column20, Me.Column21, Me.Column22)
             Me.dgw.Cursor = System.Windows.Forms.Cursors.Hand
             Me.dgw.EnableHeadersVisualStyles = False
             Me.dgw.GridColor = System.Drawing.Color.White
             Dim dataGridView As System.Windows.Forms.DataGridView = Me.dgw
-            location = New System.Drawing.Point(6, 519)
+            location = New System.Drawing.Point(6, 542)
             dataGridView.Location = location
             Me.dgw.MultiSelect = False
             Me.dgw.Name = "dgw"
@@ -2301,7 +2373,6 @@ Namespace RestaurantPOS14
             Me.Panel2.Controls.Add(Me.txtID)
             Me.Panel2.Controls.Add(Me.lblUser)
             Me.Panel2.Controls.Add(Me.txtSCPer)
-            Me.Panel2.Controls.Add(Me.txtSTPer)
             Dim panel3 As System.Windows.Forms.Panel = Me.Panel2
             location = New System.Drawing.Point(3, 3)
             panel3.Location = location
@@ -2359,26 +2430,27 @@ Namespace RestaurantPOS14
             Me.txtSTPer.BackColor = System.Drawing.Color.White
             Me.txtSTPer.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0)
             Dim textBox11 As System.Windows.Forms.TextBox = Me.txtSTPer
-            location = New System.Drawing.Point(52, 7)
+            location = New System.Drawing.Point(270, 71)
             textBox11.Location = location
             Me.txtSTPer.Name = "txtSTPer"
             Dim textBox12 As System.Windows.Forms.TextBox = Me.txtSTPer
-            size = New System.Drawing.Size(49, 20)
+            size = New System.Drawing.Size(65, 20)
             textBox12.Size = size
             Me.txtSTPer.TabIndex = 2
             Me.txtSTPer.Text = "0.00"
             Me.txtSTPer.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
-            Me.txtSTPer.Visible = False
+            Me.txtSTPer.Visible = True
             Me.Label3.AutoSize = True
             Me.Label3.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0)
             Dim label19 As System.Windows.Forms.Label = Me.Label3
-            location = New System.Drawing.Point(530, 82)
+            location = New System.Drawing.Point(181, 71)
             label19.Location = location
             Me.Label3.Name = "Label3"
             Dim label20 As System.Windows.Forms.Label = Me.Label3
-            size = New System.Drawing.Size(0, 13)
+            size = New System.Drawing.Size(83, 13)
             label20.Size = size
             Me.Label3.TabIndex = 0
+            Me.Label3.Text = "SST Charge %:"
             Me.chkTLAP.AutoSize = True
             Me.chkTLAP.Font = New System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0)
             Me.chkTLAP.ForeColor = System.Drawing.Color.MidnightBlue
@@ -2392,6 +2464,21 @@ Namespace RestaurantPOS14
             Me.chkTLAP.TabIndex = 19
             Me.chkTLAP.Text = "Auto Pop up Tables List in POS Dine In"
             Me.chkTLAP.UseVisualStyleBackColor = True
+            Me.chkShowSSTOnSecondaryDisplay.AutoSize = True
+            Me.chkShowSSTOnSecondaryDisplay.Checked = True
+            Me.chkShowSSTOnSecondaryDisplay.CheckState = System.Windows.Forms.CheckState.Checked
+            Me.chkShowSSTOnSecondaryDisplay.Font = New System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0)
+            Me.chkShowSSTOnSecondaryDisplay.ForeColor = System.Drawing.Color.MidnightBlue
+            Dim checkBox29 As System.Windows.Forms.CheckBox = Me.chkShowSSTOnSecondaryDisplay
+            location = New System.Drawing.Point(19, 467)
+            checkBox29.Location = location
+            Me.chkShowSSTOnSecondaryDisplay.Name = "chkShowSSTOnSecondaryDisplay"
+            Dim checkBox30 As System.Windows.Forms.CheckBox = Me.chkShowSSTOnSecondaryDisplay
+            size = New System.Drawing.Size(290, 19)
+            checkBox30.Size = size
+            Me.chkShowSSTOnSecondaryDisplay.TabIndex = 20
+            Me.chkShowSSTOnSecondaryDisplay.Text = "Show SST column on colored customer display"
+            Me.chkShowSSTOnSecondaryDisplay.UseVisualStyleBackColor = True
             Me.Column3.HeaderText = "ID"
             Me.Column3.Name = "Column3"
             Me.Column3.[ReadOnly] = True
@@ -2408,10 +2495,9 @@ Namespace RestaurantPOS14
             Me.Column2.[ReadOnly] = True
             dataGridViewCellStyle7.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight
             Me.Column5.DefaultCellStyle = dataGridViewCellStyle7
-            Me.Column5.HeaderText = "Service Tax %"
+            Me.Column5.HeaderText = "SST Charge %"
             Me.Column5.Name = "Column5"
             Me.Column5.[ReadOnly] = True
-            Me.Column5.Visible = False
             dataGridViewCellStyle8.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight
             Me.Column6.DefaultCellStyle = dataGridViewCellStyle8
             Me.Column6.HeaderText = "service charge%"
@@ -2468,15 +2554,17 @@ Namespace RestaurantPOS14
             Me.Column21.HeaderText = "Auto Pop up Tables List in POS"
             Me.Column21.Name = "Column21"
             Me.Column21.[ReadOnly] = True
+            Me.Column22.HeaderText = "Show SST column on colored customer display"
+            Me.Column22.Name = "Column22"
+            Me.Column22.[ReadOnly] = True
             MyBase.AcceptButton = Me.btnSave
             Dim autoScaleDimensions As System.Drawing.SizeF = New System.Drawing.SizeF(6F, 13F)
             MyBase.AutoScaleDimensions = autoScaleDimensions
             MyBase.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
             Me.BackColor = System.Drawing.Color.FromArgb(58, 58, 56)
-            size = New System.Drawing.Size(470, 623)
+            size = New System.Drawing.Size(470, 646)
             MyBase.ClientSize = size
             MyBase.Controls.Add(Me.Panel1)
-            MyBase.Controls.Add(Me.Label3)
             MyBase.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None
             MyBase.Icon = CType(componentResourceManager.GetObject("$this.Icon"), System.Drawing.Icon)
             MyBase.MaximizeBox = False

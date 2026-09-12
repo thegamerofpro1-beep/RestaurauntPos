@@ -793,6 +793,7 @@ Namespace RestaurantPOS14
                     Return
                 End If
 
+                If Me.dgw.SelectedRows.Count = 0 Then Return
                 Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                 Me.txtKitchenName.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                 Me.txtKitchen.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
@@ -843,7 +844,8 @@ Namespace RestaurantPOS14
                     If RestaurantPOS14.ModClasses.con.State = System.Data.ConnectionState.Open Then
                         RestaurantPOS14.ModClasses.con.Close()
                     End If
-                Catch
+                Catch suppressedException As System.Exception
+                    RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmKitchen_Section", suppressedException)
                 End Try
 
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(dataGridViewRow.Cells(CInt((2))).Value.ToString(), "Yes", TextCompare:=False) = 0 Then
@@ -871,51 +873,10 @@ Namespace RestaurantPOS14
         End Sub
 
         Private Sub EnsureKitchenMultiPrinterSchema()
-            Try
-                Using con As System.Data.SqlClient.SqlConnection = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
-                    con.Open()
-                    Dim hasP2 As Boolean = False
-                    Dim hasP3 As Boolean = False
-                    Using cmd As System.Data.SqlClient.SqlCommand = con.CreateCommand()
-                        cmd.CommandText = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='Kitchen' AND COLUMN_NAME IN ('Printer2','Printer3')"
-                        Using r As System.Data.SqlClient.SqlDataReader = cmd.ExecuteReader()
-                            While r.Read()
-                                Dim a As String = r.GetString(CInt((0))).Trim()
-                                If String.Equals(a, "Printer2", System.StringComparison.OrdinalIgnoreCase) Then
-                                    hasP2 = True
-                                End If
-
-                                If String.Equals(a, "Printer3", System.StringComparison.OrdinalIgnoreCase) Then
-                                    hasP3 = True
-                                End If
-                            End While
-                        End Using
-                    End Using
-
-                    If Not hasP2 Then
-                        Using alter As System.Data.SqlClient.SqlCommand = con.CreateCommand()
-                            alter.CommandText = "ALTER TABLE Kitchen ADD Printer2 VARCHAR(200) NULL"
-                            Try
-                                alter.ExecuteNonQuery()
-                            Catch
-                            End Try
-                        End Using
-                    End If
-
-                    If hasP3 Then
-                        Return
-                    End If
-
-                    Using alter2 As System.Data.SqlClient.SqlCommand = con.CreateCommand()
-                        alter2.CommandText = "ALTER TABLE Kitchen ADD Printer3 VARCHAR(200) NULL"
-                        Try
-                            alter2.ExecuteNonQuery()
-                        Catch
-                        End Try
-                    End Using
-                End Using
-            Catch
-            End Try
+            Using con As System.Data.SqlClient.SqlConnection = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
+                con.Open()
+                RestaurantPOS14.Configuration.DatabaseMaintenance.EnsureCompatibleSchema(con)
+            End Using
         End Sub
 
         Private Sub dgw_RowPostPaint(sender As Object, e As System.Windows.Forms.DataGridViewRowPostPaintEventArgs)

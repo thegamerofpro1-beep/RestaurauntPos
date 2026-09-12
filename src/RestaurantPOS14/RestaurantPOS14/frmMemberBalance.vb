@@ -414,7 +414,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT Member.MemberID,RTRIM(Name),RTRIM(ContactNo),IsNull(sum(Credit)-sum(Debit),0) FROM Member Inner join MemberLedger on Member.MemberID=MemberLedger.MemberID where Name like N'%" & Me.txtMemberName.Text & "%' group by Member.MemberID,name,ContactNo order by Name", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT Member.MemberID,RTRIM(Name),RTRIM(ContactNo),IsNull(sum(Credit)-sum(Debit),0) FROM Member Inner join MemberLedger on Member.MemberID=MemberLedger.MemberID where Name like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtMemberName.Text) & "%' group by Member.MemberID,name,ContactNo order by Name", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()
                 While RestaurantPOS14.ModClasses.rdr.Read()
@@ -431,7 +431,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT Member.MemberID,RTRIM(Name),RTRIM(ContactNo),IsNull(sum(Credit)-sum(Debit),0) FROM Member Inner join MemberLedger on Member.MemberID=MemberLedger.MemberID where Member.MemberID like N'%" & Me.txtMemberID.Text & "%' group by Member.MemberID,name,ContactNo order by Name", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT Member.MemberID,RTRIM(Name),RTRIM(ContactNo),IsNull(sum(Credit)-sum(Debit),0) FROM Member Inner join MemberLedger on Member.MemberID=MemberLedger.MemberID where Member.MemberID like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtMemberID.Text) & "%' group by Member.MemberID,name,ContactNo order by Name", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()
                 While RestaurantPOS14.ModClasses.rdr.Read()
@@ -449,7 +449,7 @@ Namespace RestaurantPOS14
                 If e.KeyCode = System.Windows.Forms.Keys.[Return] Then
                     RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                     RestaurantPOS14.ModClasses.con.Open()
-                    RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT Member.MemberID,RTRIM(Name),RTRIM(ContactNo),IsNull(sum(Credit)-sum(Debit),0) FROM Member Inner join MemberLedger on Member.MemberID=MemberLedger.MemberID where Member.MemberID like N'%" & Me.txtMemberID.Text & "%' group by Member.MemberID,name,ContactNo order by Name", RestaurantPOS14.ModClasses.con)
+                    RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT Member.MemberID,RTRIM(Name),RTRIM(ContactNo),IsNull(sum(Credit)-sum(Debit),0) FROM Member Inner join MemberLedger on Member.MemberID=MemberLedger.MemberID where Member.MemberID like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtMemberID.Text) & "%' group by Member.MemberID,name,ContactNo order by Name", RestaurantPOS14.ModClasses.con)
                     RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                     Me.dgw.Rows.Clear()
                     While RestaurantPOS14.ModClasses.rdr.Read()
@@ -478,6 +478,7 @@ Namespace RestaurantPOS14
                 End If
 
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblSet.Text, "HD", TextCompare:=False) = 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     If Microsoft.VisualBasic.CompilerServices.Operators.ConditionalCompareObjectGreaterEqual(dataGridViewRow.Cells(CInt((3))).Value, Microsoft.VisualBasic.Conversion.Val(Me.lblAmount.Text), TextCompare:=False) Then
                         MyBase.Hide()
@@ -494,6 +495,7 @@ Namespace RestaurantPOS14
                 End If
 
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblSet.Text, "Dine In Billing", TextCompare:=False) = 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow2 As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     If Microsoft.VisualBasic.CompilerServices.Operators.ConditionalCompareObjectGreaterEqual(dataGridViewRow2.Cells(CInt((3))).Value, Microsoft.VisualBasic.Conversion.Val(Me.lblAmount.Text), TextCompare:=False) Then
                         If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblTempAmount.Text, "", TextCompare:=False) = 0 Then
@@ -523,6 +525,7 @@ Namespace RestaurantPOS14
                 End If
 
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblSet.Text, "TA", TextCompare:=False) = 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow3 As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     If Microsoft.VisualBasic.CompilerServices.Operators.ConditionalCompareObjectGreaterEqual(dataGridViewRow3.Cells(CInt((3))).Value, Microsoft.VisualBasic.Conversion.Val(Me.lblAmount.Text), TextCompare:=False) Then
                         If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblTempAmount.Text, "", TextCompare:=False) = 0 Then
@@ -552,6 +555,7 @@ Namespace RestaurantPOS14
                 End If
 
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblSet.Text, "EB", TextCompare:=False) = 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow4 As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     If Microsoft.VisualBasic.CompilerServices.Operators.ConditionalCompareObjectGreaterEqual(dataGridViewRow4.Cells(CInt((3))).Value, Microsoft.VisualBasic.Conversion.Val(Me.lblAmount.Text), TextCompare:=False) Then
                         If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblTempAmount.Text, "", TextCompare:=False) = 0 Then

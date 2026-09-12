@@ -1429,6 +1429,7 @@ Namespace RestaurantPOS14
         Private Sub DataGridView1_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Me.DataGridView1.Rows.Count > 0 Then
+                    If Me.DataGridView1.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView1.SelectedRows(0)
                     Me.txtID.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                     Me.txtDepositerName.Text = dataGridViewRow.Cells(CInt((1))).Value.ToString()
@@ -1473,7 +1474,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT FundDeposit.Id, RTRIM(DepositerName), Amount, FundDeposit.Date, RTRIM(FundDeposit.Notes),RTRIM(AccNo), RTRIM(AccountName),RTRIM(BankName),RTRIM(BranchName),RTRIM(SwiftCode),RTRIM(IFSCCode) from BankBranch,BankAccountRegistration,FundDeposit where BankBranch.ID=BankAccountRegistration.BranchID and FundDeposit.AccNo=BankAccountRegistration.AccountNo and AccNo like N'%" & Me.txtAccNo.Text & "%' order by Date", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT FundDeposit.Id, RTRIM(DepositerName), Amount, FundDeposit.Date, RTRIM(FundDeposit.Notes),RTRIM(AccNo), RTRIM(AccountName),RTRIM(BankName),RTRIM(BranchName),RTRIM(SwiftCode),RTRIM(IFSCCode) from BankBranch,BankAccountRegistration,FundDeposit where BankBranch.ID=BankAccountRegistration.BranchID and FundDeposit.AccNo=BankAccountRegistration.AccountNo and AccNo like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtAccNo.Text) & "%' order by Date", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.DataGridView1.Rows.Clear()
                 While RestaurantPOS14.ModClasses.rdr.Read()

@@ -10,6 +10,8 @@
 /build/fidelity/
 /build/phase2/
 /build/delivery/
+/build/logs/
+/build/validation/
 /build/phase3/*.exe
 /build/phase3/*.pdb
 
@@ -18,3 +20,18 @@
 /RestaurantPos14 offical/
 /RestaurantPos14 offical.zip
 /CRRuntime_32bit_13_0_24.msi
+/installer/prerequisites/
+/output/
+/tmp/
+
+# Machine-local settings and database files must never be published.
+appsettings.json
+settings.json
+*.mdf
+*.ldf
+*.bak
+*.pfx
+*.p12
+*.pem
+.env
+.env.*

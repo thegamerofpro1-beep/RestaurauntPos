@@ -2193,6 +2193,7 @@ Namespace RestaurantPOS14
 
         Private Sub dgw_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             If Me.dgw.Rows.Count > 0 Then
+                If Me.dgw.SelectedRows.Count = 0 Then Return
                 Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                 RestaurantPOS14.My.MyProject.Forms.frmEnterQty.txtQ.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((3))).Value)
                 RestaurantPOS14.My.MyProject.Forms.frmEnterQty.txtCategory.Text = dataGridViewRow.Cells(CInt((16))).Value.ToString()
@@ -2290,7 +2291,7 @@ Namespace RestaurantPOS14
             Dim text As String = "0000"
             Try
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT TOP 1 ID FROM RestaurantPOS_BillingInfoKOT ORDER BY ID DESC", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand(RestaurantPOS14.Billing.UnpaidBillCancellation.LastBillIdSql, RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 If RestaurantPOS14.ModClasses.rdr.HasRows Then
                     RestaurantPOS14.ModClasses.rdr.Read()
@@ -2333,7 +2334,7 @@ Namespace RestaurantPOS14
         Public Sub auto1()
             Try
                 Me.txtBillID.Text = Me.GenerateID1()
-                Me.lblBillNo.Text = "DIB-" & Me.GenerateID1()
+                Me.lblBillNo.Text = "DIB-" & Me.txtBillID.Text
             Catch ex As System.Exception
                 Call System.Windows.Forms.MessageBox.Show(ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
             End Try
@@ -2751,7 +2752,7 @@ Namespace RestaurantPOS14
                 Me.auto1()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_BillingInfoKOT( Id,BillNo, BillDate, GrandTotal,Cash,Change,Operator,PaymentMode,ExchangeRate,CurrencyCode,KOTDiscountPer,KOTDiscountAmt,Member_ID,ODN,Waiter,GiftCardID,GiftCardAmount,LP,LA,CustomerName,PhoneNo,EmailID,TaxType,Card,NoofPerson,DIB_Status,NPPaid,BillType,Tip) Values (" & Me.txtBillID.Text & ",'" & Me.lblBillNo.Text & "',@d1," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCash.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtChange.Text)) & ",@d2,@d3,1,@d4," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtKOTDiscPer.Text)) & ",@d5,@d6,@d7,@d8,@d11,@d12,@d13,@d14,@d15,@d16,@d17,@d18," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCard.Text)) & ",1,@d19,1,'Split Bill'," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtTip.Text)) & ")")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_BillingInfoKOT( Id,BillNo, BillDate, GrandTotal,Cash,Change,Operator,PaymentMode,ExchangeRate,CurrencyCode,KOTDiscountPer,KOTDiscountAmt,Member_ID,ODN,Waiter,GiftCardID,GiftCardAmount,LP,LA,CustomerName,PhoneNo,EmailID,TaxType,Card,NoofPerson,DIB_Status,NPPaid,BillType,Tip) Values (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID.Text, "Record ID") & ",'" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.lblBillNo.Text) & "',@d1," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCash.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtChange.Text)) & ",@d2,@d3,1,@d4," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtKOTDiscPer.Text)) & ",@d5,@d6,@d7,@d8,@d11,@d12,@d13,@d14,@d15,@d16,@d17,@d18," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCard.Text)) & ",1,@d19,1,'Split Bill'," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtTip.Text)) & ")")
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Microsoft.VisualBasic.DateAndTime.Now)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", Me.lblUserVAL.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d3", Me.lblPaymentMode.Text)
@@ -2785,7 +2786,7 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModClasses.con.Close()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into TempRestaurantPOS_BillingInfoKOT( Id,BillNo, BillDate, GrandTotal,Cash,Change,Operator,PaymentMode,ExchangeRate,CurrencyCode,KOTDiscountPer,KOTDiscountAmt,Member_ID,ODN,Waiter,GiftCardID,GiftCardAmount,LP,LA,CustomerName,PhoneNo,EmailID,TaxType,Card) Values (" & Me.txtBillID.Text & ",'" & Me.lblBillNo.Text & "',@d1," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCash.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtChange.Text)) & ",@d2,@d3,1,@d4," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtKOTDiscPer.Text)) & ",@d5,@d6,@d7,@d8,@d11,@d12,@d13,@d14,@d15,@d16,@d17,@d18," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCard.Text)) & ")")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into TempRestaurantPOS_BillingInfoKOT( Id,BillNo, BillDate, GrandTotal,Cash,Change,Operator,PaymentMode,ExchangeRate,CurrencyCode,KOTDiscountPer,KOTDiscountAmt,Member_ID,ODN,Waiter,GiftCardID,GiftCardAmount,LP,LA,CustomerName,PhoneNo,EmailID,TaxType,Card) Values (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID.Text, "Record ID") & ",'" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.lblBillNo.Text) & "',@d1," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCash.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtChange.Text)) & ",@d2,@d3,1,@d4," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtKOTDiscPer.Text)) & ",@d5,@d6,@d7,@d8,@d11,@d12,@d13,@d14,@d15,@d16,@d17,@d18," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCard.Text)) & ")")
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", System.DateTime.Now)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", Me.lblUserVAL.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d3", Me.lblPaymentMode.Text)
@@ -2814,7 +2815,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillKOT(BillID,TableNo,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Category,DishNameArabic) VALUES (" & Me.txtBillID.Text & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillKOT(BillID,TableNo,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Category,DishNameArabic) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID.Text, "Record ID") & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView2.Rows, System.Collections.IEnumerable)
@@ -2855,7 +2856,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into TempRestaurantPOS_OrderedProductBillKOT(BillID,TableNo,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Category,DishNameArabic) VALUES (" & Me.txtBillID.Text & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into TempRestaurantPOS_OrderedProductBillKOT(BillID,TableNo,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Category,DishNameArabic) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID.Text, "Record ID") & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow2 As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView2.Rows, System.Collections.IEnumerable)
@@ -2950,7 +2951,7 @@ Namespace RestaurantPOS14
                         End If
                     Next
 
-                    Dim num2 As Integer = CInt(System.Math.Round(System.Math.Floor(Microsoft.VisualBasic.Conversion.Val(num) / Microsoft.VisualBasic.Conversion.Val(Me.LA))))
+                    Dim num2 As Integer = CInt(System.Math.Round(System.Math.Floor(RestaurantPOS14.ModFunc.SafeDivide(Microsoft.VisualBasic.Conversion.Val(num), Microsoft.VisualBasic.Conversion.Val(Me.LA)))))
                     RestaurantPOS14.ModFunc.LoyaltyCardMemberLedgerSave(System.DateTime.Today, Me.lblBillNo.Text, "Points for dine in billing", CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(num2))), CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.txtLP.Text))), CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.lblMemberID.Text))))
                 End If
 
@@ -3121,28 +3122,14 @@ Namespace RestaurantPOS14
 
         Public Sub OpenCashdrawer()
             Try
-                Dim origString As String = Global.Microsoft.VisualBasic.Strings.ChrW(27) & "p0@@"
-                RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
-                RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = RestaurantPOS14.ModClasses.con.CreateCommand()
-                RestaurantPOS14.ModClasses.cmd.CommandText = "SELECT RTRIM(PrinterName) from POSPrinterSetting where TillID=@d1 and IsEnabled='Yes' and CashDrawer='Enabled'"
-                RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", System.Net.Dns.GetHostName())
-                RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader()
-                If RestaurantPOS14.ModClasses.rdr.Read() Then
-                    Me.s4 = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(RestaurantPOS14.ModClasses.rdr.GetValue(0))
+                Dim errorMessage As String = String.Empty
+                If Not RestaurantPOS14.ModCashDrawer.TryOpenConfiguredDrawer(System.Net.Dns.GetHostName(), errorMessage) AndAlso
+                   Not String.IsNullOrWhiteSpace(errorMessage) Then
+                    Call System.Windows.Forms.MessageBox.Show(errorMessage, "Cash Drawer", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
                 End If
-
-                If RestaurantPOS14.ModClasses.rdr IsNot Nothing Then
-                    RestaurantPOS14.ModClasses.rdr.Close()
-                End If
-
-                If RestaurantPOS14.ModClasses.con.State = System.Data.ConnectionState.Open Then
-                    RestaurantPOS14.ModClasses.con.Close()
-                End If
-
-                RestaurantPOS14.ModCashDrawer.RawPrinter.PrintRaw(Me.s4, origString)
             Catch ex As System.Exception
-                Call System.Windows.Forms.MessageBox.Show(ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Open Cash Drawer from split bill", ex)
+                Call System.Windows.Forms.MessageBox.Show("Cash Drawer could not be opened. " & ex.GetBaseException().Message, "Cash Drawer", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
             End Try
         End Sub
 
@@ -3255,7 +3242,7 @@ Namespace RestaurantPOS14
                         dataGridViewRow2.Cells(CInt((5))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.txtKOTDiscPer.Text) + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((15))).Value)), 4)
                         dataGridViewRow2.Cells(CInt((6))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((4))).Value)) * Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((5))).Value)) / 100.0, 3)
                         Me.num1 = Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((4))).Value)) - Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((6))).Value))
-                        dataGridViewRow2.Cells(CInt((8))).Value = 0
+                        dataGridViewRow2.Cells(CInt((8))).Value = System.Math.Round(Me.num1 - Me.num1 / (1.0 + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((7))).Value)) / 100.0), 3)
                         dataGridViewRow2.Cells(CInt((10))).Value = System.Math.Round(Me.num1 - Me.num1 / (1.0 + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((9))).Value)) / 100.0), 3)
                         dataGridViewRow2.Cells(CInt((12))).Value = 0
                         dataGridViewRow2.Cells(CInt((13))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((4))).Value)) - Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((6))).Value)), 2)
@@ -3266,8 +3253,7 @@ Namespace RestaurantPOS14
                 num = System.Math.Round(num, 2)
                 Me.txtKOTDiscountAmount.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(num)
                 Dim value As Double = Me.GrandTotal_Food1X() - Microsoft.VisualBasic.Conversion.Val(Me.txtLA.Text) - Microsoft.VisualBasic.Conversion.Val(Me.txtGFA.Text) + Microsoft.VisualBasic.Conversion.Val(Me.txtTip.Text)
-                value = System.Math.Round(value, 2)
-                Me.txtGrandTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(value)
+                RestaurantPOS14.Billing.PayableTotal.Apply(Me.txtGrandTotal, value, String.Equals(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtColoredCustomerDisplay.Text, "Yes", StringComparison.OrdinalIgnoreCase))
                 Dim num2 As Double = Microsoft.VisualBasic.Conversion.Val(Me.txtCash.Text) + Microsoft.VisualBasic.Conversion.Val(Me.txtCard.Text) - Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal.Text)
                 num2 = System.Math.Round(num2, 2)
                 If num2 < 0.0 Then
@@ -3293,7 +3279,7 @@ Namespace RestaurantPOS14
                 num3 += Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow3.Cells(CInt((4))).Value))
             Next
 
-            Dim num4 As Double = Microsoft.VisualBasic.Conversion.Val(Me.txtKOTDiscountAmount.Text) * 100.0 / Microsoft.VisualBasic.Conversion.Val(num3)
+            Dim num4 As Double = RestaurantPOS14.ModFunc.SafeDivide(Microsoft.VisualBasic.Conversion.Val(Me.txtKOTDiscountAmount.Text) * 100.0, Microsoft.VisualBasic.Conversion.Val(num3))
             num4 = System.Math.Round(num4, 4)
             Me.txtKOTDiscPer.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(num4)
             If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.txtTaxType.Text, "Inclusive", TextCompare:=False) <> 0 Then
@@ -3310,7 +3296,7 @@ Namespace RestaurantPOS14
                     dataGridViewRow5.Cells(CInt((5))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.txtKOTDiscPer.Text) + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((15))).Value)), 4)
                     dataGridViewRow5.Cells(CInt((6))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((4))).Value)) * Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((5))).Value)) / 100.0, 3)
                     num4 = Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((4))).Value)) - Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((6))).Value))
-                    dataGridViewRow5.Cells(CInt((8))).Value = 0
+                    dataGridViewRow5.Cells(CInt((8))).Value = System.Math.Round(num4 - num4 / (1.0 + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((7))).Value)) / 100.0), 3)
                     dataGridViewRow5.Cells(CInt((10))).Value = System.Math.Round(num4 - num4 / (1.0 + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((9))).Value)) / 100.0), 3)
                     dataGridViewRow5.Cells(CInt((12))).Value = 0
                     dataGridViewRow5.Cells(CInt((13))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((4))).Value)) - Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((6))).Value)), 2)
@@ -3318,8 +3304,7 @@ Namespace RestaurantPOS14
             End If
 
             Dim value2 As Double = Me.GrandTotal_Food1X() - Microsoft.VisualBasic.Conversion.Val(Me.txtLA.Text) - Microsoft.VisualBasic.Conversion.Val(Me.txtGFA.Text) + Microsoft.VisualBasic.Conversion.Val(Me.txtTip.Text)
-            value2 = System.Math.Round(value2, 2)
-            Me.txtGrandTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(value2)
+            RestaurantPOS14.Billing.PayableTotal.Apply(Me.txtGrandTotal, value2, String.Equals(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtColoredCustomerDisplay.Text, "Yes", StringComparison.OrdinalIgnoreCase))
             Dim num5 As Double = Microsoft.VisualBasic.Conversion.Val(Me.txtCash.Text) + Microsoft.VisualBasic.Conversion.Val(Me.txtCard.Text) - Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal.Text)
             num5 = System.Math.Round(num5, 2)
             If num5 < 0.0 Then

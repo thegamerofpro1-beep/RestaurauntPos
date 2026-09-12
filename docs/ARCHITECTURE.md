@@ -41,7 +41,9 @@ Localization and editable receipt-template rendering remain extension seams unti
 ## Compatibility boundaries
 
 - The public static connection field remains in place for decompiled callers.
-- No database schema is created automatically. `dbo.ApplicationSettings` is optional and read-only from this layer.
+- A database created by either original SQL script is upgraded transactionally before login. Versioned, idempotent migrations add only the current app's compatibility tables and nullable columns; existing sales rows are retained.
+- `dbo.POSSchemaMigrations` records the four applied schema migrations, and an application lock prevents two terminals from upgrading the same database concurrently.
+- `dbo.ApplicationSettings` is created by the compatibility migration and remains read-only from the configuration-provider layer.
 - Existing legacy files and registry values are imported but not deleted.
 - New SQL setup saves through DPAPI and splash startup recognizes the protected connection; plaintext `SQLSettings.dat` is migration-only.
 - Missing SQL settings-table access degrades to lower configuration layers and emits a diagnostic.

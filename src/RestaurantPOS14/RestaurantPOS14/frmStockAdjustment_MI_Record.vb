@@ -536,6 +536,7 @@ Namespace RestaurantPOS14
         Private Sub dgw_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Me.dgw.Rows.Count > 0 AndAlso Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblSet.Text, "SA", TextCompare:=False) = 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     Call RestaurantPOS14.My.MyProject.Forms.frmStockAdjustment_MI.Show()
                     MyBase.Hide()
@@ -626,7 +627,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT  StockAdjustment_MI.SA_ID, StockAdjustment_MI.Date, RTRIM(Dish), RTRIM(StockAdjustment_MI.AdjustmentType),StockAdjustment_MI.Qty, RTRIM(StockAdjustment_MI.Reason) FROM StockAdjustment_MI INNER JOIN Dish ON StockAdjustment_MI.Dish = Dish.DishName where DishName like N'%" & Me.txtProductName.Text & "%' order by Date", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT  StockAdjustment_MI.SA_ID, StockAdjustment_MI.Date, RTRIM(Dish), RTRIM(StockAdjustment_MI.AdjustmentType),StockAdjustment_MI.Qty, RTRIM(StockAdjustment_MI.Reason) FROM StockAdjustment_MI INNER JOIN Dish ON StockAdjustment_MI.Dish = Dish.DishName where DishName like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtProductName.Text) & "%' order by Date", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()
                 While RestaurantPOS14.ModClasses.rdr.Read()

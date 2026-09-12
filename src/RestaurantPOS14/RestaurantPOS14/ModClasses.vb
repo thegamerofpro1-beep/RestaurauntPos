@@ -12,11 +12,11 @@ Namespace RestaurantPOS14
 
         Public Shared cmd1 As System.Data.SqlClient.SqlCommand
 
-        Public Shared cmd2 As System.Data.SqlClient.SqlCommand
+        Public Shared secondaryCommand As System.Data.SqlClient.SqlCommand
 
-        Public Shared cmd3 As System.Data.SqlClient.SqlCommand
+        Public Shared tertiaryCommand As System.Data.SqlClient.SqlCommand
 
-        Public Shared cmd4 As System.Data.SqlClient.SqlCommand
+        Public Shared quaternaryCommand As System.Data.SqlClient.SqlCommand
 
         Public Shared rdr As System.Data.SqlClient.SqlDataReader
 

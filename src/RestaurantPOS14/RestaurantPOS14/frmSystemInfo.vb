@@ -967,8 +967,13 @@ Namespace RestaurantPOS14
             AddHandler MyBase.Closed, AddressOf Me.frmSystemInfo_Closed
             AddHandler MyBase.Load, AddressOf Me.MainForm_Load
             Call RestaurantPOS14.frmSystemInfo.__ENCAddToList(Me)
-            Me.h = System.Net.Dns.GetHostByName(System.Net.Dns.GetHostName())
             Me.InitializeComponent()
+            Try
+                Me.h = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName())
+            Catch ex As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Resolve local host information", ex)
+                Me.h = Nothing
+            End Try
         End Sub
 
         <System.Diagnostics.DebuggerNonUserCodeAttribute>
@@ -1057,12 +1062,20 @@ Namespace RestaurantPOS14
                 Next
             Catch ex As System.Exception
                 Call Microsoft.VisualBasic.Interaction.MsgBox(ex.Message, Microsoft.VisualBasic.MsgBoxStyle.Critical, "Error!")
-                Call Microsoft.VisualBasic.CompilerServices.ProjectData.EndApp()
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Read system hardware information", ex)
             End Try
 
             Try
-                Me.ipaddress = CType(Me.h.AddressList.GetValue(CInt((0))), System.Net.IPAddress).ToString()
                 Me.hostname = System.Net.Dns.GetHostName()
+                Me.ipaddress = String.Empty
+                If Me.h IsNot Nothing AndAlso Me.h.AddressList IsNot Nothing Then
+                    For Each address In Me.h.AddressList
+                        If address.AddressFamily = System.Net.Sockets.AddressFamily.InterNetwork AndAlso Not System.Net.IPAddress.IsLoopback(address) Then
+                            Me.ipaddress = address.ToString()
+                            Exit For
+                        End If
+                    Next
+                End If
                 Me.TextBox9.Text = Me.ipaddress
                 Me.TextBox1.Text = Me.hostname
                 Me.TextBox2.Text = System.Environment.UserName
@@ -1075,7 +1088,8 @@ Namespace RestaurantPOS14
                 Next
 
                 Me.TextBox10.Text = Me.GetPublicIP().ToString()
-            Catch __unusedException1__ As System.Exception
+            Catch ex As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Load network system information", ex)
             End Try
 
             Me.TextBox3.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(RestaurantPOS14.My.MyProject.Computer.Info.AvailablePhysicalMemory)
@@ -1093,21 +1107,23 @@ Namespace RestaurantPOS14
         End Sub
 
         Public Function GetPublicIP() As String
-            Dim text As String = ""
-            Using response As System.Net.WebResponse = System.Net.WebRequest.Create(CStr(("http://checkip.dyndns.org/"))).GetResponse()
+            Dim uri = RestaurantPOS14.Security.ExternalResourceGuard.RequireHttpUri("https://api.ipify.org", False)
+            Dim request = RestaurantPOS14.Security.ExternalResourceGuard.CreateRequest(uri, 5000)
+            Dim text As String
+            Using response As System.Net.WebResponse = request.GetResponse()
                 Using streamReader As System.IO.StreamReader = New System.IO.StreamReader(response.GetResponseStream())
-                    text = streamReader.ReadToEnd()
+                    text = streamReader.ReadToEnd().Trim()
                 End Using
             End Using
-
-            Dim num As Integer = text.IndexOf("Address: ") + 9
-            Dim num2 As Integer = text.LastIndexOf("</body>")
-            Return text.Substring(num, num2 - num)
+            Dim address As System.Net.IPAddress = Nothing
+            If Not System.Net.IPAddress.TryParse(text, address) Then Throw New System.Net.ProtocolViolationException("The public IP service returned an invalid address.")
+            Return address.ToString()
         End Function
 
         Private Sub SaveToFileToolStripMenuItem_Click(sender As Object, e As System.EventArgs)
+            Dim tempFilePath = System.IO.Path.GetTempFileName()
             Try
-                Dim streamWriter As System.IO.StreamWriter = New System.IO.StreamWriter(New System.IO.FileStream("temp.txt", System.IO.FileMode.Create, System.IO.FileAccess.Write))
+                Using streamWriter As New System.IO.StreamWriter(New System.IO.FileStream(tempFilePath, System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None))
                 streamWriter.Write("****** Processor Information ******")
                 streamWriter.WriteLine()
                 streamWriter.WriteLine()
@@ -1190,8 +1206,8 @@ Namespace RestaurantPOS14
                 streamWriter.WriteLine("Date / Time")
                 streamWriter.WriteLine(Me.TextBox12.Text)
                 streamWriter.WriteLine()
-                streamWriter.Flush()
-                streamWriter.Close()
+                    streamWriter.Flush()
+                End Using
                 Dim saveFileDialog As System.Windows.Forms.SaveFileDialog = Me.SaveFileDialog1
                 saveFileDialog.AddExtension = True
                 saveFileDialog.OverwritePrompt = True
@@ -1202,10 +1218,17 @@ Namespace RestaurantPOS14
                 saveFileDialog.FilterIndex = 1
                 saveFileDialog.Title = "SystemInfo - Save file"
                 If saveFileDialog.ShowDialog() = System.Windows.Forms.DialogResult.OK Then
-                    Call RestaurantPOS14.My.MyProject.Computer.FileSystem.MoveFile("temp.txt", saveFileDialog.FileName, overwrite:=True)
+                    Call RestaurantPOS14.My.MyProject.Computer.FileSystem.CopyFile(tempFilePath, saveFileDialog.FileName, overwrite:=True)
                 End If
             Catch ex As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Save system information", ex)
                 Call Microsoft.VisualBasic.Interaction.MsgBox(ex.Message, Microsoft.VisualBasic.MsgBoxStyle.Critical, "Error!")
+            Finally
+                Try
+                    If System.IO.File.Exists(tempFilePath) Then System.IO.File.Delete(tempFilePath)
+                Catch ex As System.Exception
+                    RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Delete temporary system information file", ex)
+                End Try
             End Try
         End Sub
 

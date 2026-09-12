@@ -1029,7 +1029,7 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModClasses.con.Close()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into Voucher_OtherDetails(VoucherID,Particulars,Amount,Note) VALUES (" & Me.txtVoucherID.Text & ",@d1,@d2,@d3)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into Voucher_OtherDetails(VoucherID,Particulars,Amount,Note) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtVoucherID.Text, "Record ID") & ",@d1,@d2,@d3)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView1.Rows, System.Collections.IEnumerable)
@@ -1059,7 +1059,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("delete from Voucher where ID=" & Me.txtVoucherID.Text)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("delete from Voucher where ID=" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtVoucherID.Text, "Record ID"))
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 Dim num As Integer = RestaurantPOS14.ModClasses.cmd.ExecuteNonQuery()
                 If RestaurantPOS14.ModClasses.con.State = System.Data.ConnectionState.Open Then
@@ -1122,13 +1122,13 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModClasses.con.Close()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("delete from Voucher_OtherDetails where VoucherID=" & Me.txtVoucherID.Text)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("delete from Voucher_OtherDetails where VoucherID=" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtVoucherID.Text, "Record ID"))
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.ExecuteNonQuery()
                 RestaurantPOS14.ModClasses.con.Close()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into Voucher_OtherDetails(VoucherID,Particulars,Amount,Note) VALUES (" & Me.txtVoucherID.Text & ",@d1,@d2,@d3)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into Voucher_OtherDetails(VoucherID,Particulars,Amount,Note) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtVoucherID.Text, "Record ID") & ",@d1,@d2,@d3)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView1.Rows, System.Collections.IEnumerable)

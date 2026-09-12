@@ -1617,23 +1617,23 @@ Namespace RestaurantPOS14
         End Sub
 
         Private Sub btnNotepad_ClickButtonArea(Sender As Object, e As System.Windows.Forms.MouseEventArgs)
-            Call System.Diagnostics.Process.Start("Notepad.exe")
+            RestaurantPOS14.Security.ExternalResourceGuard.StartTrustedWindowsApplication("Notepad.exe", "Notepad")
         End Sub
 
         Private Sub btnWordpad_ClickButtonArea(Sender As Object, e As System.Windows.Forms.MouseEventArgs)
-            Call System.Diagnostics.Process.Start("wordpad.exe")
+            RestaurantPOS14.Security.ExternalResourceGuard.StartTrustedWindowsApplication("wordpad.exe", "WordPad")
         End Sub
 
         Private Sub btnCalculator_ClickButtonArea(Sender As Object, e As System.Windows.Forms.MouseEventArgs)
-            Call System.Diagnostics.Process.Start("Calc.exe")
+            RestaurantPOS14.Security.ExternalResourceGuard.StartTrustedWindowsApplication("Calc.exe", "Calculator")
         End Sub
 
         Private Sub btnMSWord_ClickButtonArea(Sender As Object, e As System.Windows.Forms.MouseEventArgs)
-            Call System.Diagnostics.Process.Start("WinWord.exe")
+            RestaurantPOS14.Security.ExternalResourceGuard.StartTrustedWindowsApplication("WinWord.exe", "Microsoft Word")
         End Sub
 
         Private Sub btnPaint_ClickButtonArea(Sender As Object, e As System.Windows.Forms.MouseEventArgs)
-            Call System.Diagnostics.Process.Start("MsPaint.exe")
+            RestaurantPOS14.Security.ExternalResourceGuard.StartTrustedWindowsApplication("MsPaint.exe", "Paint")
         End Sub
 
         Private Sub btnOSKeyboard_ClickButtonArea(Sender As Object, e As System.Windows.Forms.MouseEventArgs)
@@ -1645,7 +1645,7 @@ Namespace RestaurantPOS14
         End Sub
 
         Private Sub btnTaskManager_ClickButtonArea(Sender As Object, e As System.Windows.Forms.MouseEventArgs)
-            Call System.Diagnostics.Process.Start("TaskMgr.exe")
+            RestaurantPOS14.Security.ExternalResourceGuard.StartTrustedWindowsApplication("TaskMgr.exe", "Task Manager")
         End Sub
 
         <System.Diagnostics.DebuggerNonUserCodeAttribute>

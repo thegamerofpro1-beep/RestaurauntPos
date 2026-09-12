@@ -121,21 +121,19 @@ Namespace RestaurantPOS14
 
         Public Sub Reset()
             Me.btnSave.Enabled = RestaurantPOS14.ModFunc.IsSaveAllowed(Me.lblUser.Text, "Settings")
-            Me.EnsureSchema()
+            Try
+                Me.EnsureSchema()
+            Catch ex As System.Exception
+                Call System.Windows.Forms.MessageBox.Show("Advanced Setting storage could not be upgraded." & System.Environment.NewLine & System.Environment.NewLine & ex.Message, "Advanced Setting", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
+            End Try
             Me.LoadFlags()
         End Sub
 
         Private Sub EnsureSchema()
-            Try
-                Using con As System.Data.SqlClient.SqlConnection = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
-                    con.Open()
-                    Using cmd As System.Data.SqlClient.SqlCommand = New System.Data.SqlClient.SqlCommand("IF OBJECT_ID('dbo.OtherSetting') IS NULL BEGIN CREATE TABLE [dbo].[OtherSetting] ([EnableChecklist] [nchar](3) NULL, [EnableMyInvois] [nchar](3) NULL, [MyInvoisBaseUrl] [nvarchar](512) NULL, [MyInvoisClientId] [nvarchar](128) NULL, [MyInvoisClientSecret] [nvarchar](256) NULL, [MyInvoisEnvironment] [nchar](20) NULL); END;IF COL_LENGTH('dbo.OtherSetting','EnableChecklist') IS NULL ALTER TABLE [dbo].[OtherSetting] ADD [EnableChecklist] [nchar](3) NULL;IF COL_LENGTH('dbo.OtherSetting','EnableMyInvois') IS NULL ALTER TABLE [dbo].[OtherSetting] ADD [EnableMyInvois] [nchar](3) NULL;IF COL_LENGTH('dbo.OtherSetting','MyInvoisBaseUrl') IS NULL ALTER TABLE [dbo].[OtherSetting] ADD [MyInvoisBaseUrl] [nvarchar](512) NULL;IF COL_LENGTH('dbo.OtherSetting','MyInvoisClientId') IS NULL ALTER TABLE [dbo].[OtherSetting] ADD [MyInvoisClientId] [nvarchar](128) NULL;IF COL_LENGTH('dbo.OtherSetting','MyInvoisClientSecret') IS NULL ALTER TABLE [dbo].[OtherSetting] ADD [MyInvoisClientSecret] [nvarchar](256) NULL;IF COL_LENGTH('dbo.OtherSetting','MyInvoisEnvironment') IS NULL ALTER TABLE [dbo].[OtherSetting] ADD [MyInvoisEnvironment] [nchar](20) NULL;IF NOT EXISTS (SELECT 1 FROM [dbo].[OtherSetting]) INSERT INTO [dbo].[OtherSetting] (EnableChecklist, EnableMyInvois, MyInvoisBaseUrl, MyInvoisClientId, MyInvoisClientSecret, MyInvoisEnvironment) VALUES ('No','No','https://preprod-api.myinvois.hasil.gov.my','','','Sandbox');", con)
-                        cmd.ExecuteNonQuery()
-                    End Using
-                End Using
-
-            Catch
-            End Try
+            Using con As System.Data.SqlClient.SqlConnection = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
+                con.Open()
+                RestaurantPOS14.Configuration.DatabaseMaintenance.EnsureCompatibleSchema(con)
+            End Using
         End Sub
 
         Private Sub LoadFlags()
@@ -183,6 +181,7 @@ Namespace RestaurantPOS14
 
                 Using con As System.Data.SqlClient.SqlConnection = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                     con.Open()
+                    RestaurantPOS14.Configuration.DatabaseMaintenance.EnsureCompatibleSchema(con)
                     Dim affected As Integer = 0
                     Using cmd As System.Data.SqlClient.SqlCommand = New System.Data.SqlClient.SqlCommand("UPDATE OtherSetting SET EnableChecklist=@c, EnableMyInvois=@m, MyInvoisBaseUrl=@u, MyInvoisClientId=@ci, MyInvoisClientSecret=@cs, MyInvoisEnvironment=@e", con)
                         cmd.Parameters.AddWithValue("@c", If(Me.chkChecklist.Checked, "Yes", "No"))

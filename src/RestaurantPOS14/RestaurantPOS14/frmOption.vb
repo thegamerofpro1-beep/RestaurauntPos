@@ -310,62 +310,66 @@ Namespace RestaurantPOS14
         <System.Runtime.CompilerServices.MethodImplAttribute(System.Runtime.CompilerServices.MethodImplOptions.NoInlining Or System.Runtime.CompilerServices.MethodImplOptions.NoOptimization)>
         Private Sub btnClose_Click(sender As Object, e As System.EventArgs)
             Me.ClearCustomerDisplay()
-            Call Microsoft.VisualBasic.CompilerServices.ProjectData.EndApp()
+            RestaurantPOS14.Diagnostics.ApplicationLifecycle.ExitApplication()
         End Sub
 
         Private Sub btnBackOffice_Click(sender As Object, e As System.EventArgs)
+            Dim backOffice = RestaurantPOS14.My.MyProject.Forms.frmBackOffice
+            backOffice.lblUser.Text = Me.lblUser.Text
+            backOffice.lblUserType.Text = Me.lblUserType.Text
+            Me.ConfigureBackOfficePermissions(backOffice)
+
             If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblUserType.Text, "Super Admin", TextCompare:=False) = 0 Then
-                RestaurantPOS14.My.MyProject.Forms.frmBackOffice.lblUser.Text = Me.lblUser.Text
-                RestaurantPOS14.My.MyProject.Forms.frmBackOffice.lblUserType.Text = Me.lblUserType.Text
-                Me.Check()
-                RestaurantPOS14.My.MyProject.Forms.frmBackOffice.btnRegistration.Enabled = True
-                RestaurantPOS14.My.MyProject.Forms.frmBackOffice.btnAttendance.Enabled = True
-                RestaurantPOS14.My.MyProject.Forms.frmBackOffice.btnEmployeeSession.Enabled = True
-                RestaurantPOS14.My.MyProject.Forms.frmBackOffice.btnLogs.Enabled = True
-                MyBase.Hide()
-                Call RestaurantPOS14.My.MyProject.Forms.frmBackOffice.Show()
+                backOffice.btnRegistration.Enabled = True
+                backOffice.btnAttendance.Enabled = True
+                backOffice.btnEmployeeSession.Enabled = True
+                backOffice.btnLogs.Enabled = True
             Else
-                RestaurantPOS14.My.MyProject.Forms.frmBackOffice.lblUser.Text = Me.lblUser.Text
-                RestaurantPOS14.My.MyProject.Forms.frmBackOffice.lblUserType.Text = Me.lblUserType.Text
-                Me.Check()
-                RestaurantPOS14.My.MyProject.Forms.frmBackOffice.btnRegistration.Enabled = False
-                RestaurantPOS14.My.MyProject.Forms.frmBackOffice.btnAttendance.Enabled = False
-                RestaurantPOS14.My.MyProject.Forms.frmBackOffice.btnEmployeeSession.Enabled = False
-                RestaurantPOS14.My.MyProject.Forms.frmBackOffice.btnLogs.Enabled = False
-                MyBase.Hide()
-                Call RestaurantPOS14.My.MyProject.Forms.frmBackOffice.Show()
+                backOffice.btnRegistration.Enabled = False
+                backOffice.btnAttendance.Enabled = False
+                backOffice.btnEmployeeSession.Enabled = False
+                backOffice.btnLogs.Enabled = False
             End If
+
+            MyBase.Hide()
+            backOffice.Show()
         End Sub
 
         Private Sub btnFrontOffice_Click(sender As Object, e As System.EventArgs)
-            RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.lblUserType.Text = Me.lblUserType.Text
-            RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.lblUser.Text = Me.lblUser.Text
-            RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnOpenCashDrawer.Enabled = True
-            RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnPOS.Enabled = True
-            RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnClockOut.Enabled = True
-            RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnWorkPeriod.Enabled = True
-            RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnReport.Enabled = True
+            Dim frontOffice = RestaurantPOS14.My.MyProject.Forms.frmFrontOffice
+            frontOffice.lblUserType.Text = Me.lblUserType.Text
+            frontOffice.lblUser.Text = Me.lblUser.Text
+            frontOffice.btnOpenCashDrawer.Enabled = True
+            frontOffice.btnPOS.Enabled = True
+            frontOffice.btnClockOut.Enabled = True
+            frontOffice.btnKitchenDisplay.Enabled = True
+            frontOffice.btnWorkPeriod.Enabled = True
+            frontOffice.btnReport.Enabled = True
             MyBase.Hide()
-            Call RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.Show()
+            frontOffice.Show()
         End Sub
 
         Public Sub Check()
+            Me.ConfigureBackOfficePermissions(RestaurantPOS14.My.MyProject.Forms.frmBackOffice)
+        End Sub
+
+        Private Sub ConfigureBackOfficePermissions(backOffice As RestaurantPOS14.frmBackOffice)
             If RestaurantPOS14.ModFunc.IsViewAllowed(Me.lblUser.Text, "POS Report") Then
-                RestaurantPOS14.My.MyProject.Forms.frmBackOffice.btnPOSReport.Enabled = True
+                backOffice.btnPOSReport.Enabled = True
             Else
-                RestaurantPOS14.My.MyProject.Forms.frmBackOffice.btnPOSReport.Enabled = False
+                backOffice.btnPOSReport.Enabled = False
             End If
 
             If RestaurantPOS14.ModFunc.IsViewAllowed(Me.lblUser.Text, "Work Period Report") Then
-                RestaurantPOS14.My.MyProject.Forms.frmBackOffice.btnWorkPeriodReport.Enabled = True
+                backOffice.btnWorkPeriodReport.Enabled = True
             Else
-                RestaurantPOS14.My.MyProject.Forms.frmBackOffice.btnWorkPeriodReport.Enabled = False
+                backOffice.btnWorkPeriodReport.Enabled = False
             End If
 
             If RestaurantPOS14.ModFunc.IsViewAllowed(Me.lblUser.Text, "Accounting Report") Then
-                RestaurantPOS14.My.MyProject.Forms.frmBackOffice.btnAccountingReports.Enabled = True
+                backOffice.btnAccountingReports.Enabled = True
             Else
-                RestaurantPOS14.My.MyProject.Forms.frmBackOffice.btnAccountingReports.Enabled = False
+                backOffice.btnAccountingReports.Enabled = False
             End If
         End Sub
 

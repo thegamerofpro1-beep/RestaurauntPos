@@ -361,7 +361,8 @@ Namespace RestaurantPOS14
             Try
                 If Not Me.DBConnectionStatus() Then
                     Call System.Windows.Forms.MessageBox.Show("Failed to connect with Database", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
-                    Call Microsoft.VisualBasic.CompilerServices.ProjectData.EndApp()
+                    RestaurantPOS14.Diagnostics.ApplicationLifecycle.ExitApplication()
+                    Return
                 End If
 
                 Me.flpOrders.Controls.Clear()
@@ -490,12 +491,15 @@ Namespace RestaurantPOS14
                     RestaurantPOS14.ModClasses.cmd.Dispose()
                     AddHandler button.Click, AddressOf Me.ButtonDineIn_Click
                 Next
-            Catch __unusedException1__ As System.Exception
-                Call Microsoft.VisualBasic.CompilerServices.ProjectData.EndApp()
+            Catch ex As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Load KDS orders", ex)
+                RestaurantPOS14.Diagnostics.ApplicationLifecycle.ExitApplication()
             Finally
-                RestaurantPOS14.ModClasses.con.Close()
-                RestaurantPOS14.ModClasses.con.Dispose()
-                RestaurantPOS14.ModClasses.cmd.Dispose()
+                If RestaurantPOS14.ModClasses.con IsNot Nothing Then
+                    RestaurantPOS14.ModClasses.con.Close()
+                    RestaurantPOS14.ModClasses.con.Dispose()
+                End If
+                If RestaurantPOS14.ModClasses.cmd IsNot Nothing Then RestaurantPOS14.ModClasses.cmd.Dispose()
             End Try
         End Sub
 

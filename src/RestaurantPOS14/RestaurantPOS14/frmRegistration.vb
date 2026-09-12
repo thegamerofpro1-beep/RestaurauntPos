@@ -1149,7 +1149,7 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()
                 While RestaurantPOS14.ModClasses.rdr.Read()
-                    Me.dgw.Rows.Add(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(0)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(1)), RestaurantPOS14.ModFunc.Decrypt(Microsoft.VisualBasic.CompilerServices.Conversions.ToString(RestaurantPOS14.ModClasses.rdr(2))), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(3)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(4)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(5)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(6)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(7)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(8)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(9)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(10)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(11)))
+                    Me.dgw.Rows.Add(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(0)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(1)), Microsoft.VisualBasic.CompilerServices.Conversions.ToString(RestaurantPOS14.ModClasses.rdr(2)).Trim(), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(3)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(4)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(5)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(6)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(7)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(8)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(9)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(10)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr(11)))
                 End While
 
                 RestaurantPOS14.ModClasses.con.Close()
@@ -1172,12 +1172,14 @@ Namespace RestaurantPOS14
         Private Sub dgw_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Me.dgw.Rows.Count > 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     Me.txtUserID.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                     Me.TextBox1.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                     Me.cmbUserType.Text = dataGridViewRow.Cells(CInt((1))).Value.ToString()
-                    Me.txtPassword.Text = dataGridViewRow.Cells(CInt((2))).Value.ToString()
-                    Me.txtPIN.Text = dataGridViewRow.Cells(CInt((2))).Value.ToString()
+                    Dim storedPin = dataGridViewRow.Cells(CInt((2))).Value.ToString().Trim()
+                    Me.txtPIN.Text = storedPin
+                    Me.txtPassword.Text = If(RestaurantPOS14.Security.PinSecurity.IsStrongHash(storedPin), "••••", RestaurantPOS14.ModFunc.Decrypt(storedPin))
                     Me.txtName.Text = dataGridViewRow.Cells(CInt((3))).Value.ToString()
                     Me.txtContactNo.Text = dataGridViewRow.Cells(CInt((5))).Value.ToString()
                     Me.txtEmailID.Text = dataGridViewRow.Cells(CInt((4))).Value.ToString()
@@ -1295,19 +1297,11 @@ Namespace RestaurantPOS14
                     Me.st2 = "No"
                 End If
 
-                If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.txtPassword.Text, Me.txtPIN.Text, TextCompare:=False) <> 0 Then
-                    RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
-                    RestaurantPOS14.ModClasses.con.Open()
-                    RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("select Password from registration where Password=@d1")
-                    RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", RestaurantPOS14.ModFunc.Encrypt(Me.txtPassword.Text))
-                    RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
-                    RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader()
-                    If RestaurantPOS14.ModClasses.rdr.Read() Then
+                Dim pinChanged = Not (RestaurantPOS14.Security.PinSecurity.IsStrongHash(Me.txtPIN.Text) AndAlso Me.txtPassword.Text = "••••") AndAlso Not RestaurantPOS14.Security.PinSecurity.VerifyPin(Me.txtPassword.Text, Me.txtPIN.Text)
+                If pinChanged Then
+                    RestaurantPOS14.Security.PinSecurity.ValidatePin(Me.txtPassword.Text)
+                    If Me.IsPinInUse(Me.txtPassword.Text, Me.TextBox1.Text) Then
                         Call System.Windows.Forms.MessageBox.Show("PIN is already in used", "Input Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
-                        If RestaurantPOS14.ModClasses.rdr IsNot Nothing Then
-                            RestaurantPOS14.ModClasses.rdr.Close()
-                        End If
-
                         Return
                     End If
                 End If
@@ -1370,7 +1364,7 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Me.txtUserID.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", Me.cmbUserType.Text)
-                RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d3", RestaurantPOS14.ModFunc.Encrypt(Me.txtPassword.Text.Trim()))
+                RestaurantPOS14.ModClasses.cmd.Parameters.Add("@d3", System.Data.SqlDbType.NChar, 50).Value = If(pinChanged, RestaurantPOS14.Security.PinSecurity.HashPin(Me.txtPassword.Text.Trim()), Me.txtPIN.Text.Trim())
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d4", Me.txtName.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d5", Me.txtContactNo.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d6", Me.txtEmailID.Text)
@@ -1472,24 +1466,13 @@ Namespace RestaurantPOS14
                 End If
 
                 RestaurantPOS14.ModClasses.con.Close()
-                RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
-                RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("select password from registration where Password=@d1")
-                RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", RestaurantPOS14.ModFunc.Encrypt(Me.txtPassword.Text))
-                RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
-                RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader()
-                If RestaurantPOS14.ModClasses.rdr.Read() Then
+                RestaurantPOS14.Security.PinSecurity.ValidatePin(Me.txtPassword.Text)
+                If Me.IsPinInUse(Me.txtPassword.Text, Nothing) Then
                     Call System.Windows.Forms.MessageBox.Show("Pin is already in use for other user", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
                     Me.txtPassword.Text = ""
                     Me.txtPassword.Focus()
-                    If RestaurantPOS14.ModClasses.rdr IsNot Nothing Then
-                        RestaurantPOS14.ModClasses.rdr.Close()
-                    End If
-
                     Return
                 End If
-
-                RestaurantPOS14.ModClasses.con.Close()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
                 RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("select CardNo from registration where CardNo=@d1 and CardNo is Not NULL and CardNo <> ''")
@@ -1526,7 +1509,7 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Me.txtUserID.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", Me.cmbUserType.Text)
-                RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d3", RestaurantPOS14.ModFunc.Encrypt(Me.txtPassword.Text.Trim()))
+                RestaurantPOS14.ModClasses.cmd.Parameters.Add("@d3", System.Data.SqlDbType.NChar, 50).Value = RestaurantPOS14.Security.PinSecurity.HashPin(Me.txtPassword.Text.Trim())
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d4", Me.txtName.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d5", Me.txtContactNo.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d6", Me.txtEmailID.Text)
@@ -1554,7 +1537,7 @@ Namespace RestaurantPOS14
         Private Sub dgw_CellFormatting(sender As Object, e As System.Windows.Forms.DataGridViewCellFormattingEventArgs)
             If e.ColumnIndex = 2 AndAlso e.Value IsNot Nothing Then
                 Me.dgw.Rows(CInt((e.RowIndex))).Tag = System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(e.Value)
-                e.Value = New String("●"c, e.Value.ToString().Length)
+                e.Value = New String("●"c, 4)
             End If
         End Sub
 
@@ -1604,6 +1587,7 @@ Namespace RestaurantPOS14
         End Sub
 
         Private Sub txtPassword_Validating(sender As Object, e As System.ComponentModel.CancelEventArgs)
+            If RestaurantPOS14.Security.PinSecurity.IsStrongHash(Me.txtPIN.Text) AndAlso Me.txtPassword.Text = "••••" Then Return
             If Me.txtPassword.Text.Length < 4 Then
                 Call System.Windows.Forms.MessageBox.Show("PIN must be of 4 digits", "Input Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
                 Me.txtPassword.Text = ""
@@ -1612,6 +1596,23 @@ Namespace RestaurantPOS14
                 Me.txtPassword.Text = ""
             End If
         End Sub
+
+        Private Function IsPinInUse(pin As String, excludedUserId As String) As Boolean
+            Using connection As New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
+                connection.Open()
+                Using command As New System.Data.SqlClient.SqlCommand("SELECT RTRIM(UserID), RTRIM(Password) FROM Registration", connection)
+                    Using reader = command.ExecuteReader()
+                        While reader.Read()
+                            Dim userId = If(reader.IsDBNull(0), String.Empty, reader.GetString(0).Trim())
+                            If Not String.IsNullOrWhiteSpace(excludedUserId) AndAlso userId.Equals(excludedUserId.Trim(), StringComparison.OrdinalIgnoreCase) Then Continue While
+                            Dim storedPin = If(reader.IsDBNull(1), String.Empty, reader.GetString(1).Trim())
+                            If RestaurantPOS14.Security.PinSecurity.VerifyPin(pin, storedPin) Then Return True
+                        End While
+                    End Using
+                End Using
+            End Using
+            Return False
+        End Function
 
         Private Sub frmRegistration_Load(sender As Object, e As System.EventArgs)
             Me.Getdata()

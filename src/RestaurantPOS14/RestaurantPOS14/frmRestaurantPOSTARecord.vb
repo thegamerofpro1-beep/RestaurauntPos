@@ -926,6 +926,7 @@ Namespace RestaurantPOS14
         Private Sub dgw_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Me.dgw.Rows.Count > 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     RestaurantPOS14.My.MyProject.Forms.frmPOS.txtBillID1.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                     RestaurantPOS14.My.MyProject.Forms.frmPOS.dtpBillDate.Value = Microsoft.VisualBasic.CompilerServices.Conversions.ToDate(dataGridViewRow.Cells(CInt((2))).Value)

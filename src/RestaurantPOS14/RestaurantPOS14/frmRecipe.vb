@@ -1123,7 +1123,7 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModClasses.con.Close()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into Recipe_Join(RecipeID,ProductID,Quantity,CostPerUnit,TotalItemCost) VALUES (" & Me.txtID.Text & ",@d1,@d2,@d3,@d4)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into Recipe_Join(RecipeID,ProductID,Quantity,CostPerUnit,TotalItemCost) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtID.Text, "Record ID") & ",@d1,@d2,@d3,@d4)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow As System.Windows.Forms.DataGridViewRow In CType(Me.dgw.Rows, System.Collections.IEnumerable)
@@ -1337,6 +1337,7 @@ Namespace RestaurantPOS14
                 Me.btnRemove.Enabled = True
                 Me.btnAdd.Enabled = False
                 Me.btnGridUpdate.Enabled = True
+                If Me.dgw.SelectedRows.Count = 0 Then Return
                 Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                 Me.txtProductID.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                 Me.cmbProductName.Text = dataGridViewRow.Cells(CInt((1))).Value.ToString()
@@ -1514,7 +1515,7 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModClasses.con.Close()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into Recipe_Join(RecipeID,ProductID,Quantity,CostPerUnit,TotalItemCost) VALUES (" & Me.txtID.Text & ",@d1,@d2,@d3,@d4)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into Recipe_Join(RecipeID,ProductID,Quantity,CostPerUnit,TotalItemCost) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtID.Text, "Record ID") & ",@d1,@d2,@d3,@d4)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow As System.Windows.Forms.DataGridViewRow In CType(Me.dgw.Rows, System.Collections.IEnumerable)

@@ -158,6 +158,8 @@ Namespace RestaurantPOS14
 
         <System.Diagnostics.DebuggerNonUserCodeAttribute>
         Public Sub New()
+            Call RestaurantPOS14.frmPizza.__ENCAddToList(Me)
+            Me.InitializeComponent()
             MyBase.Hide()
             Me._btnPizzaSize.Visible = False
             Me._btnPizzaSize.Enabled = False

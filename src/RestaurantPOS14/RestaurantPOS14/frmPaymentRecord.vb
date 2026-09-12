@@ -622,6 +622,7 @@ Namespace RestaurantPOS14
         Private Sub dgw_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Me.dgw.Rows.Count > 0 AndAlso Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblSet.Text, "Payment", TextCompare:=False) = 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     RestaurantPOS14.My.MyProject.Forms.frmPayment.txtT_ID.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                     RestaurantPOS14.My.MyProject.Forms.frmPayment.txtTransactionNo.Text = dataGridViewRow.Cells(CInt((1))).Value.ToString()
@@ -720,7 +721,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT T_ID, RTRIM(TransactionID), Date,RTRIM(PaymentMode),Supplier.ID, RTRIM(Supplier.SupplierID),RTRIM(Name),Amount,RTRIM(PaymentModeDetails), RTRIM(Payment.Remarks) from Supplier,Payment where Supplier.ID=Payment.SupplierID and Amount > 0  and [Name] like N'%" & Me.txtSupplierName.Text & "%' order by [Date]", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT T_ID, RTRIM(TransactionID), Date,RTRIM(PaymentMode),Supplier.ID, RTRIM(Supplier.SupplierID),RTRIM(Name),Amount,RTRIM(PaymentModeDetails), RTRIM(Payment.Remarks) from Supplier,Payment where Supplier.ID=Payment.SupplierID and Amount > 0  and [Name] like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtSupplierName.Text) & "%' order by [Date]", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()

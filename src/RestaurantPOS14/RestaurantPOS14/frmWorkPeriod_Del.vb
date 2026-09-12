@@ -301,6 +301,7 @@ Namespace RestaurantPOS14
 
         Private Sub DeleteRecord()
             Try
+                If Me.dgw.SelectedRows.Count = 0 Then Return
                 If Microsoft.VisualBasic.CompilerServices.Operators.ConditionalCompareObjectEqual(Me.dgw.SelectedRows(CInt((0))).Cells(CInt((3))).Value, "Active", TextCompare:=False) Then
                     Call System.Windows.Forms.MessageBox.Show("Work period can't be deleted while its running", "Info", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Asterisk)
                     Return
@@ -342,6 +343,7 @@ Namespace RestaurantPOS14
         Private Sub dgw_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Me.dgw.Rows.Count > 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     Me.txtID.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                     Me.btnDelete.Enabled = True

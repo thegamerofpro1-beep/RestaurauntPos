@@ -818,6 +818,7 @@ Namespace RestaurantPOS14
         Private Sub dgw_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Me.dgw.Rows.Count > 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     Me.txtID.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                     Me.cmbServerName.Text = dataGridViewRow.Cells(CInt((1))).Value.ToString()
@@ -922,7 +923,7 @@ Namespace RestaurantPOS14
 
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Update EmailSetting set ServerName=@d1, SMTPAddress=@d2, Username=@d3, Password=@d4, Port=@d5, TLS_SSL_Required=@d6, IsDefault=@d7, IsActive=@d8 where ID=" & Me.txtID.Text)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Update EmailSetting set ServerName=@d1, SMTPAddress=@d2, Username=@d3, Password=@d4, Port=@d5, TLS_SSL_Required=@d6, IsDefault=@d7, IsActive=@d8 where ID=" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtID.Text, "Record ID"))
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Me.cmbServerName.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", Me.txtSMTPAddress.Text)

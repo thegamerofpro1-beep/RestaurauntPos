@@ -352,7 +352,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select RTRIM(Warehouse),RTRIM(ProductCode),RTRIM(ProductName) from temp_stock,Product where Temp_Stock.ProductID=Product.PID and Qty <= 0 and Warehouse like N'%" & Me.txtWarehouse.Text & "%' order by Warehouse,ProductName", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select RTRIM(Warehouse),RTRIM(ProductCode),RTRIM(ProductName) from temp_stock,Product where Temp_Stock.ProductID=Product.PID and Qty <= 0 and Warehouse like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtWarehouse.Text) & "%' order by Warehouse,ProductName", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()
                 While RestaurantPOS14.ModClasses.rdr.Read()
@@ -369,7 +369,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select RTRIM(Warehouse),RTRIM(ProductCode),RTRIM(ProductName) from temp_stock,Product where Temp_Stock.ProductID=Product.PID and Qty <= 0 and ProductName like N'%" & Me.txtProductName.Text & "%' order by Warehouse,ProductName", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select RTRIM(Warehouse),RTRIM(ProductCode),RTRIM(ProductName) from temp_stock,Product where Temp_Stock.ProductID=Product.PID and Qty <= 0 and ProductName like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtProductName.Text) & "%' order by Warehouse,ProductName", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()
                 While RestaurantPOS14.ModClasses.rdr.Read()

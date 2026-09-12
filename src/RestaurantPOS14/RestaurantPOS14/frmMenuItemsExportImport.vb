@@ -629,7 +629,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(DishName),RTRIM(DishNameArabic), RTRIM(Category),DIRate,TARate,HDRate,RTRIM(Barcode) from Dish where DishName like N'%" & Me.txtSearchByDish.Text & "%' order by DishName", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(DishName),RTRIM(DishNameArabic), RTRIM(Category),DIRate,TARate,HDRate,RTRIM(Barcode) from Dish where DishName like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtSearchByDish.Text) & "%' order by DishName", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()
@@ -722,7 +722,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(DishName),RTRIM(DishNameArabic), RTRIM(Category),DIRate,TARate,HDRate,RTRIM(Barcode) from Dish where Category like N'%" & Me.txtCategory.Text & "%' order by DishName", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(DishName),RTRIM(DishNameArabic), RTRIM(Category),DIRate,TARate,HDRate,RTRIM(Barcode) from Dish where Category like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtCategory.Text) & "%' order by DishName", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()

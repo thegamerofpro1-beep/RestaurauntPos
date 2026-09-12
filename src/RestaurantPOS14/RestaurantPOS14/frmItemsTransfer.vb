@@ -1062,7 +1062,7 @@ Namespace RestaurantPOS14
                 Call RestaurantPOS14.My.MyProject.Forms.frmPOS.auto()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderInfoKOT( Id,TicketNo, BillDate, GrandTotal,tableNo,Operator,GroupName,TicketNote,KOT_Status,TaxType,NoOfPerson) Values (" & RestaurantPOS14.My.MyProject.Forms.frmPOS.txtTicketID.Text & ",@d6,@d2," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.lblBalance2.Text)) & ",@d1,@d3,@d4,@d5,'Open',@dTax," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtNoofPeople.Text)) & ")")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderInfoKOT( Id,TicketNo, BillDate, GrandTotal,tableNo,Operator,GroupName,TicketNote,KOT_Status,TaxType,NoOfPerson) Values (" & RestaurantPOS14.Security.SqlInput.RequireInteger(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtTicketID.Text, "Record ID") & ",@d6,@d2," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.lblBalance2.Text)) & ",@d1,@d3,@d4,@d5,'Open',@dTax," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtNoofPeople.Text)) & ")")
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Me.cmbTransferTo.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", System.DateTime.Now)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d3", RestaurantPOS14.My.MyProject.Forms.frmPOS.lblUserVAL.Text)
@@ -1077,7 +1077,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductKOT(TicketID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,T_Number,DishNameArabic,ItemStatus) VALUES (" & RestaurantPOS14.My.MyProject.Forms.frmPOS.txtTicketID.Text & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16,@d17,@d18)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductKOT(TicketID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,T_Number,DishNameArabic,ItemStatus) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtTicketID.Text, "Record ID") & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16,@d17,@d18)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView2.Rows, System.Collections.IEnumerable)
@@ -1314,6 +1314,7 @@ Namespace RestaurantPOS14
 
         Private Sub DataGridView1_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             If Me.DataGridView1.Rows.Count > 0 Then
+                If Me.DataGridView1.SelectedRows.Count = 0 Then Return
                 Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView1.SelectedRows(0)
                 RestaurantPOS14.My.MyProject.Forms.frmEnterQtyX.txtQ.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((2))).Value)
                 RestaurantPOS14.My.MyProject.Forms.frmEnterQtyX.txtCategory.Text = dataGridViewRow.Cells(CInt((15))).Value.ToString()

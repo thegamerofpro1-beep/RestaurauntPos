@@ -1317,7 +1317,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("delete from Payroll_MB where id=" & Me.txtID.Text)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("delete from Payroll_MB where id=" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtID.Text, "Record ID"))
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 If RestaurantPOS14.ModClasses.cmd.ExecuteNonQuery() > 0 Then
                     Dim st As String = "deleted the Payroll record having payment id '" & Me.txtPaymentID.Text & "'"
@@ -1386,6 +1386,7 @@ Namespace RestaurantPOS14
         Private Sub dgw_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Me.dgw.Rows.Count > 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     Me.txtEmployeeID.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                     Me.txtEmployeeName.Text = dataGridViewRow.Cells(CInt((1))).Value.ToString()
@@ -1438,7 +1439,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(UserID),RTRIM(Name),RTRIM(SIN) from Registration where Active='Yes' and Name like N'%" & Me.txtSearchByEmployee.Text & "%' and PayrollType='Monthly Basis' order by Name", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(UserID),RTRIM(Name),RTRIM(SIN) from Registration where Active='Yes' and Name like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtSearchByEmployee.Text) & "%' and PayrollType='Monthly Basis' order by Name", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()
                 While RestaurantPOS14.ModClasses.rdr.Read()

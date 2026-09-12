@@ -443,6 +443,7 @@ Namespace RestaurantPOS14
         Private Sub dgw_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Me.dgw.Rows.Count > 0 AndAlso Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblSet.Text, "Payment", TextCompare:=False) = 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     MyBase.Hide()
                     RestaurantPOS14.My.MyProject.Forms.frmPayroll_HB.txtID.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
@@ -497,7 +498,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("select Payroll.ID as [ID],RTRIM(PaymentID) as [Payment ID],RTRIM(Registration.UserID) as [Employee ID],RTRIM(Name) as [Employee Name],RTRIM(SSN) as [SIN],Hours as [Working Hours],Rate as [Rate/Hour],GrossSalary as [Gross Pay],CPPPer as [CPP %],CPP as [CPP],EIPer as [EI %],EI as [EI],FedTaxPer as [FedTax %],FedTax as [Fed Tax],VPPer as [VP %],VP as [VP],Convert(DateTime,paymentdate,131) as [Payment Date],RTRIM(PaymentMode) as [Payment Mode],RTRIM(Remarks) as [Payment Mode Details],NetPay as [Net Pay] from Payroll,Registration where Registration.UserID=Payroll.UserID and Name like N'%" & Me.txtEmployeeName.Text & "%' order by paymentdate", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("select Payroll.ID as [ID],RTRIM(PaymentID) as [Payment ID],RTRIM(Registration.UserID) as [Employee ID],RTRIM(Name) as [Employee Name],RTRIM(SSN) as [SIN],Hours as [Working Hours],Rate as [Rate/Hour],GrossSalary as [Gross Pay],CPPPer as [CPP %],CPP as [CPP],EIPer as [EI %],EI as [EI],FedTaxPer as [FedTax %],FedTax as [Fed Tax],VPPer as [VP %],VP as [VP],Convert(DateTime,paymentdate,131) as [Payment Date],RTRIM(PaymentMode) as [Payment Mode],RTRIM(Remarks) as [Payment Mode Details],NetPay as [Net Pay] from Payroll,Registration where Registration.UserID=Payroll.UserID and Name like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtEmployeeName.Text) & "%' order by paymentdate", RestaurantPOS14.ModClasses.con)
                 Dim sqlDataAdapter As System.Data.SqlClient.SqlDataAdapter = New System.Data.SqlClient.SqlDataAdapter(RestaurantPOS14.ModClasses.cmd)
                 Dim dataSet As System.Data.DataSet = New System.Data.DataSet()
                 sqlDataAdapter.Fill(dataSet, "Payroll")

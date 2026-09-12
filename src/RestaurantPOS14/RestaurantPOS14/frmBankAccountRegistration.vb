@@ -1392,6 +1392,7 @@ Namespace RestaurantPOS14
         Private Sub dgw_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Me.dgw.Rows.Count > 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     Me.txtBranchID.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                     Me.txtBank.Text = dataGridViewRow.Cells(CInt((1))).Value.ToString()
@@ -1538,6 +1539,7 @@ Namespace RestaurantPOS14
         Private Sub DataGridView1_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Me.DataGridView1.Rows.Count > 0 Then
+                    If Me.DataGridView1.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView1.SelectedRows(0)
                     Me.txtAccNo.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                     Me.txtAccountNo.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()

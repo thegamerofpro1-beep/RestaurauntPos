@@ -376,45 +376,59 @@ Namespace RestaurantPOS14
         End Sub
 
         Public Function PGMpesa(OAuthURL As String, ConsumerKey As String, ConsumerSecret As String, C2BSimulateURL As String, ShortCode As String, SalesAmount As Integer, MesaNumber As String, BillReferenceNumber As String) As String
-            Dim str As String = System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(ConsumerKey & ":" & ConsumerSecret))
-            System.Net.ServicePointManager.MaxServicePointIdleTime = 1000
-            System.Net.ServicePointManager.Expect100Continue = True
-            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12
-            Dim httpWebRequest As System.Net.HttpWebRequest = CType(System.Net.WebRequest.Create(OAuthURL), System.Net.HttpWebRequest)
-            httpWebRequest.Headers.Add("Authorization", "Basic " & str)
-            httpWebRequest.ContentType = "application/json"
-            httpWebRequest.Headers.Add("cache-control", "no-cache")
-            httpWebRequest.Method = "GET"
+            If String.IsNullOrWhiteSpace(ConsumerKey) OrElse String.IsNullOrWhiteSpace(ConsumerSecret) Then Throw New InvalidOperationException("M-PESA credentials are not configured.")
+            If SalesAmount <= 0 Then Throw New ArgumentOutOfRangeException(NameOf(SalesAmount), "The M-PESA amount must be greater than zero.")
+            If String.IsNullOrWhiteSpace(ShortCode) OrElse String.IsNullOrWhiteSpace(MesaNumber) OrElse String.IsNullOrWhiteSpace(BillReferenceNumber) Then Throw New ArgumentException("M-PESA short code, mobile number, and bill reference are required.")
+
+            Dim oauthUri = RestaurantPOS14.Security.ExternalResourceGuard.RequireHttpUri(OAuthURL, False)
+            Dim paymentUri = RestaurantPOS14.Security.ExternalResourceGuard.RequireHttpUri(C2BSimulateURL, False)
+            Dim authorization As String = System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(ConsumerKey.Trim() & ":" & ConsumerSecret))
+            Dim tokenRequest = RestaurantPOS14.Security.ExternalResourceGuard.CreateRequest(oauthUri, 20000)
+            tokenRequest.Headers.Add("Authorization", "Basic " & authorization)
+            tokenRequest.Accept = "application/json"
+            tokenRequest.Headers.Add("cache-control", "no-cache")
+            tokenRequest.Method = "GET"
+
             Try
-                Dim httpWebResponse As System.Net.HttpWebResponse = CType(httpWebRequest.GetResponse(), System.Net.HttpWebResponse)
-                Dim streamReader As System.IO.StreamReader = New System.IO.StreamReader(httpWebResponse.GetResponseStream(), System.Text.Encoding.UTF8)
-                Dim objectValue As Object = System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(Newtonsoft.Json.JsonConvert.DeserializeObject(streamReader.ReadToEnd()))
-                Me.TokenKey = Microsoft.VisualBasic.CompilerServices.NewLateBinding.LateIndexGet(CObj((objectValue)), CType((New Object(0) {"access_token"}), System.[Object]()), CType((Nothing), System.[String]())).ToString()
-                httpWebResponse.Close()
-                streamReader.Close()
+                Using tokenResponse = DirectCast(tokenRequest.GetResponse(), System.Net.HttpWebResponse)
+                    Using reader As New System.IO.StreamReader(tokenResponse.GetResponseStream(), System.Text.Encoding.UTF8)
+                        Dim payload = Newtonsoft.Json.Linq.JObject.Parse(reader.ReadToEnd())
+                        Me.TokenKey = Convert.ToString(payload("access_token"))
+                    End Using
+                End Using
             Catch ex As System.Net.WebException
-                System.Console.WriteLine(New System.IO.StreamReader(CType((ex.Response.GetResponseStream()), System.IO.Stream)).ReadToEnd())
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("M-PESA token request", ex)
+                Throw New InvalidOperationException("M-PESA authentication failed. Check the endpoint and credentials.", ex)
             End Try
+            If String.IsNullOrWhiteSpace(Me.TokenKey) Then Throw New InvalidOperationException("M-PESA did not return an access token.")
 
-            System.Net.ServicePointManager.MaxServicePointIdleTime = 1000
-            System.Net.ServicePointManager.Expect100Continue = True
-            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12
-            Dim httpWebRequest2 As System.Net.HttpWebRequest = CType(System.Net.WebRequest.Create(C2BSimulateURL), System.Net.HttpWebRequest)
-            httpWebRequest2.Method = "POST"
-            httpWebRequest2.Accept = "application/json"
-            httpWebRequest2.Headers.Add("authorization", "Bearer " & Me.TokenKey)
-            httpWebRequest2.ContentType = "application/json"
-            Dim value As String = "{""ShortCode"":""" & ShortCode & """,""CommandID"":""CustomerPayBillOnline"",""Amount"":""" & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(SalesAmount) & """,""Msisdn"":""" & MesaNumber & """,""BillRefNumber"":""" & BillReferenceNumber & """}"
-            Using streamWriter As System.IO.StreamWriter = New System.IO.StreamWriter(httpWebRequest2.GetRequestStream())
-                streamWriter.Write(value)
+            Dim paymentRequest = RestaurantPOS14.Security.ExternalResourceGuard.CreateRequest(paymentUri, 30000)
+            paymentRequest.Method = "POST"
+            paymentRequest.Accept = "application/json"
+            paymentRequest.Headers.Add("Authorization", "Bearer " & Me.TokenKey)
+            paymentRequest.ContentType = "application/json; charset=utf-8"
+            Dim json = Newtonsoft.Json.JsonConvert.SerializeObject(New With {
+                .ShortCode = ShortCode.Trim(),
+                .CommandID = "CustomerPayBillOnline",
+                .Amount = SalesAmount,
+                .Msisdn = MesaNumber.Trim(),
+                .BillRefNumber = BillReferenceNumber.Trim()
+            })
+            Using writer As New System.IO.StreamWriter(paymentRequest.GetRequestStream(), System.Text.Encoding.UTF8)
+                writer.Write(json)
             End Using
 
-            Dim httpWebResponse2 As System.Net.HttpWebResponse = CType(httpWebRequest2.GetResponse(), System.Net.HttpWebResponse)
-            Using streamReader2 As System.IO.StreamReader = New System.IO.StreamReader(httpWebResponse2.GetResponseStream())
-                streamReader2.ReadToEnd()
-            End Using
-
-            Return Microsoft.VisualBasic.CompilerServices.Conversions.ToString(CInt(httpWebResponse2.StatusCode))
+            Try
+                Using paymentResponse = DirectCast(paymentRequest.GetResponse(), System.Net.HttpWebResponse)
+                    Using reader As New System.IO.StreamReader(paymentResponse.GetResponseStream(), System.Text.Encoding.UTF8)
+                        reader.ReadToEnd()
+                    End Using
+                    Return CInt(paymentResponse.StatusCode).ToString()
+                End Using
+            Catch ex As System.Net.WebException
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("M-PESA payment request", ex)
+                Throw New InvalidOperationException("The M-PESA payment request failed. Verify the number and service settings.", ex)
+            End Try
         End Function
 
         Private Sub Button2_Click(sender As Object, e As System.EventArgs)

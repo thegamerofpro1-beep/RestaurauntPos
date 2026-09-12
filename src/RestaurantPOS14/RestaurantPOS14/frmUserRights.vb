@@ -993,6 +993,7 @@ Namespace RestaurantPOS14
                 Next
 
                 RestaurantPOS14.ModClasses.con.Close()
+                RestaurantPOS14.ModFunc.ClearUserRightsCache()
                 MetroFramework.MetroMessageBox.Show(Me, "Successfully granted", "User Rights", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Asterisk)
                 Me.Check()
                 Me.Reset()
@@ -1029,6 +1030,7 @@ Namespace RestaurantPOS14
                 Next
 
                 RestaurantPOS14.ModClasses.con.Close()
+                RestaurantPOS14.ModFunc.ClearUserRightsCache()
                 MetroFramework.MetroMessageBox.Show(Me, "Successfully Updated", "User Rights", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Asterisk)
                 Me.Check()
                 Me.Reset()
@@ -1056,6 +1058,7 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Me.cmbUserID.Text)
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 If RestaurantPOS14.ModClasses.cmd.ExecuteNonQuery() > 0 Then
+                    RestaurantPOS14.ModFunc.ClearUserRightsCache()
                     MetroFramework.MetroMessageBox.Show(Me, "Successfully deleted", "Record", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Asterisk)
                     Me.Reset()
                     Me.Reset()

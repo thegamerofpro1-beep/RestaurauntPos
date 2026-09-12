@@ -421,6 +421,8 @@ Namespace RestaurantPOS14
         End Property
 
         Public Sub New()
+            Call RestaurantPOS14.frmPizzaModifiersList_AutoPopUp.__ENCAddToList(Me)
+            Me.InitializeComponent()
             MyBase.Hide()
         End Sub
 

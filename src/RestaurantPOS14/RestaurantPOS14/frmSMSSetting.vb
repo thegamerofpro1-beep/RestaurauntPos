@@ -557,6 +557,7 @@ Namespace RestaurantPOS14
         Private Sub dgw_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Me.dgw.Rows.Count > 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     Me.txtID.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((0))).Value)
                     Me.txtAPIURL.Text = dataGridViewRow.Cells(CInt((1))).Value.ToString()
@@ -632,7 +633,7 @@ Namespace RestaurantPOS14
 
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Update SMSSetting set APIURL=@d1,IsDefault=@d2,IsEnabled=@d3 where ID=" & Me.txtID.Text)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Update SMSSetting set APIURL=@d1,IsDefault=@d2,IsEnabled=@d3 where ID=" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtID.Text, "Record ID"))
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Me.txtAPIURL.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", Me.st1)
@@ -920,7 +921,7 @@ Namespace RestaurantPOS14
             size = New System.Drawing.Size(581, 30)
             label10.Size = size
             Me.Label5.TabIndex = 9
-            Me.Label5.Text = "Ex:  http://127.0.0.1:9500/api?action=sendmessage&username=admin&password=12345&recipient=@MobileNo&" & Global.Microsoft.VisualBasic.Constants.vbCrLf & "messagetype=SMS:TEXT&Message=@Message"
+            Me.Label5.Text = "Ex: [local SMS gateway]/api?action=sendmessage&username=YOUR_USER&password=YOUR_PASSWORD&recipient=@MobileNo&" & Global.Microsoft.VisualBasic.Constants.vbCrLf & "messagetype=SMS:TEXT&Message=@Message"
             Dim textBox3 As System.Windows.Forms.TextBox = Me.txtID
             location = New System.Drawing.Point(628, 3)
             textBox3.Location = location

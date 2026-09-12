@@ -921,6 +921,7 @@ Namespace RestaurantPOS14
                     Return
                 End If
 
+                If Me.dgw.SelectedRows.Count = 0 Then Return
                 Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                 RestaurantPOS14.My.MyProject.Forms.frmPOS.txtBillID.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                 RestaurantPOS14.My.MyProject.Forms.frmPOS.lblBillNo.Text = dataGridViewRow.Cells(CInt((1))).Value.ToString()
@@ -990,7 +991,7 @@ Namespace RestaurantPOS14
                         obj.Size = rectangle.Size
                         Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Clear()
                         For Each dataGridViewRow2 As System.Windows.Forms.DataGridViewRow In CType(RestaurantPOS14.My.MyProject.Forms.frmPOS.DataGridView2.Rows, System.Collections.IEnumerable)
-                            Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Add(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((1))).Value), Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((2))).Value)), Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((3))).Value)), Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((13))).Value)))
+                            Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.AddItem(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((1))).Value), Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((2))).Value)), Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((3))).Value)), Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((7))).Value)), Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((8))).Value)), Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((13))).Value)))
                         Next
 
                         RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.Strings.Format(Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtGrandTotal.Text), "#,##0.00")
@@ -1001,7 +1002,8 @@ Namespace RestaurantPOS14
 
                         Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.Show()
                     End If
-                Catch
+                Catch suppressedException As System.Exception
+                    RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmRestaurantPOSKOTFinalBillRecord_Unpaid", suppressedException)
                 End Try
 
                 If RestaurantPOS14.My.MyProject.Forms.frmPOS.TabControl1.SelectedIndex <> 1 Then

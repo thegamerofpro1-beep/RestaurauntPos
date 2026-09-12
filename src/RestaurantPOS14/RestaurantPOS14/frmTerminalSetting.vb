@@ -1290,7 +1290,7 @@ Namespace RestaurantPOS14
 
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                Call New System.Data.SqlClient.SqlCommand(CStr(("IF COL_LENGTH('dbo.PosPrinterSetting','DisableColoredDisplaySingleScreen') IS NULL ALTER TABLE dbo.PosPrinterSetting ADD DisableColoredDisplaySingleScreen nchar(10) NULL")), CType((RestaurantPOS14.ModClasses.con), System.Data.SqlClient.SqlConnection)).ExecuteNonQuery()
+                RestaurantPOS14.Configuration.DatabaseMaintenance.EnsureCompatibleSchema(RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into PosPrinterSetting(TillID,PrinterName,IsEnabled,CashDrawer,CustomerDisplay,CDPort,CallerID,CallerIDPort,SMII,CCD,PT,PTIpAddress,PTPortNo,WS,WSPortNo,DisableColoredDisplaySingleScreen) VALUES (@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Me.txtTillID.Text)
@@ -1311,6 +1311,7 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d16", Me.st7)
                 RestaurantPOS14.ModClasses.cmd.ExecuteReader()
                 RestaurantPOS14.ModClasses.con.Close()
+                RestaurantPOS14.Configuration.SettingsHost.Service.Reload()
                 Call System.Windows.Forms.MessageBox.Show("Successfully saved", "Terminal Setting", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Asterisk)
                 Me.Reset()
             Catch ex As System.Exception
@@ -1385,6 +1386,7 @@ Namespace RestaurantPOS14
                 If RestaurantPOS14.ModClasses.con.State = System.Data.ConnectionState.Open Then
                     RestaurantPOS14.ModClasses.con.Close()
                 End If
+                RestaurantPOS14.Configuration.SettingsHost.Service.Reload()
             Catch ex As System.Exception
                 Call System.Windows.Forms.MessageBox.Show(ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
             End Try
@@ -1396,6 +1398,7 @@ Namespace RestaurantPOS14
                     Return
                 End If
 
+                If Me.dgw.SelectedRows.Count = 0 Then Return
                 Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                 Me.txtID.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                 Me.txtTillID.Text = dataGridViewRow.Cells(CInt((1))).Value.ToString()
@@ -1557,7 +1560,7 @@ Namespace RestaurantPOS14
 
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                Call New System.Data.SqlClient.SqlCommand(CStr(("IF COL_LENGTH('dbo.PosPrinterSetting','DisableColoredDisplaySingleScreen') IS NULL ALTER TABLE dbo.PosPrinterSetting ADD DisableColoredDisplaySingleScreen nchar(10) NULL")), CType((RestaurantPOS14.ModClasses.con), System.Data.SqlClient.SqlConnection)).ExecuteNonQuery()
+                RestaurantPOS14.Configuration.DatabaseMaintenance.EnsureCompatibleSchema(RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Update PosPrinterSetting set TillID=@d1,PrinterName=@d2,IsEnabled=@d3,CashDrawer=@d4,CustomerDisplay=@d5,CDPort=@d6,CallerID=@d7,CallerIDPort=@d8,SMII=@d9,CCD=@d10,PT=@d11,PTIpAddress=@d12,PTPortNo=@d13,WS=@d14,WSPortNo=@d15,DisableColoredDisplaySingleScreen=@d16 where ID=" & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtID.Text)))
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Me.txtTillID.Text)
@@ -1578,6 +1581,7 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d16", Me.st7)
                 RestaurantPOS14.ModClasses.cmd.ExecuteReader()
                 RestaurantPOS14.ModClasses.con.Close()
+                RestaurantPOS14.Configuration.SettingsHost.Service.Reload()
                 Call System.Windows.Forms.MessageBox.Show("Successfully updated", "Terminal Setting", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Asterisk)
                 Me.Reset()
             Catch ex As System.Exception

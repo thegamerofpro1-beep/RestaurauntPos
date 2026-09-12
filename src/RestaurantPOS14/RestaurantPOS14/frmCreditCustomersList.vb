@@ -303,6 +303,7 @@ Namespace RestaurantPOS14
         Private Sub dgw_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Me.dgw.Rows.Count > 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblSet.Text, "Customer Ledger", TextCompare:=False) = 0 Then
                         RestaurantPOS14.My.MyProject.Forms.frmCreditCustomerLedger.txtCustID.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
@@ -363,7 +364,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT CC_ID,RTRIM(CreditCustomerid), RTRIM(Name), RTRIM(Address), RTRIM(ContactNo),RTRIM(Active),RegistrationDate from CreditCustomer where Name like N'%" & Me.txtSearchByCustomerName.Text & "%' order by Name", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT CC_ID,RTRIM(CreditCustomerid), RTRIM(Name), RTRIM(Address), RTRIM(ContactNo),RTRIM(Active),RegistrationDate from CreditCustomer where Name like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtSearchByCustomerName.Text) & "%' order by Name", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()
@@ -386,7 +387,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT CC_ID,RTRIM(CreditCustomerid), RTRIM(Name), RTRIM(Address), RTRIM(ContactNo),RTRIM(Active),RegistrationDate from CreditCustomer where CreditCustomerID like N'%" & Me.txtSearchByAC.Text & "%' order by Name", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT CC_ID,RTRIM(CreditCustomerid), RTRIM(Name), RTRIM(Address), RTRIM(ContactNo),RTRIM(Active),RegistrationDate from CreditCustomer where CreditCustomerID like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtSearchByAC.Text) & "%' order by Name", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()

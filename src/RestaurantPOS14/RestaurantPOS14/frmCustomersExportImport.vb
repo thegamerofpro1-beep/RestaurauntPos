@@ -446,7 +446,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(CustomerName), RTRIM(Address), RTRIM(ContactNo) from HDCustomer where CustomerName like N'%" & Me.txtSearchByCustomer.Text & "%' order by CustomerName", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(CustomerName), RTRIM(Address), RTRIM(ContactNo) from HDCustomer where CustomerName like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtSearchByCustomer.Text) & "%' order by CustomerName", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()
@@ -506,7 +506,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(CustomerName), RTRIM(Address), RTRIM(ContactNo) from HDCustomer where ContactNo like N'%" & Me.txtSearchByContactNo.Text & "%' order by CustomerName", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(CustomerName), RTRIM(Address), RTRIM(ContactNo) from HDCustomer where ContactNo like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtSearchByContactNo.Text) & "%' order by CustomerName", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()

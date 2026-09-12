@@ -780,7 +780,7 @@ Namespace RestaurantPOS14
 
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into employeeregistration(Empid,employeeid,employeename,address,City,contactno,email,dateofjoining,photo,Active) VALUES (" & Me.txtID.Text & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,'" & Me.st1 & "')")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into employeeregistration(Empid,employeeid,employeename,address,City,contactno,email,dateofjoining,photo,Active) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtID.Text, "Record ID") & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,'" & Me.st1 & "')")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Me.txtEmployeeID.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", Me.txtEmployeeName.Text)
@@ -855,7 +855,7 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModClasses.con.Close()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("delete from EmployeeRegistration where EmpID=" & Me.txtID.Text)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("delete from EmployeeRegistration where EmpID=" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtID.Text, "Record ID"))
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 If RestaurantPOS14.ModClasses.cmd.ExecuteNonQuery() > 0 Then
                     Dim st As String = "deleted the record of employee '" & Me.txtEmployeeName.Text & "' having ID '" & Me.txtEmployeeID.Text & "'"
@@ -907,7 +907,7 @@ Namespace RestaurantPOS14
 
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("update employeeregistration set employeeid=@d1,employeename=@d2,address=@d4,City=@d5,contactno=@d6,email=@d7,dateofjoining=@d11,photo=@d14,Active='" & Me.st1 & "' where Empid=" & Me.txtID.Text)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("update employeeregistration set employeeid=@d1,employeename=@d2,address=@d4,City=@d5,contactno=@d6,email=@d7,dateofjoining=@d11,photo=@d14,Active='" & Me.st1 & "' where Empid=" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtID.Text, "Record ID"))
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Me.txtEmployeeID.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", Me.txtEmployeeName.Text)

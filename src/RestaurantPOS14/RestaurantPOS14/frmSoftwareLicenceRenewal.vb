@@ -428,7 +428,7 @@ Namespace RestaurantPOS14
                     End Using
 
                     Call System.Windows.Forms.MessageBox.Show("Successfully renewal", "Software License", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Asterisk)
-                    Call Microsoft.VisualBasic.CompilerServices.ProjectData.EndApp()
+                    RestaurantPOS14.Diagnostics.ApplicationLifecycle.ExitApplication()
                 Else
                     Call System.Windows.Forms.MessageBox.Show("Invalid activation id", "Input Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
                 End If
@@ -439,7 +439,7 @@ Namespace RestaurantPOS14
 
         <System.Runtime.CompilerServices.MethodImplAttribute(System.Runtime.CompilerServices.MethodImplOptions.NoInlining Or System.Runtime.CompilerServices.MethodImplOptions.NoOptimization)>
         Private Sub btnClose_Click(sender As Object, e As System.EventArgs)
-            Call Microsoft.VisualBasic.CompilerServices.ProjectData.EndApp()
+            RestaurantPOS14.Diagnostics.ApplicationLifecycle.ExitApplication()
         End Sub
 
         Private Sub cmbESC_SelectedIndexChanged(sender As Object, e As System.EventArgs)
@@ -454,7 +454,7 @@ Namespace RestaurantPOS14
 
         <System.Runtime.CompilerServices.MethodImplAttribute(System.Runtime.CompilerServices.MethodImplOptions.NoInlining Or System.Runtime.CompilerServices.MethodImplOptions.NoOptimization)>
         Private Sub frmSoftwareLicenceRenewal_FormClosing(sender As Object, e As System.Windows.Forms.FormClosingEventArgs)
-            Call Microsoft.VisualBasic.CompilerServices.ProjectData.EndApp()
+            RestaurantPOS14.Diagnostics.ApplicationLifecycle.ExitApplication()
         End Sub
 
         <System.Diagnostics.DebuggerNonUserCodeAttribute>

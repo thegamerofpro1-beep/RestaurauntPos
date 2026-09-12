@@ -518,6 +518,7 @@ Namespace RestaurantPOS14
         Private Sub dgw_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Me.dgw.Rows.Count > 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     Me.txtType.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                     Me.txtWarehouseType.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()

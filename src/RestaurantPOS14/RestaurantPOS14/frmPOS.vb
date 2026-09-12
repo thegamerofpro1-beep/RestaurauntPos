@@ -65,7 +65,7 @@ Namespace RestaurantPOS14
 
         Private einvTip As System.Windows.Forms.ToolTip
 
-        Private Shared EBaseUrl As String = "https://sandbox.example"
+        Private Shared EBaseUrl As String = String.Empty
 
         Private Shared EClientId As String = Nothing
 
@@ -15108,7 +15108,7 @@ Namespace RestaurantPOS14
             Me._btnPizza1.Enabled = False
             Me._btnPizza1.Text = ""
             Me.btnUndoDIB = New CButtonLib.CButton()
-            Me.btnUndoDIB.Text = "Undo Bill"
+            Me.btnUndoDIB.Text = "Cancel Unpaid Bill"
             Me.btnUndoDIB.Visible = True
             Me.btnUndoDIB.Enabled = True
             Me.btnUndoDIB.BackColor = System.Drawing.Color.Transparent
@@ -15129,7 +15129,7 @@ Namespace RestaurantPOS14
                 If Me.mtMergeTables IsNot Nothing Then
                     Dim x As Integer = Me.mtMergeTables.Right + 8
                     Dim y As Integer = Me.mtMergeTables.Top
-                    Me.btnUndoDIB.Size = New System.Drawing.Size(100, Me.mtMergeTables.Height)
+                    Me.btnUndoDIB.Size = New System.Drawing.Size(180, Me.mtMergeTables.Height)
                     Me.btnUndoDIB.Location = New System.Drawing.Point(x, y)
                 ElseIf anchorGetData IsNot Nothing Then
                     Me.btnUndoDIB.Location = New System.Drawing.Point(anchorGetData.Left, anchorGetData.Bottom + 6)
@@ -15140,7 +15140,8 @@ Namespace RestaurantPOS14
                 End If
 
                 Me.btnUndoDIB.BringToFront()
-            Catch
+            Catch suppressedException As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
             End Try
         End Sub
 
@@ -15508,7 +15509,8 @@ Namespace RestaurantPOS14
                     If RestaurantPOS14.ModClasses.con.State = System.Data.ConnectionState.Open Then
                         RestaurantPOS14.ModClasses.con.Close()
                     End If
-                Catch
+                Catch suppressedException As System.Exception
+                    RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                 End Try
 
                 If System.Windows.Forms.Screen.AllScreens.Length = 1 AndAlso Microsoft.VisualBasic.CompilerServices.Operators.CompareString(disableSingle, "Yes", TextCompare:=False) = 0 Then
@@ -15668,30 +15670,19 @@ Namespace RestaurantPOS14
             End Try
         End Sub
 
-        Public Sub OpenCashdrawer()
+        Public Sub OpenCashdrawer(Optional showNotConfigured As Boolean = False)
             Try
-                Dim origString As String = Global.Microsoft.VisualBasic.Strings.ChrW(27) & "p0@@"
-                RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
-                RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = RestaurantPOS14.ModClasses.con.CreateCommand()
-                RestaurantPOS14.ModClasses.cmd.CommandText = "SELECT RTRIM(PrinterName) from POSPrinterSetting where TillID=@d1 and IsEnabled='Yes' and CashDrawer='Enabled'"
-                RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Me.txtTillID.Text)
-                RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader()
-                If RestaurantPOS14.ModClasses.rdr.Read() Then
-                    Me.s4 = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(RestaurantPOS14.ModClasses.rdr.GetValue(0))
-                End If
+                Dim errorMessage As String = String.Empty
+                If RestaurantPOS14.ModCashDrawer.TryOpenConfiguredDrawer(Me.txtTillID.Text, errorMessage) Then Return
 
-                If RestaurantPOS14.ModClasses.rdr IsNot Nothing Then
-                    RestaurantPOS14.ModClasses.rdr.Close()
+                If Not String.IsNullOrWhiteSpace(errorMessage) Then
+                    Call System.Windows.Forms.MessageBox.Show(errorMessage, "Cash Drawer", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
+                ElseIf showNotConfigured Then
+                    Call System.Windows.Forms.MessageBox.Show("Cash Drawer is not enabled for this terminal, or its receipt printer is blank.", "Cash Drawer", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Information)
                 End If
-
-                If RestaurantPOS14.ModClasses.con.State = System.Data.ConnectionState.Open Then
-                    RestaurantPOS14.ModClasses.con.Close()
-                End If
-
-                RestaurantPOS14.ModCashDrawer.RawPrinter.PrintRaw(Me.s4, origString)
             Catch ex As System.Exception
-                Call System.Windows.Forms.MessageBox.Show(ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Open Cash Drawer from POS", ex)
+                Call System.Windows.Forms.MessageBox.Show("Cash Drawer could not be opened. " & ex.GetBaseException().Message, "Cash Drawer", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
             End Try
         End Sub
 
@@ -15700,7 +15691,7 @@ Namespace RestaurantPOS14
             Dim text As String = "0000"
             Try
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT TOP 1 ID FROM RestaurantPOS_BillingInfoKOT ORDER BY ID DESC", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand(RestaurantPOS14.Billing.UnpaidBillCancellation.LastBillIdSql, RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 If RestaurantPOS14.ModClasses.rdr.HasRows Then
                     RestaurantPOS14.ModClasses.rdr.Read()
@@ -15730,7 +15721,7 @@ Namespace RestaurantPOS14
         Public Sub auto1()
             Try
                 Me.txtBillID.Text = Me.GenerateID1()
-                Me.lblBillNo.Text = "DIB-" & Me.GenerateID1()
+                Me.lblBillNo.Text = "DIB-" & Me.txtBillID.Text
             Catch ex As System.Exception
                 Call System.Windows.Forms.MessageBox.Show(ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
             End Try
@@ -15988,7 +15979,7 @@ Namespace RestaurantPOS14
                 obj.Location = location + CType(p, System.Drawing.Size)
                 Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Clear()
                 For Each dataGridViewRow As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView2.Rows, System.Collections.IEnumerable)
-                    Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Add(Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((1))).Value), Microsoft.VisualBasic.Conversion.Val(Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((2))).Value)), Microsoft.VisualBasic.Conversion.Val(Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((3))).Value)), Microsoft.VisualBasic.Conversion.Val(Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((4))).Value)))
+                    Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.AddItem(Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((1))).Value), Microsoft.VisualBasic.Conversion.Val(Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((2))).Value)), Microsoft.VisualBasic.Conversion.Val(Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((3))).Value)), Microsoft.VisualBasic.Conversion.Val(Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((7))).Value)), Microsoft.VisualBasic.Conversion.Val(Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((8))).Value)), Microsoft.VisualBasic.Conversion.Val(Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((13))).Value)))
                 Next
 
                 RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal.Text))
@@ -16503,7 +16494,8 @@ Namespace RestaurantPOS14
                     If Not RestaurantPOS14.ModClasses.rdr.IsDBNull(1) Then
                         Try
                             argb = CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr.GetValue(1)))))
-                        Catch
+                        Catch suppressedException As System.Exception
+                            RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                         End Try
                     End If
 
@@ -16549,7 +16541,8 @@ Namespace RestaurantPOS14
                     If Not RestaurantPOS14.ModClasses.rdr.IsDBNull(1) Then
                         Try
                             argb2 = CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr.GetValue(1)))))
-                        Catch
+                        Catch suppressedException As System.Exception
+                            RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                         End Try
                     End If
 
@@ -16595,7 +16588,8 @@ Namespace RestaurantPOS14
                     If Not RestaurantPOS14.ModClasses.rdr.IsDBNull(1) Then
                         Try
                             argb3 = CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr.GetValue(1)))))
-                        Catch
+                        Catch suppressedException As System.Exception
+                            RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                         End Try
                     End If
 
@@ -16641,7 +16635,8 @@ Namespace RestaurantPOS14
                     If Not RestaurantPOS14.ModClasses.rdr.IsDBNull(1) Then
                         Try
                             argb4 = CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr.GetValue(1)))))
-                        Catch
+                        Catch suppressedException As System.Exception
+                            RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                         End Try
                     End If
 
@@ -17339,9 +17334,13 @@ Namespace RestaurantPOS14
                     Me.num3 = Microsoft.VisualBasic.Conversion.Val(Me.txtAmt_Food.Text) - Microsoft.VisualBasic.Conversion.Val(Me.txtDiscountAmount_Food.Text)
                     Me.num3 = System.Math.Round(Me.num3, 2)
                     Me.txtSubTotal_Food.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Me.num3)
-                    Me.num4 = Microsoft.VisualBasic.Conversion.Val(Me.txtSubTotal_Food.Text) * Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxPer_Food.Text) / 100.0
+                    If Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxPer_Food.Text) > 0.0 Then
+                        Me.num4 = Microsoft.VisualBasic.Conversion.Val(Me.txtSubTotal_Food.Text) - Microsoft.VisualBasic.Conversion.Val(Me.txtSubTotal_Food.Text) / (1.0 + Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxPer_Food.Text) / 100.0)
+                    Else
+                        Me.num4 = 0.0
+                    End If
                     Me.num4 = System.Math.Round(Me.num4, 2)
-                    Me.txtServiceTaxAmount_Food.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(0)
+                    Me.txtServiceTaxAmount_Food.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Me.num4)
                     Me.num5 = Me.num3 - Me.num3 / (1.0 + Microsoft.VisualBasic.Conversion.Val(Me.txtVATPer_Food.Text) / 100.0)
                     Me.num5 = System.Math.Round(Me.num5, 2)
                     Me.txtVATAmt_Food.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Me.num5)
@@ -17365,7 +17364,7 @@ Namespace RestaurantPOS14
                     Me.txtSubTotal_Food.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Me.num3)
                     Me.num4 = Microsoft.VisualBasic.Conversion.Val(Me.txtSubTotal_Food.Text) * Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxPer_Food.Text) / 100.0
                     Me.num4 = System.Math.Round(Me.num4, 2)
-                    Me.txtServiceTaxAmount_Food.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(0)
+                    Me.txtServiceTaxAmount_Food.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Me.num4)
                     Me.num5 = Microsoft.VisualBasic.Conversion.Val(Me.txtSubTotal_Food.Text) * Microsoft.VisualBasic.Conversion.Val(Me.txtVATPer_Food.Text) / 100.0
                     Me.num5 = System.Math.Round(Me.num5, 2)
                     Me.txtVATAmt_Food.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Me.num5)
@@ -17518,8 +17517,8 @@ Namespace RestaurantPOS14
                     Dim location As System.Drawing.Point = screen.Bounds.Location
                     Dim p As System.Drawing.Point = New System.Drawing.Point(100, 100)
                     obj.Location = location + CType(p, System.Drawing.Size)
-                    Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Add(Me.str, Microsoft.VisualBasic.Conversion.Val(Me.txtRate_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtQty_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
-                    RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.lblBalance.Text))
+                    Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.AddItem(Me.str, Microsoft.VisualBasic.Conversion.Val(Me.txtRate_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtQty_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxPer_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxAmount_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
+                    RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = RestaurantPOS14.Configuration.MoneyMath.FormatPayableTotal(Microsoft.VisualBasic.Conversion.Val(Me.lblBalance.Text))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblHST.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.H1()))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.CurrentCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Count - 1))).Cells(0)
                     Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.Show()
@@ -17704,7 +17703,7 @@ Namespace RestaurantPOS14
                     Dim location As System.Drawing.Point = screen.Bounds.Location
                     Dim p As System.Drawing.Point = New System.Drawing.Point(100, 100)
                     obj.Location = location + CType(p, System.Drawing.Size)
-                    Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Add(Me.str, Microsoft.VisualBasic.Conversion.Val(Me.txtRate_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtQty_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
+                    Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.AddItem(Me.str, Microsoft.VisualBasic.Conversion.Val(Me.txtRate_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtQty_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxPer_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxAmount_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal1.Text))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblHST.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.H2()))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.CurrentCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Count - 1))).Cells(0)
@@ -17862,7 +17861,7 @@ Namespace RestaurantPOS14
                     Dim location As System.Drawing.Point = screen.Bounds.Location
                     Dim p As System.Drawing.Point = New System.Drawing.Point(100, 100)
                     obj.Location = location + CType(p, System.Drawing.Size)
-                    Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Add(Me.str, Microsoft.VisualBasic.Conversion.Val(Me.txtRate_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtQty_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
+                    Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.AddItem(Me.str, Microsoft.VisualBasic.Conversion.Val(Me.txtRate_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtQty_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxPer_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxAmount_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal2.Text))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblHST.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.H3()))
                     If System.Windows.Forms.Screen.AllScreens.Length = 1 Then
@@ -18021,7 +18020,7 @@ Namespace RestaurantPOS14
                     Dim location As System.Drawing.Point = screen.Bounds.Location
                     Dim p As System.Drawing.Point = New System.Drawing.Point(100, 100)
                     obj.Location = location + CType(p, System.Drawing.Size)
-                    Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Add(Me.str, Microsoft.VisualBasic.Conversion.Val(Me.txtRate_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtQty_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
+                    Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.AddItem(Me.str, Microsoft.VisualBasic.Conversion.Val(Me.txtRate_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtQty_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxPer_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxAmount_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal3.Text))
                     If System.Windows.Forms.Screen.AllScreens.Length = 1 Then
                         MyBase.Activate()
@@ -18332,12 +18331,14 @@ Namespace RestaurantPOS14
                         Dim dataGridViewCell As System.Windows.Forms.DataGridViewCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((rowIndex))).Cells(2)
                         dataGridViewCell.Value = Microsoft.VisualBasic.CompilerServices.Operators.AddObject(dataGridViewCell.Value, 1)
                         Dim dataGridViewCell2 As System.Windows.Forms.DataGridViewCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((rowIndex))).Cells(3)
+                        dataGridViewCell2.Value = Microsoft.VisualBasic.CompilerServices.Operators.AddObject(dataGridViewCell2.Value, Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxAmount_Food.Text))
+                        Dim totalDisplayCell As System.Windows.Forms.DataGridViewCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((rowIndex))).Cells(4)
                         If System.Windows.Forms.Screen.AllScreens.Length = 1 Then
                             MyBase.Activate()
                         End If
 
-                        dataGridViewCell2.Value = Microsoft.VisualBasic.CompilerServices.Operators.AddObject(dataGridViewCell2.Value, Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
-                        RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.lblBalance.Text))
+                        totalDisplayCell.Value = Microsoft.VisualBasic.CompilerServices.Operators.AddObject(totalDisplayCell.Value, Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
+                        RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = RestaurantPOS14.Configuration.MoneyMath.FormatPayableTotal(Microsoft.VisualBasic.Conversion.Val(Me.lblBalance.Text))
                         RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblHST.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.H1()))
                         Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.Show()
                     End If
@@ -18365,7 +18366,7 @@ Namespace RestaurantPOS14
                 Dim value As Double = Me.GrandTotal_Food()
                 value = System.Math.Round(value, 2)
                 Me.lblBalance.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(value)
-                Me.CustomerDisplayUpdatedBalance(New Decimal(Microsoft.VisualBasic.Conversion.Val(Me.lblBalance.Text)))
+                Me.CustomerDisplayUpdatedBalance(RestaurantPOS14.Configuration.MoneyMath.RoundPayableTotal(CDec(Microsoft.VisualBasic.Conversion.Val(Me.lblBalance.Text))))
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.txtColoredCustomerDisplay.Text, "Yes", TextCompare:=False) = 0 Then
                     Dim obj As System.Windows.Forms.Screen =(If((System.Windows.Forms.Screen.AllScreens.Length <= 1), System.Windows.Forms.Screen.AllScreens(0), (If((System.Windows.Forms.Screen.AllScreens.Length > 1), System.Windows.Forms.Screen.AllScreens(1), System.Windows.Forms.Screen.AllScreens(0)))))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.StartPosition = System.Windows.Forms.FormStartPosition.Manual
@@ -18377,7 +18378,7 @@ Namespace RestaurantPOS14
 
                     Dim p As System.Drawing.Point = New System.Drawing.Point(100, 100)
                     frmSecondaryDisplay2.Location = location + CType(p, System.Drawing.Size)
-                    RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.lblBalance.Text))
+                    RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = RestaurantPOS14.Configuration.MoneyMath.FormatPayableTotal(Microsoft.VisualBasic.Conversion.Val(Me.lblBalance.Text))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblHST.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.H1()))
                     Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.Show()
                 End If
@@ -18433,8 +18434,10 @@ Namespace RestaurantPOS14
 
                         dataGridViewCell.Value = Microsoft.VisualBasic.CompilerServices.Operators.SubtractObject(dataGridViewCell.Value, 1)
                         Dim dataGridViewCell2 As System.Windows.Forms.DataGridViewCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((rowIndex))).Cells(3)
-                        dataGridViewCell2.Value = Microsoft.VisualBasic.CompilerServices.Operators.SubtractObject(dataGridViewCell2.Value, Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
-                        RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.lblBalance.Text))
+                        dataGridViewCell2.Value = Microsoft.VisualBasic.CompilerServices.Operators.SubtractObject(dataGridViewCell2.Value, Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxAmount_Food.Text))
+                        Dim totalDisplayCell As System.Windows.Forms.DataGridViewCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((rowIndex))).Cells(4)
+                        totalDisplayCell.Value = Microsoft.VisualBasic.CompilerServices.Operators.SubtractObject(totalDisplayCell.Value, Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
+                        RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = RestaurantPOS14.Configuration.MoneyMath.FormatPayableTotal(Microsoft.VisualBasic.Conversion.Val(Me.lblBalance.Text))
                         RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblHST.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.H1()))
                         Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.Show()
                     End If
@@ -18491,6 +18494,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.My.MyProject.Forms.frmChangeRate.lblSet.Text = "KOT"
                 If Me.DataGridView1.Rows.Count > 0 Then
+                    If Me.DataGridView1.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView1.SelectedRows(0)
                     RestaurantPOS14.My.MyProject.Forms.frmChangeRate.txtNotes.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((13))).Value)
                     RestaurantPOS14.My.MyProject.Forms.frmChangeRate.txtR.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((14))).Value)
@@ -18507,6 +18511,7 @@ Namespace RestaurantPOS14
         Public Sub FillData()
             Try
                 If Me.DataGridView1.Rows.Count > 0 Then
+                    If Me.DataGridView1.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView1.SelectedRows(0)
                     Me.txtFoodName.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                     Me.txtRate_Food.Text = dataGridViewRow.Cells(CInt((1))).Value.ToString()
@@ -18530,6 +18535,7 @@ Namespace RestaurantPOS14
         Public Sub FillData1()
             Try
                 If Me.DataGridView3.Rows.Count > 0 Then
+                    If Me.DataGridView3.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView3.SelectedRows(0)
                     Me.txtFoodName.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                     Me.txtRate_Food.Text = dataGridViewRow.Cells(CInt((1))).Value.ToString()
@@ -18553,6 +18559,7 @@ Namespace RestaurantPOS14
         Public Sub FillData2()
             Try
                 If Me.DataGridView4.Rows.Count > 0 Then
+                    If Me.DataGridView4.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView4.SelectedRows(0)
                     Me.txtFoodName.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                     Me.txtRate_Food.Text = dataGridViewRow.Cells(CInt((1))).Value.ToString()
@@ -18576,6 +18583,7 @@ Namespace RestaurantPOS14
         Public Sub FillData3()
             Try
                 If Me.DataGridView5.Rows.Count > 0 Then
+                    If Me.DataGridView5.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView5.SelectedRows(0)
                     Me.txtFoodName.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                     Me.txtRate_Food.Text = dataGridViewRow.Cells(CInt((1))).Value.ToString()
@@ -18976,7 +18984,7 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModFunc.ODN(Me.lblOrderNo.Text, Me.lblTableNo.Text)
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderInfoKOT( Id,TicketNo, BillDate, GrandTotal,tableNo,Operator,GroupName,TicketNote,KOT_Status,TaxType,NoOfPerson,ODNX) Values (" & Me.txtTicketID.Text & ",@d6,@d2," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.lblBalance.Text)) & ",@d1,@d3,@d4,@d5,'Open',@dTax," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtNoofPeople.Text)) & ",@d7)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderInfoKOT( Id,TicketNo, BillDate, GrandTotal,tableNo,Operator,GroupName,TicketNote,KOT_Status,TaxType,NoOfPerson,ODNX) Values (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtTicketID.Text, "Record ID") & ",@d6,@d2," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.lblBalance.Text)) & ",@d1,@d3,@d4,@d5,'Open',@dTax," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtNoofPeople.Text)) & ",@d7)")
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Me.lblTableNo.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", System.DateTime.Now)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d3", Me.lblUserVAL.Text)
@@ -18992,7 +19000,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductKOT(TicketID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,T_Number,DishNameArabic,ItemStatus) VALUES (" & Me.txtTicketID.Text & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16,@d17,@d18)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductKOT(TicketID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,T_Number,DishNameArabic,ItemStatus) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtTicketID.Text, "Record ID") & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16,@d17,@d18)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow5 As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView1.Rows, System.Collections.IEnumerable)
@@ -19119,7 +19127,8 @@ Namespace RestaurantPOS14
                     Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                     RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                     RestaurantPOS14.ModClasses.con.Open()
-                    RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select RTRIM(TableNo),RTRIM(Dish),(Rate),Sum(Quantity),Sum(Amount),(DiscountPer), Sum(DiscountAmount), RTRIM(STPer), Sum(STAmount), RTRIM(VATPer), Sum(VATAmount),SCPer,Sum(SCAmount),Sum(TotalAmount),RTRIM(GroupName),(DiscountPer),RTRIM(Category),RTRIM(DishNameArabic) from RestaurantPOS_OrderedProductKOT,RestaurantPOS_OrderInfoKOT where RestaurantPOS_OrderedProductKOT.TicketID=RestaurantPOS_OrderInfoKOT.ID and TableNo in (" & Me.txtMergedTables.Text & ") and KOT_Status in ('Open','Served','Prepared') and ItemStatus <> 'Canceled' group by TableNo,Dish,Rate,DiscountPer,STPer,VATPer,SCPer,GroupName,Category,DishNameArabic order by TableNo", RestaurantPOS14.ModClasses.con)
+                    RestaurantPOS14.ModClasses.cmd = RestaurantPOS14.Billing.DineInBillQueries.CreateUnpaidBillItemsCommand(
+                        RestaurantPOS14.ModClasses.con, System.Convert.ToInt32(Me.txtTempBillID.Text, System.Globalization.CultureInfo.InvariantCulture))
                     RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
                     Dim sqlDataReader3 As System.Data.SqlClient.SqlDataReader = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                     Me.DataGridView2X.Rows.Clear()
@@ -19131,7 +19140,7 @@ Namespace RestaurantPOS14
                     Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                     RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                     RestaurantPOS14.ModClasses.con.Open()
-                    RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Update RestaurantPOS_BillingInfoKOT set Cash=0,Change=0,PaymentMode=@d1,KOTDiscountPer=0,KOTDiscountAmt=0,GiftCardID=@d11,GiftCardAmount=@d12,LP=@d13,LA=@d14,Card=0,Tip=0,GrandTotal=" & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Me.GrandTotal_Food1X()) & " where RestaurantPOS_BillingInfoKOT.ID=" & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtTempBillID.Text)))
+                    RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Update RestaurantPOS_BillingInfoKOT set Cash=0,Change=0,PaymentMode=@d1,KOTDiscountPer=0,KOTDiscountAmt=0,GiftCardID=@d11,GiftCardAmount=@d12,LP=@d13,LA=@d14,Card=0,Tip=0,GrandTotal=" & RestaurantPOS14.Configuration.MoneyMath.FormatPayableTotal(Me.GrandTotal_Food1X()) & " where RestaurantPOS_BillingInfoKOT.ID=" & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtTempBillID.Text)))
                     RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", "Cash")
                     RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d11", "")
                     RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d12", 0)
@@ -19152,7 +19161,7 @@ Namespace RestaurantPOS14
                     Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                     RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                     RestaurantPOS14.ModClasses.con.Open()
-                    RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillKOT(BillID,TableNo,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Category,DishNameArabic) VALUES (" & Me.txtTempBillID.Text & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16)")
+                    RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillKOT(BillID,TableNo,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Category,DishNameArabic) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtTempBillID.Text, "Record ID") & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16)")
                     RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                     RestaurantPOS14.ModClasses.cmd.Prepare()
                     For Each dataGridViewRow6 As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView2X.Rows, System.Collections.IEnumerable)
@@ -19256,7 +19265,7 @@ Namespace RestaurantPOS14
             RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
             RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
             If RestaurantPOS14.ModClasses.rdr.Read() Then
-                Call System.Windows.Forms.MessageBox.Show("Bill is already generated for selected table, Order can't be deleted.", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
+                Call System.Windows.Forms.MessageBox.Show("This table has an unpaid bill. To correct the order, use Dine In Billing > Cancel Unpaid Bill first. Bills with payments cannot be cancelled there.", "Order linked to unpaid bill", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Information)
                 Me.Reset()
             Else
                 RestaurantPOS14.ModClasses.con.Close()
@@ -19293,7 +19302,7 @@ Namespace RestaurantPOS14
 
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("delete from RestaurantPOS_OrderInfoKOT where ID=" & Me.txtTicketID.Text)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("delete from RestaurantPOS_OrderInfoKOT where ID=" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtTicketID.Text, "Record ID"))
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 Dim num As Integer = RestaurantPOS14.ModClasses.cmd.ExecuteNonQuery()
                 If RestaurantPOS14.ModClasses.con.State = System.Data.ConnectionState.Open Then
@@ -19379,7 +19388,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("delete from RestaurantPOS_BillingInfoKOT where ID=" & Me.txtBillID.Text)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("delete from RestaurantPOS_BillingInfoKOT where ID=" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID.Text, "Record ID"))
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 Dim num As Integer = RestaurantPOS14.ModClasses.cmd.ExecuteNonQuery()
                 If RestaurantPOS14.ModClasses.con.State = System.Data.ConnectionState.Open Then
@@ -19412,7 +19421,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("delete from RestaurantPOS_BillingInfoTA where ID=" & Me.txtBillID1.Text)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("delete from RestaurantPOS_BillingInfoTA where ID=" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID1.Text, "Record ID"))
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 Dim num As Integer = RestaurantPOS14.ModClasses.cmd.ExecuteNonQuery()
                 If RestaurantPOS14.ModClasses.con.State = System.Data.ConnectionState.Open Then
@@ -19502,7 +19511,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("delete from RestaurantPOS_BillingInfoHD where ID=" & Me.txtBillID2.Text)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("delete from RestaurantPOS_BillingInfoHD where ID=" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID2.Text, "Record ID"))
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 Dim num As Integer = RestaurantPOS14.ModClasses.cmd.ExecuteNonQuery()
                 If RestaurantPOS14.ModClasses.con.State = System.Data.ConnectionState.Open Then
@@ -19592,7 +19601,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("delete from RestaurantPOS_BillingInfoEB where ID=" & Me.txtBillID3.Text)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("delete from RestaurantPOS_BillingInfoEB where ID=" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID3.Text, "Record ID"))
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 Dim num As Integer = RestaurantPOS14.ModClasses.cmd.ExecuteNonQuery()
                 If RestaurantPOS14.ModClasses.con.State = System.Data.ConnectionState.Open Then
@@ -19759,7 +19768,8 @@ Namespace RestaurantPOS14
                 If RestaurantPOS14.ModClasses.con.State = System.Data.ConnectionState.Open Then
                     RestaurantPOS14.ModClasses.con.Close()
                 End If
-            Catch
+            Catch suppressedException As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
             End Try
 
             Dim printDocument As System.Drawing.Printing.PrintDocument = New System.Drawing.Printing.PrintDocument()
@@ -19810,7 +19820,8 @@ Namespace RestaurantPOS14
                 If RestaurantPOS14.ModClasses.rdr.Read() Then
                     operatorName = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(RestaurantPOS14.ModClasses.rdr.GetValue(0)) & " (" & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(RestaurantPOS14.ModClasses.rdr.GetValue(1)) & ")"
                 End If
-            Catch
+            Catch suppressedException As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
             End Try
 
             e.Graphics.DrawString(hotelName, bold, System.Drawing.Brushes.Black, 10F, y)
@@ -19887,7 +19898,8 @@ Namespace RestaurantPOS14
                             catToKitchen(c) = k
                         End If
                     End While
-                Catch
+                Catch suppressedException As System.Exception
+                    RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                 End Try
             End If
 
@@ -20289,7 +20301,7 @@ Namespace RestaurantPOS14
                         dataGridViewRow2.Cells(CInt((5))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.txtKOTDiscPer.Text) + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((15))).Value)), 4)
                         dataGridViewRow2.Cells(CInt((6))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((4))).Value)) * Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((5))).Value)) / 100.0, 3)
                         Me.num1 = Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((4))).Value)) - Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((6))).Value))
-                        dataGridViewRow2.Cells(CInt((8))).Value = 0
+                        dataGridViewRow2.Cells(CInt((8))).Value = System.Math.Round(Me.num1 - Me.num1 / (1.0 + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((7))).Value)) / 100.0), 3)
                         dataGridViewRow2.Cells(CInt((10))).Value = System.Math.Round(Me.num1 - Me.num1 / (1.0 + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((9))).Value)) / 100.0), 3)
                         dataGridViewRow2.Cells(CInt((12))).Value = 0
                         dataGridViewRow2.Cells(CInt((13))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((4))).Value)) - Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((6))).Value)), 2)
@@ -20300,8 +20312,7 @@ Namespace RestaurantPOS14
                 num = System.Math.Round(num, 2)
                 Me.txtKOTDiscountAmount.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(num)
                 Dim value As Double = Me.GrandTotal_Food1() - Microsoft.VisualBasic.Conversion.Val(Me.txtLA.Text) - Microsoft.VisualBasic.Conversion.Val(Me.txtGFA.Text) + Microsoft.VisualBasic.Conversion.Val(Me.txtTip.Text)
-                value = System.Math.Round(value, 2)
-                Me.txtGrandTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(value)
+                RestaurantPOS14.Billing.PayableTotal.Apply(Me.txtGrandTotal, value, String.Equals(Me.txtColoredCustomerDisplay.Text, "Yes", StringComparison.OrdinalIgnoreCase))
                 Dim num2 As Double = Microsoft.VisualBasic.Conversion.Val(Me.txtCash.Text) + Microsoft.VisualBasic.Conversion.Val(Me.txtCard.Text) - Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal.Text)
                 num2 = System.Math.Round(num2, 2)
                 If num2 < 0.0 Then
@@ -20329,7 +20340,7 @@ Namespace RestaurantPOS14
                 num3 += Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow3.Cells(CInt((4))).Value))
             Next
 
-            Dim num4 As Double = Microsoft.VisualBasic.Conversion.Val(Me.txtKOTDiscountAmount.Text) * 100.0 / Microsoft.VisualBasic.Conversion.Val(num3)
+            Dim num4 As Double = RestaurantPOS14.ModFunc.SafeDivide(Microsoft.VisualBasic.Conversion.Val(Me.txtKOTDiscountAmount.Text) * 100.0, Microsoft.VisualBasic.Conversion.Val(num3))
             num4 = System.Math.Round(num4, 4)
             Me.txtKOTDiscPer.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(num4)
             If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.txtTaxType.Text, "Inclusive", TextCompare:=False) <> 0 Then
@@ -20346,7 +20357,7 @@ Namespace RestaurantPOS14
                     dataGridViewRow5.Cells(CInt((5))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.txtKOTDiscPer.Text) + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((15))).Value)), 4)
                     dataGridViewRow5.Cells(CInt((6))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((4))).Value)) * Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((5))).Value)) / 100.0, 3)
                     num4 = Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((4))).Value)) - Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((6))).Value))
-                    dataGridViewRow5.Cells(CInt((8))).Value = 0
+                    dataGridViewRow5.Cells(CInt((8))).Value = System.Math.Round(num4 - num4 / (1.0 + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((7))).Value)) / 100.0), 3)
                     dataGridViewRow5.Cells(CInt((10))).Value = System.Math.Round(num4 - num4 / (1.0 + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((9))).Value)) / 100.0), 3)
                     dataGridViewRow5.Cells(CInt((12))).Value = 0
                     dataGridViewRow5.Cells(CInt((13))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((4))).Value)) - Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((6))).Value)), 2)
@@ -20354,8 +20365,7 @@ Namespace RestaurantPOS14
             End If
 
             Dim value2 As Double = Me.GrandTotal_Food1() - Microsoft.VisualBasic.Conversion.Val(Me.txtLA.Text) - Microsoft.VisualBasic.Conversion.Val(Me.txtGFA.Text) + Microsoft.VisualBasic.Conversion.Val(Me.txtTip.Text)
-            value2 = System.Math.Round(value2, 2)
-            Me.txtGrandTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(value2)
+            RestaurantPOS14.Billing.PayableTotal.Apply(Me.txtGrandTotal, value2, String.Equals(Me.txtColoredCustomerDisplay.Text, "Yes", StringComparison.OrdinalIgnoreCase))
             Dim num5 As Double = Microsoft.VisualBasic.Conversion.Val(Me.txtCash.Text) + Microsoft.VisualBasic.Conversion.Val(Me.txtCard.Text) - Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal.Text)
             num5 = System.Math.Round(num5, 2)
             If num5 < 0.0 Then
@@ -20391,7 +20401,7 @@ Namespace RestaurantPOS14
                             dataGridViewRow2.Cells(CInt((4))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.txtTADiscountPer.Text) + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((14))).Value)), 4)
                             dataGridViewRow2.Cells(CInt((5))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((3))).Value)) * Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((4))).Value)) / 100.0, 3)
                             Me.num1 = Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((3))).Value)) - Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((5))).Value))
-                            dataGridViewRow2.Cells(CInt((7))).Value = 0
+                            dataGridViewRow2.Cells(CInt((7))).Value = System.Math.Round(Me.num1 - Me.num1 / (1.0 + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((6))).Value)) / 100.0), 3)
                             dataGridViewRow2.Cells(CInt((9))).Value = System.Math.Round(Me.num1 - Me.num1 / (1.0 + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((8))).Value)) / 100.0), 3)
                             dataGridViewRow2.Cells(CInt((11))).Value = 0
                             dataGridViewRow2.Cells(CInt((12))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((3))).Value)) - Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((5))).Value)), 2)
@@ -20404,8 +20414,7 @@ Namespace RestaurantPOS14
                     Me.lblBalance1.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Me.GrandTotal_Food2())
                     Me.txtSubTotal1.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Me.GrandTotal_Food2())
                     Me.num1 = Microsoft.VisualBasic.Conversion.Val(Me.txtParcelCharges.Text) + Microsoft.VisualBasic.Conversion.Val(Me.txtSubTotal1.Text) - Microsoft.VisualBasic.Conversion.Val(Me.txtLA1.Text) - Microsoft.VisualBasic.Conversion.Val(Me.txtGFA1.Text) + Microsoft.VisualBasic.Conversion.Val(Me.txtTip1.Text)
-                    Me.num1 = System.Math.Round(Me.num1, 2)
-                    Me.txtGrandTotal1.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Me.num1)
+                    RestaurantPOS14.Billing.PayableTotal.Apply(Me.txtGrandTotal1, Me.num1, String.Equals(Me.txtColoredCustomerDisplay.Text, "Yes", StringComparison.OrdinalIgnoreCase))
                     If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.txtColoredCustomerDisplay.Text, "Yes", TextCompare:=False) = 0 Then
                         Dim screen As System.Windows.Forms.Screen =(If((System.Windows.Forms.Screen.AllScreens.Length <= 1), System.Windows.Forms.Screen.AllScreens(0), (If((System.Windows.Forms.Screen.AllScreens.Length > 1), System.Windows.Forms.Screen.AllScreens(1), System.Windows.Forms.Screen.AllScreens(0)))))
                         If System.Windows.Forms.Screen.AllScreens.Length = 1 Then
@@ -20446,7 +20455,7 @@ Namespace RestaurantPOS14
                     num3 += Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow3.Cells(CInt((3))).Value))
                 Next
 
-                Dim num4 As Double = Microsoft.VisualBasic.Conversion.Val(Me.txtTADiscountAmount.Text) * 100.0 / Microsoft.VisualBasic.Conversion.Val(num3)
+                Dim num4 As Double = RestaurantPOS14.ModFunc.SafeDivide(Microsoft.VisualBasic.Conversion.Val(Me.txtTADiscountAmount.Text) * 100.0, Microsoft.VisualBasic.Conversion.Val(num3))
                 num4 = System.Math.Round(num4, 4)
                 Me.txtTADiscountPer.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(num4)
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.txtTaxType.Text, "Inclusive", TextCompare:=False) <> 0 Then
@@ -20463,7 +20472,7 @@ Namespace RestaurantPOS14
                         dataGridViewRow5.Cells(CInt((4))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.txtTADiscountPer.Text) + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((14))).Value)), 4)
                         dataGridViewRow5.Cells(CInt((5))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((3))).Value)) * Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((4))).Value)) / 100.0, 3)
                         num4 = Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((3))).Value)) - Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((5))).Value))
-                        dataGridViewRow5.Cells(CInt((7))).Value = 0
+                        dataGridViewRow5.Cells(CInt((7))).Value = System.Math.Round(num4 - num4 / (1.0 + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((6))).Value)) / 100.0), 2)
                         dataGridViewRow5.Cells(CInt((9))).Value = System.Math.Round(num4 - num4 / (1.0 + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((8))).Value)) / 100.0), 2)
                         dataGridViewRow5.Cells(CInt((11))).Value = 0
                         dataGridViewRow5.Cells(CInt((12))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((3))).Value)) - Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((5))).Value)), 2)
@@ -20473,8 +20482,7 @@ Namespace RestaurantPOS14
                 Me.lblBalance1.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Me.GrandTotal_Food2())
                 Me.txtSubTotal1.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Me.GrandTotal_Food2())
                 num4 = Microsoft.VisualBasic.Conversion.Val(Me.txtParcelCharges.Text) + Microsoft.VisualBasic.Conversion.Val(Me.txtSubTotal1.Text) - Microsoft.VisualBasic.Conversion.Val(Me.txtLA1.Text) - Microsoft.VisualBasic.Conversion.Val(Me.txtGFA1.Text) + Microsoft.VisualBasic.Conversion.Val(Me.txtTip1.Text)
-                num4 = System.Math.Round(num4, 2)
-                Me.txtGrandTotal1.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(num4)
+                RestaurantPOS14.Billing.PayableTotal.Apply(Me.txtGrandTotal1, num4, String.Equals(Me.txtColoredCustomerDisplay.Text, "Yes", StringComparison.OrdinalIgnoreCase))
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.txtColoredCustomerDisplay.Text, "Yes", TextCompare:=False) = 0 Then
                     If System.Windows.Forms.Screen.AllScreens.Length = 1 Then
                         MyBase.Activate()
@@ -20529,7 +20537,7 @@ Namespace RestaurantPOS14
                                 dataGridViewRow2.Cells(CInt((4))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.txtHDDiscountPer.Text) + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((14))).Value)), 4)
                                 dataGridViewRow2.Cells(CInt((5))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((3))).Value)) * Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((4))).Value)) / 100.0, 3)
                                 Me.num1 = Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((3))).Value)) - Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((5))).Value))
-                                dataGridViewRow2.Cells(CInt((7))).Value = 0
+                                dataGridViewRow2.Cells(CInt((7))).Value = System.Math.Round(Me.num1 - Me.num1 / (1.0 + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((6))).Value)) / 100.0), 2)
                                 dataGridViewRow2.Cells(CInt((9))).Value = System.Math.Round(Me.num1 - Me.num1 / (1.0 + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((8))).Value)) / 100.0), 2)
                                 dataGridViewRow2.Cells(CInt((11))).Value = 0
                                 dataGridViewRow2.Cells(CInt((12))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((3))).Value)) - Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((5))).Value)), 2)
@@ -20542,20 +20550,19 @@ Namespace RestaurantPOS14
                         Me.lblBalance2.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Me.GrandTotal_Food3())
                         Me.txtSubTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Me.GrandTotal_Food3())
                         Dim value As Double = Microsoft.VisualBasic.Conversion.Val(Me.txtSubTotal.Text) + Microsoft.VisualBasic.Conversion.Val(Me.txtDeliveryCharges.Text) - Microsoft.VisualBasic.Conversion.Val(Me.txtLA2.Text) - Microsoft.VisualBasic.Conversion.Val(Me.txtGFA2.Text) + Microsoft.VisualBasic.Conversion.Val(Me.txtTip2.Text)
-                        value = System.Math.Round(value, 2)
-                        Me.txtGrandTotal2.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(value)
-                        If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.txtColoredCustomerDisplay.Text, "Yes", TextCompare:=False) = 0 AndAlso System.Windows.Forms.Screen.AllScreens.Length = 1 Then
-                            MyBase.Activate()
-                        End If
+                        RestaurantPOS14.Billing.PayableTotal.Apply(Me.txtGrandTotal2, value, String.Equals(Me.txtColoredCustomerDisplay.Text, "Yes", StringComparison.OrdinalIgnoreCase))
+                        If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.txtColoredCustomerDisplay.Text, "Yes", TextCompare:=False) = 0 Then
+                            If System.Windows.Forms.Screen.AllScreens.Length = 1 Then MyBase.Activate()
 
-                        Dim screen As System.Windows.Forms.Screen =(If((System.Windows.Forms.Screen.AllScreens.Length <= 1), System.Windows.Forms.Screen.AllScreens(0), (If((System.Windows.Forms.Screen.AllScreens.Length > 1), System.Windows.Forms.Screen.AllScreens(1), System.Windows.Forms.Screen.AllScreens(0)))))
-                        RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.StartPosition = System.Windows.Forms.FormStartPosition.Manual
-                        Dim obj As RestaurantPOS14.frmSecondaryDisplay = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay
-                        Dim location As System.Drawing.Point = screen.Bounds.Location
-                        Dim p As System.Drawing.Point = New System.Drawing.Point(100, 100)
-                        obj.Location = location + CType(p, System.Drawing.Size)
-                        RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal2.Text))
-                        Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.Show()
+                            Dim screen As System.Windows.Forms.Screen =(If((System.Windows.Forms.Screen.AllScreens.Length <= 1), System.Windows.Forms.Screen.AllScreens(0), (If((System.Windows.Forms.Screen.AllScreens.Length > 1), System.Windows.Forms.Screen.AllScreens(1), System.Windows.Forms.Screen.AllScreens(0)))))
+                            RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.StartPosition = System.Windows.Forms.FormStartPosition.Manual
+                            Dim obj As RestaurantPOS14.frmSecondaryDisplay = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay
+                            Dim location As System.Drawing.Point = screen.Bounds.Location
+                            Dim p As System.Drawing.Point = New System.Drawing.Point(100, 100)
+                            obj.Location = location + CType(p, System.Drawing.Size)
+                            RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal2.Text))
+                            Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.Show()
+                        End If
                     End If
                 End If
 
@@ -20575,7 +20582,7 @@ Namespace RestaurantPOS14
                     num2 += Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow3.Cells(CInt((3))).Value))
                 Next
 
-                Dim num3 As Double = Microsoft.VisualBasic.Conversion.Val(Me.txtHDDiscountAmount.Text) * 100.0 / Microsoft.VisualBasic.Conversion.Val(num2)
+                Dim num3 As Double = RestaurantPOS14.ModFunc.SafeDivide(Microsoft.VisualBasic.Conversion.Val(Me.txtHDDiscountAmount.Text) * 100.0, Microsoft.VisualBasic.Conversion.Val(num2))
                 num3 = System.Math.Round(num3, 4)
                 Me.txtHDDiscountPer.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(num3)
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.txtTaxType.Text, "Inclusive", TextCompare:=False) <> 0 Then
@@ -20592,7 +20599,7 @@ Namespace RestaurantPOS14
                         dataGridViewRow5.Cells(CInt((4))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.txtHDDiscountPer.Text) + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((14))).Value)), 4)
                         dataGridViewRow5.Cells(CInt((5))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((3))).Value)) * Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((4))).Value)) / 100.0, 3)
                         num3 = Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((3))).Value)) - Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((5))).Value))
-                        dataGridViewRow5.Cells(CInt((7))).Value = 0
+                        dataGridViewRow5.Cells(CInt((7))).Value = System.Math.Round(num3 - num3 / (1.0 + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((6))).Value)) / 100.0), 2)
                         dataGridViewRow5.Cells(CInt((9))).Value = System.Math.Round(num3 - num3 / (1.0 + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((8))).Value)) / 100.0), 2)
                         dataGridViewRow5.Cells(CInt((11))).Value = 0
                         dataGridViewRow5.Cells(CInt((12))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((3))).Value)) - Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((5))).Value)), 2)
@@ -20602,8 +20609,7 @@ Namespace RestaurantPOS14
                 Me.lblBalance2.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Me.GrandTotal_Food3())
                 Me.txtSubTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Me.GrandTotal_Food3())
                 Dim value2 As Double = Microsoft.VisualBasic.Conversion.Val(Me.txtSubTotal.Text) + Microsoft.VisualBasic.Conversion.Val(Me.txtDeliveryCharges.Text) - Microsoft.VisualBasic.Conversion.Val(Me.txtLA2.Text) - Microsoft.VisualBasic.Conversion.Val(Me.txtGFA2.Text) + Microsoft.VisualBasic.Conversion.Val(Me.txtTip2.Text)
-                value2 = System.Math.Round(value2, 2)
-                Me.txtGrandTotal2.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(value2)
+                RestaurantPOS14.Billing.PayableTotal.Apply(Me.txtGrandTotal2, value2, String.Equals(Me.txtColoredCustomerDisplay.Text, "Yes", StringComparison.OrdinalIgnoreCase))
                 If System.Windows.Forms.Screen.AllScreens.Length = 1 Then
                     MyBase.Activate()
                 End If
@@ -20650,7 +20656,7 @@ Namespace RestaurantPOS14
                                 dataGridViewRow2.Cells(CInt((4))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.txtEBDiscountPer.Text) + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((14))).Value)), 4)
                                 dataGridViewRow2.Cells(CInt((5))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((3))).Value)) * Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((4))).Value)) / 100.0, 3)
                                 Me.num1 = Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((3))).Value)) - Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((5))).Value))
-                                dataGridViewRow2.Cells(CInt((7))).Value = 0
+                                dataGridViewRow2.Cells(CInt((7))).Value = System.Math.Round(Me.num1 - Me.num1 / (1.0 + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((6))).Value)) / 100.0), 2)
                                 dataGridViewRow2.Cells(CInt((9))).Value = System.Math.Round(Me.num1 - Me.num1 / (1.0 + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((8))).Value)) / 100.0), 2)
                                 dataGridViewRow2.Cells(CInt((11))).Value = 0
                                 dataGridViewRow2.Cells(CInt((12))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((3))).Value)) - Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((5))).Value)), 2)
@@ -20661,12 +20667,11 @@ Namespace RestaurantPOS14
                         num = System.Math.Round(num, 2)
                         Me.txtEBDiscountAmount.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(num)
                         Dim value As Double = Me.GrandTotal_Food4() - Microsoft.VisualBasic.Conversion.Val(Me.txtLA3.Text) - Microsoft.VisualBasic.Conversion.Val(Me.txtGFA3.Text) + Microsoft.VisualBasic.Conversion.Val(Me.txtTip3.Text)
-                        value = System.Math.Round(value, 2)
                         If System.Windows.Forms.Screen.AllScreens.Length = 1 Then
                             MyBase.Activate()
                         End If
 
-                        Me.txtGrandTotal3.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(value)
+                        RestaurantPOS14.Billing.PayableTotal.Apply(Me.txtGrandTotal3, value, String.Equals(Me.txtColoredCustomerDisplay.Text, "Yes", StringComparison.OrdinalIgnoreCase))
                         If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.txtColoredCustomerDisplay.Text, "Yes", TextCompare:=False) = 0 Then
                             Dim screen As System.Windows.Forms.Screen =(If((System.Windows.Forms.Screen.AllScreens.Length <= 1), System.Windows.Forms.Screen.AllScreens(0), (If((System.Windows.Forms.Screen.AllScreens.Length > 1), System.Windows.Forms.Screen.AllScreens(1), System.Windows.Forms.Screen.AllScreens(0)))))
                             RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.StartPosition = System.Windows.Forms.FormStartPosition.Manual
@@ -20705,7 +20710,7 @@ Namespace RestaurantPOS14
                     num3 += Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow3.Cells(CInt((3))).Value))
                 Next
 
-                Dim num4 As Double = Microsoft.VisualBasic.Conversion.Val(Me.txtEBDiscountAmount.Text) * 100.0 / Microsoft.VisualBasic.Conversion.Val(num3)
+                Dim num4 As Double = RestaurantPOS14.ModFunc.SafeDivide(Microsoft.VisualBasic.Conversion.Val(Me.txtEBDiscountAmount.Text) * 100.0, Microsoft.VisualBasic.Conversion.Val(num3))
                 num4 = System.Math.Round(num4, 4)
                 Me.txtEBDiscountPer.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(num4)
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.txtTaxType.Text, "Inclusive", TextCompare:=False) <> 0 Then
@@ -20722,7 +20727,7 @@ Namespace RestaurantPOS14
                         dataGridViewRow5.Cells(CInt((4))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.txtEBDiscountPer.Text) + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((14))).Value)), 4)
                         dataGridViewRow5.Cells(CInt((5))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((3))).Value)) * Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((4))).Value)) / 100.0, 3)
                         num4 = Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((3))).Value)) - Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((5))).Value))
-                        dataGridViewRow5.Cells(CInt((7))).Value = 0
+                        dataGridViewRow5.Cells(CInt((7))).Value = System.Math.Round(num4 - num4 / (1.0 + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((6))).Value)) / 100.0), 2)
                         dataGridViewRow5.Cells(CInt((9))).Value = System.Math.Round(num4 - num4 / (1.0 + Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((8))).Value)) / 100.0), 2)
                         dataGridViewRow5.Cells(CInt((11))).Value = 0
                         dataGridViewRow5.Cells(CInt((12))).Value = System.Math.Round(Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((3))).Value)) - Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow5.Cells(CInt((5))).Value)), 2)
@@ -20734,8 +20739,7 @@ Namespace RestaurantPOS14
                     MyBase.Activate()
                 End If
 
-                value2 = System.Math.Round(value2, 2)
-                Me.txtGrandTotal3.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(value2)
+                RestaurantPOS14.Billing.PayableTotal.Apply(Me.txtGrandTotal3, value2, String.Equals(Me.txtColoredCustomerDisplay.Text, "Yes", StringComparison.OrdinalIgnoreCase))
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.txtColoredCustomerDisplay.Text, "Yes", TextCompare:=False) = 0 Then
                     Dim screen2 As System.Windows.Forms.Screen =(If((System.Windows.Forms.Screen.AllScreens.Length <= 1), System.Windows.Forms.Screen.AllScreens(0), (If((System.Windows.Forms.Screen.AllScreens.Length > 1), System.Windows.Forms.Screen.AllScreens(1), System.Windows.Forms.Screen.AllScreens(0)))))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.StartPosition = System.Windows.Forms.FormStartPosition.Manual
@@ -20898,7 +20902,7 @@ Namespace RestaurantPOS14
                 Me.auto1()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_BillingInfoKOT( Id,BillNo, BillDate, GrandTotal,Cash,Change,Operator,PaymentMode,ExchangeRate,CurrencyCode,KOTDiscountPer,KOTDiscountAmt,Member_ID,ODN,Waiter,GiftCardID,GiftCardAmount,LP,LA,CustomerName,PhoneNo,EmailID,TaxType,Card,NoofPerson,DIB_Status,NPPaid,BillType,Tip) Values (" & Me.txtBillID.Text & ",'" & Me.lblBillNo.Text & "',@d1," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCash.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtChange.Text)) & ",@d2,@d3," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtExchangeRate.Text)) & ",@d4," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtKOTDiscPer.Text)) & ",@d5,@d6,@d7,@d8,@d11,@d12,@d13,@d14,@d15,@d16,@d17,@d18," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCard.Text)) & ",1,@d19,1,'Normal Bill'," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtTip.Text)) & ")")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_BillingInfoKOT( Id,BillNo, BillDate, GrandTotal,Cash,Change,Operator,PaymentMode,ExchangeRate,CurrencyCode,KOTDiscountPer,KOTDiscountAmt,Member_ID,ODN,Waiter,GiftCardID,GiftCardAmount,LP,LA,CustomerName,PhoneNo,EmailID,TaxType,Card,NoofPerson,DIB_Status,NPPaid,BillType,Tip) Values (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID.Text, "Record ID") & ",'" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.lblBillNo.Text) & "',@d1," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCash.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtChange.Text)) & ",@d2,@d3," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtExchangeRate.Text)) & ",@d4," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtKOTDiscPer.Text)) & ",@d5,@d6,@d7,@d8,@d11,@d12,@d13,@d14,@d15,@d16,@d17,@d18," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCard.Text)) & ",1,@d19,1,'Normal Bill'," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtTip.Text)) & ")")
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Microsoft.VisualBasic.DateAndTime.Now)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", Me.lblUserVAL.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d3", Me.lblPaymentMode.Text)
@@ -20937,7 +20941,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillKOT(BillID,TableNo,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Category,DishNameArabic) VALUES (" & Me.txtBillID.Text & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillKOT(BillID,TableNo,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Category,DishNameArabic) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID.Text, "Record ID") & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView2.Rows, System.Collections.IEnumerable)
@@ -21032,7 +21036,7 @@ Namespace RestaurantPOS14
                         End If
                     Next
 
-                    Dim num6 As Integer = CInt(System.Math.Round(System.Math.Floor(Microsoft.VisualBasic.Conversion.Val(num5) / Microsoft.VisualBasic.Conversion.Val(Me.LA))))
+                    Dim num6 As Integer = CInt(System.Math.Round(System.Math.Floor(RestaurantPOS14.ModFunc.SafeDivide(Microsoft.VisualBasic.Conversion.Val(num5), Microsoft.VisualBasic.Conversion.Val(Me.LA)))))
                     RestaurantPOS14.ModFunc.LoyaltyCardMemberLedgerSave(System.DateTime.Today, Me.lblBillNo.Text, "Points for dine in billing", CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(num6))), CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.txtLP.Text))), CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.lblMemberID.Text))))
                 End If
 
@@ -21281,7 +21285,8 @@ Namespace RestaurantPOS14
                 Me.Print2Func2()
                 Try
                     RestaurantPOS14.frmEInvoicePreview.ShowFor(Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(Microsoft.VisualBasic.Conversion.Val(Me.txtBillID1.Text)), "TA")
-                Catch
+                Catch suppressedException As System.Exception
+                    RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                 End Try
             Catch ex As System.Exception
                 Call System.Windows.Forms.MessageBox.Show(ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
@@ -21386,7 +21391,8 @@ Namespace RestaurantPOS14
                 Me.Print3Func2()
                 Try
                     RestaurantPOS14.frmEInvoicePreview.ShowFor(Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(Microsoft.VisualBasic.Conversion.Val(Me.txtBillID2.Text)), "HD")
-                Catch
+                Catch suppressedException As System.Exception
+                    RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                 End Try
             Catch ex As System.Exception
                 Call System.Windows.Forms.MessageBox.Show(ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
@@ -21583,7 +21589,9 @@ Namespace RestaurantPOS14
                         Dim dataGridViewCell As System.Windows.Forms.DataGridViewCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((rowIndex))).Cells(2)
                         dataGridViewCell.Value = Microsoft.VisualBasic.CompilerServices.Operators.AddObject(dataGridViewCell.Value, 1)
                         Dim dataGridViewCell2 As System.Windows.Forms.DataGridViewCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((rowIndex))).Cells(3)
-                        dataGridViewCell2.Value = Microsoft.VisualBasic.CompilerServices.Operators.AddObject(dataGridViewCell2.Value, Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
+                        dataGridViewCell2.Value = Microsoft.VisualBasic.CompilerServices.Operators.AddObject(dataGridViewCell2.Value, Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxAmount_Food.Text))
+                        Dim totalDisplayCell As System.Windows.Forms.DataGridViewCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((rowIndex))).Cells(4)
+                        totalDisplayCell.Value = Microsoft.VisualBasic.CompilerServices.Operators.AddObject(totalDisplayCell.Value, Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
                         RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal1.Text))
                         RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblHST.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.H2()))
                         Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.Show()
@@ -21650,7 +21658,9 @@ Namespace RestaurantPOS14
                         Dim dataGridViewCell As System.Windows.Forms.DataGridViewCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((rowIndex))).Cells(2)
                         dataGridViewCell.Value = Microsoft.VisualBasic.CompilerServices.Operators.SubtractObject(dataGridViewCell.Value, 1)
                         Dim dataGridViewCell2 As System.Windows.Forms.DataGridViewCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((rowIndex))).Cells(3)
-                        dataGridViewCell2.Value = Microsoft.VisualBasic.CompilerServices.Operators.SubtractObject(dataGridViewCell2.Value, Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
+                        dataGridViewCell2.Value = Microsoft.VisualBasic.CompilerServices.Operators.SubtractObject(dataGridViewCell2.Value, Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxAmount_Food.Text))
+                        Dim totalDisplayCell As System.Windows.Forms.DataGridViewCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((rowIndex))).Cells(4)
+                        totalDisplayCell.Value = Microsoft.VisualBasic.CompilerServices.Operators.SubtractObject(totalDisplayCell.Value, Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
                         RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal1.Text))
                         RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblHST.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.H2()))
                         Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.Show()
@@ -21682,7 +21692,7 @@ Namespace RestaurantPOS14
                 Me.Compute()
                 Me.fillCurrencyTA()
                 Me.Calc1()
-                Me.CustomerDisplayUpdatedBalance(New Decimal(Microsoft.VisualBasic.Conversion.Val(Me.lblBalance1.Text)))
+                Me.CustomerDisplayUpdatedBalance(New Decimal(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal1.Text)))
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.txtColoredCustomerDisplay.Text, "Yes", TextCompare:=False) = 0 Then
                     Dim screen As System.Windows.Forms.Screen =(If((System.Windows.Forms.Screen.AllScreens.Length <= 1), System.Windows.Forms.Screen.AllScreens(0), (If((System.Windows.Forms.Screen.AllScreens.Length > 1), System.Windows.Forms.Screen.AllScreens(1), System.Windows.Forms.Screen.AllScreens(0)))))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.StartPosition = System.Windows.Forms.FormStartPosition.Manual
@@ -21690,7 +21700,7 @@ Namespace RestaurantPOS14
                     Dim location As System.Drawing.Point = screen.Bounds.Location
                     Dim p As System.Drawing.Point = New System.Drawing.Point(100, 100)
                     obj.Location = location + CType(p, System.Drawing.Size)
-                    RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.lblBalance1.Text))
+                    RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Me.txtGrandTotal1.Text
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblHST.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.H2()))
                     Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.Show()
                 End If
@@ -21890,7 +21900,7 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModFunc.ODN(Me.lblOrderNo.Text, Me.lblBillNo1.Text)
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_BillingInfoTA( Id,BillNo, BillDate, GrandTotal,Cash,Change,Operator,SubTotal,ParcelCharges,PaymentMode,BillNote,ExchangeRate,CurrencyCode,TADiscountPer,TADiscountAmt,Member_ID,PhoneNo,ODN,TA_Status,GiftCardID,GiftCardAmount,LP,LA,CustomerName,TaxType,card,Tip) Values (" & Me.txtBillID1.Text & ",'" & Me.lblBillNo1.Text & "',@d1," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal1.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCash1.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtChange1.Text)) & ",@d2," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtSubTotal1.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtParcelCharges.Text)) & ",@d3,@d4," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtExchangeRate.Text)) & ",@d5," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtTADiscountPer.Text)) & ",@d6,@d7,@d8,@d9,'Paid Directly',@d11,@d12,@d13,@d14,@d15,@d16," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCard1.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtTip1.Text)) & ")")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_BillingInfoTA( Id,BillNo, BillDate, GrandTotal,Cash,Change,Operator,SubTotal,ParcelCharges,PaymentMode,BillNote,ExchangeRate,CurrencyCode,TADiscountPer,TADiscountAmt,Member_ID,PhoneNo,ODN,TA_Status,GiftCardID,GiftCardAmount,LP,LA,CustomerName,TaxType,card,Tip) Values (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID1.Text, "Record ID") & ",'" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.lblBillNo1.Text) & "',@d1," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal1.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCash1.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtChange1.Text)) & ",@d2," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtSubTotal1.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtParcelCharges.Text)) & ",@d3,@d4," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtExchangeRate.Text)) & ",@d5," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtTADiscountPer.Text)) & ",@d6,@d7,@d8,@d9,'Paid Directly',@d11,@d12,@d13,@d14,@d15,@d16," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCard1.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtTip1.Text)) & ")")
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Microsoft.VisualBasic.DateAndTime.Now)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", Me.lblUserVAL.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d3", Me.lblPaymentMode1.Text)
@@ -21923,7 +21933,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillTA(BillID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,DishNameArabic) VALUES (" & Me.txtBillID1.Text & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillTA(BillID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,DishNameArabic) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID1.Text, "Record ID") & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow5 As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView3.Rows, System.Collections.IEnumerable)
@@ -21974,7 +21984,7 @@ Namespace RestaurantPOS14
                         End If
                     Next
 
-                    Dim num7 As Integer = CInt(System.Math.Round(System.Math.Floor(Microsoft.VisualBasic.Conversion.Val(num6) / Microsoft.VisualBasic.Conversion.Val(Me.LA))))
+                    Dim num7 As Integer = CInt(System.Math.Round(System.Math.Floor(RestaurantPOS14.ModFunc.SafeDivide(Microsoft.VisualBasic.Conversion.Val(num6), Microsoft.VisualBasic.Conversion.Val(Me.LA)))))
                     RestaurantPOS14.ModFunc.LoyaltyCardMemberLedgerSave(System.DateTime.Today, Me.lblBillNo1.Text, "Points for Take Away billing", CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(num7))), CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.txtLP1.Text))), CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.lblMemberID.Text))))
                 End If
 
@@ -22027,7 +22037,8 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.Extensions.Events.IntegrationEventHost.PublishBillSettledIfEligible(Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(Microsoft.VisualBasic.Conversion.Val(Me.txtBillID1.Text)), "TA")
                 Try
                     RestaurantPOS14.frmEInvoicePreview.ShowFor(Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(Microsoft.VisualBasic.Conversion.Val(Me.txtBillID1.Text)), "TA")
-                Catch
+                Catch suppressedException As System.Exception
+                    RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                 End Try
 
                 RestaurantPOS14.ModFunc.HoldBillDelete(Me.txtHoldID.Text)
@@ -22750,7 +22761,7 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModFunc.ODN(Me.lblOrderNo.Text, Me.lblBillNo2.Text)
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_BillingInfoHD( Id,BillNo, BillDate,SubTotal,HomeDeliveryCharges, GrandTotal,Operator,CustomerName,Address,ContactNo,PaymentMode,Employee_ID,BillNote,HDDiscountPer,HDDiscountAmt,Member_ID,ODN,HD_Status,GiftCardID,GiftCardAmount,LP,LA,TaxType,Tip,AmtReceived) Values (" & Me.txtBillID2.Text & ",'" & Me.lblBillNo2.Text & "',@d1," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtSubTotal.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtDeliveryCharges.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal2.Text)) & ",@d2,@d3,@d4,@d5,@d6," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtDeliveryPersonID.Text)) & ",@d7," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtHDDiscountPer.Text)) & ",@d8,@d9,@d10,'Confirmed',@d11,@d12,@d13,@d14,@d15," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtTip2.Text)) & ",@d18)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_BillingInfoHD( Id,BillNo, BillDate,SubTotal,HomeDeliveryCharges, GrandTotal,Operator,CustomerName,Address,ContactNo,PaymentMode,Employee_ID,BillNote,HDDiscountPer,HDDiscountAmt,Member_ID,ODN,HD_Status,GiftCardID,GiftCardAmount,LP,LA,TaxType,Tip,AmtReceived) Values (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID2.Text, "Record ID") & ",'" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.lblBillNo2.Text) & "',@d1," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtSubTotal.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtDeliveryCharges.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal2.Text)) & ",@d2,@d3,@d4,@d5,@d6," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtDeliveryPersonID.Text)) & ",@d7," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtHDDiscountPer.Text)) & ",@d8,@d9,@d10,'Confirmed',@d11,@d12,@d13,@d14,@d15," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtTip2.Text)) & ",@d18)")
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Microsoft.VisualBasic.DateAndTime.Now)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", Me.lblUserVAL.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d3", Me.txtCustomerName.Text)
@@ -22784,7 +22795,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillHD(BillID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,DishNameArabic) VALUES (" & Me.txtBillID2.Text & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillHD(BillID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,DishNameArabic) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID2.Text, "Record ID") & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow5 As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView4.Rows, System.Collections.IEnumerable)
@@ -22838,7 +22849,7 @@ Namespace RestaurantPOS14
                         End If
                     Next
 
-                    Dim num7 As Integer = CInt(System.Math.Round(System.Math.Floor(Microsoft.VisualBasic.Conversion.Val(num6) / Microsoft.VisualBasic.Conversion.Val(Me.LA))))
+                    Dim num7 As Integer = CInt(System.Math.Round(System.Math.Floor(RestaurantPOS14.ModFunc.SafeDivide(Microsoft.VisualBasic.Conversion.Val(num6), Microsoft.VisualBasic.Conversion.Val(Me.LA)))))
                     RestaurantPOS14.ModFunc.LoyaltyCardMemberLedgerSave(System.DateTime.Today, Me.lblBillNo2.Text, "Points for home delivery order", CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(num7))), CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.txtLP2.Text))), CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.lblMemberID.Text))))
                 End If
 
@@ -22987,7 +22998,9 @@ Namespace RestaurantPOS14
                         Dim dataGridViewCell As System.Windows.Forms.DataGridViewCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((rowIndex))).Cells(2)
                         dataGridViewCell.Value = Microsoft.VisualBasic.CompilerServices.Operators.AddObject(dataGridViewCell.Value, 1)
                         Dim dataGridViewCell2 As System.Windows.Forms.DataGridViewCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((rowIndex))).Cells(3)
-                        dataGridViewCell2.Value = Microsoft.VisualBasic.CompilerServices.Operators.AddObject(dataGridViewCell2.Value, Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
+                        dataGridViewCell2.Value = Microsoft.VisualBasic.CompilerServices.Operators.AddObject(dataGridViewCell2.Value, Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxAmount_Food.Text))
+                        Dim totalDisplayCell As System.Windows.Forms.DataGridViewCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((rowIndex))).Cells(4)
+                        totalDisplayCell.Value = Microsoft.VisualBasic.CompilerServices.Operators.AddObject(totalDisplayCell.Value, Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
                         RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal2.Text))
                         RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblHST.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.H3()))
                         Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.Show()
@@ -23052,7 +23065,9 @@ Namespace RestaurantPOS14
                     Dim dataGridViewCell As System.Windows.Forms.DataGridViewCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((rowIndex))).Cells(2)
                     dataGridViewCell.Value = Microsoft.VisualBasic.CompilerServices.Operators.SubtractObject(dataGridViewCell.Value, 1)
                     Dim dataGridViewCell2 As System.Windows.Forms.DataGridViewCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((rowIndex))).Cells(3)
-                    dataGridViewCell2.Value = Microsoft.VisualBasic.CompilerServices.Operators.SubtractObject(dataGridViewCell2.Value, Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
+                    dataGridViewCell2.Value = Microsoft.VisualBasic.CompilerServices.Operators.SubtractObject(dataGridViewCell2.Value, Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxAmount_Food.Text))
+                    Dim totalDisplayCell As System.Windows.Forms.DataGridViewCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((rowIndex))).Cells(4)
+                    totalDisplayCell.Value = Microsoft.VisualBasic.CompilerServices.Operators.SubtractObject(totalDisplayCell.Value, Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal2.Text))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblHST.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.H3()))
                     Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.Show()
@@ -23081,7 +23096,7 @@ Namespace RestaurantPOS14
                 Me.txtSubTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(value)
                 Me.Compute()
                 Me.Calc2()
-                Me.CustomerDisplayUpdatedBalance(New Decimal(Microsoft.VisualBasic.Conversion.Val(Me.lblBalance2.Text)))
+                Me.CustomerDisplayUpdatedBalance(New Decimal(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal2.Text)))
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.txtColoredCustomerDisplay.Text, "Yes", TextCompare:=False) = 0 Then
                     Dim screen As System.Windows.Forms.Screen =(If((System.Windows.Forms.Screen.AllScreens.Length <= 1), System.Windows.Forms.Screen.AllScreens(0), (If((System.Windows.Forms.Screen.AllScreens.Length > 1), System.Windows.Forms.Screen.AllScreens(1), System.Windows.Forms.Screen.AllScreens(0)))))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.StartPosition = System.Windows.Forms.FormStartPosition.Manual
@@ -23089,7 +23104,7 @@ Namespace RestaurantPOS14
                     Dim location As System.Drawing.Point = screen.Bounds.Location
                     Dim p As System.Drawing.Point = New System.Drawing.Point(100, 100)
                     obj.Location = location + CType(p, System.Drawing.Size)
-                    RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.lblBalance2.Text))
+                    RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Me.txtGrandTotal2.Text
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblHST.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.H3()))
                     Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.Show()
                 End If
@@ -23104,6 +23119,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.My.MyProject.Forms.frmChangeRate.lblSet.Text = "Takeaway"
                 If Me.DataGridView3.Rows.Count > 0 Then
+                    If Me.DataGridView3.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView3.SelectedRows(0)
                     RestaurantPOS14.My.MyProject.Forms.frmChangeRate.txtNotes.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((13))).Value)
                     RestaurantPOS14.My.MyProject.Forms.frmChangeRate.txtR.Text = Me.txtTADiscountPer.Text
@@ -23237,6 +23253,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.My.MyProject.Forms.frmChangeRate.lblSet.Text = "Home Delivery"
                 If Me.DataGridView4.Rows.Count > 0 Then
+                    If Me.DataGridView4.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView4.SelectedRows(0)
                     RestaurantPOS14.My.MyProject.Forms.frmChangeRate.txtNotes.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((13))).Value)
                     RestaurantPOS14.My.MyProject.Forms.frmChangeRate.txtR.Text = Me.txtHDDiscountPer.Text
@@ -23258,6 +23275,7 @@ Namespace RestaurantPOS14
 
         Public Sub DataGridView3_MouseDoubleClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             If Me.DataGridView3.Rows.Count > 0 Then
+                If Me.DataGridView3.SelectedRows.Count = 0 Then Return
                 Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView3.SelectedRows(0)
                 RestaurantPOS14.My.MyProject.Forms.frmNotes.txtNotes.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((13))).Value)
                 RestaurantPOS14.My.MyProject.Forms.frmNotes.lblSet.Text = "TA"
@@ -23267,6 +23285,7 @@ Namespace RestaurantPOS14
 
         Public Sub DataGridView4_MouseDoubleClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             If Me.DataGridView4.Rows.Count > 0 Then
+                If Me.DataGridView4.SelectedRows.Count = 0 Then Return
                 Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView4.SelectedRows(0)
                 RestaurantPOS14.My.MyProject.Forms.frmNotes.txtNotes.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((13))).Value)
                 RestaurantPOS14.My.MyProject.Forms.frmNotes.lblSet.Text = "HD"
@@ -23278,6 +23297,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.My.MyProject.Forms.frmChangeQty.lblSet.Text = "Takeaway"
                 If Me.DataGridView3.Rows.Count > 0 Then
+                    If Me.DataGridView3.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView3.SelectedRows(0)
                     RestaurantPOS14.My.MyProject.Forms.frmChangeQty.txtNotes.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((13))).Value)
                     RestaurantPOS14.My.MyProject.Forms.frmChangeQty.txtQ.Text = Me.txtTADiscountPer.Text
@@ -23294,6 +23314,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.My.MyProject.Forms.frmChangeQty.lblSet.Text = "Home Delivery"
                 If Me.DataGridView4.Rows.Count > 0 Then
+                    If Me.DataGridView4.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView4.SelectedRows(0)
                     RestaurantPOS14.My.MyProject.Forms.frmChangeQty.txtNotes.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((13))).Value)
                     RestaurantPOS14.My.MyProject.Forms.frmChangeQty.txtQ.Text = Me.txtHDDiscountPer.Text
@@ -23310,6 +23331,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.My.MyProject.Forms.frmChangeQty.lblSet.Text = "KOT"
                 If Me.DataGridView1.Rows.Count > 0 Then
+                    If Me.DataGridView1.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView1.SelectedRows(0)
                     RestaurantPOS14.My.MyProject.Forms.frmChangeQty.txtNotes.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((13))).Value)
                     RestaurantPOS14.My.MyProject.Forms.frmChangeQty.txtQ.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((14))).Value)
@@ -23391,6 +23413,7 @@ Namespace RestaurantPOS14
 
         Public Sub DataGridView1_MouseDoubleClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             If Me.DataGridView1.Rows.Count > 0 Then
+                If Me.DataGridView1.SelectedRows.Count = 0 Then Return
                 Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView1.SelectedRows(0)
                 RestaurantPOS14.My.MyProject.Forms.frmNotes.txtNotes.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((13))).Value)
                 RestaurantPOS14.My.MyProject.Forms.frmNotes.lblSet.Text = "KOT"
@@ -23654,6 +23677,7 @@ Namespace RestaurantPOS14
 
         Public Sub DataGridView5_MouseDoubleClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             If Me.DataGridView5.Rows.Count > 0 Then
+                If Me.DataGridView5.SelectedRows.Count = 0 Then Return
                 Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView5.SelectedRows(0)
                 RestaurantPOS14.My.MyProject.Forms.frmNotes.txtNotes.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((13))).Value)
                 RestaurantPOS14.My.MyProject.Forms.frmNotes.lblSet.Text = "EB"
@@ -23715,7 +23739,9 @@ Namespace RestaurantPOS14
                         Dim dataGridViewCell As System.Windows.Forms.DataGridViewCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((rowIndex))).Cells(2)
                         dataGridViewCell.Value = Microsoft.VisualBasic.CompilerServices.Operators.AddObject(dataGridViewCell.Value, 1)
                         Dim dataGridViewCell2 As System.Windows.Forms.DataGridViewCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((rowIndex))).Cells(3)
-                        dataGridViewCell2.Value = Microsoft.VisualBasic.CompilerServices.Operators.AddObject(dataGridViewCell2.Value, Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
+                        dataGridViewCell2.Value = Microsoft.VisualBasic.CompilerServices.Operators.AddObject(dataGridViewCell2.Value, Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxAmount_Food.Text))
+                        Dim totalDisplayCell As System.Windows.Forms.DataGridViewCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((rowIndex))).Cells(4)
+                        totalDisplayCell.Value = Microsoft.VisualBasic.CompilerServices.Operators.AddObject(totalDisplayCell.Value, Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
                         RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal3.Text))
                         RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblHST.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.H4()))
                         Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.Show()
@@ -23782,7 +23808,9 @@ Namespace RestaurantPOS14
                         Dim dataGridViewCell As System.Windows.Forms.DataGridViewCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((rowIndex))).Cells(2)
                         dataGridViewCell.Value = Microsoft.VisualBasic.CompilerServices.Operators.SubtractObject(dataGridViewCell.Value, 1)
                         Dim dataGridViewCell2 As System.Windows.Forms.DataGridViewCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((rowIndex))).Cells(3)
-                        dataGridViewCell2.Value = Microsoft.VisualBasic.CompilerServices.Operators.SubtractObject(dataGridViewCell2.Value, Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
+                        dataGridViewCell2.Value = Microsoft.VisualBasic.CompilerServices.Operators.SubtractObject(dataGridViewCell2.Value, Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxAmount_Food.Text))
+                        Dim totalDisplayCell As System.Windows.Forms.DataGridViewCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((rowIndex))).Cells(4)
+                        totalDisplayCell.Value = Microsoft.VisualBasic.CompilerServices.Operators.SubtractObject(totalDisplayCell.Value, Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
                         RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal3.Text))
                         RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblHST.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.H4()))
                         Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.Show()
@@ -23813,7 +23841,7 @@ Namespace RestaurantPOS14
                 Me.fillCurrencyEB()
                 Me.Compute()
                 Me.Calc3()
-                Me.CustomerDisplayUpdatedBalance(New Decimal(Microsoft.VisualBasic.Conversion.Val(Me.lblBalance3.Text)))
+                Me.CustomerDisplayUpdatedBalance(New Decimal(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal3.Text)))
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.txtColoredCustomerDisplay.Text, "Yes", TextCompare:=False) = 0 Then
                     Dim screen As System.Windows.Forms.Screen =(If((System.Windows.Forms.Screen.AllScreens.Length <= 1), System.Windows.Forms.Screen.AllScreens(0), (If((System.Windows.Forms.Screen.AllScreens.Length > 1), System.Windows.Forms.Screen.AllScreens(1), System.Windows.Forms.Screen.AllScreens(0)))))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.StartPosition = System.Windows.Forms.FormStartPosition.Manual
@@ -23821,7 +23849,7 @@ Namespace RestaurantPOS14
                     Dim location As System.Drawing.Point = screen.Bounds.Location
                     Dim p As System.Drawing.Point = New System.Drawing.Point(100, 100)
                     obj.Location = location + CType(p, System.Drawing.Size)
-                    RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.lblBalance3.Text))
+                    RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Me.txtGrandTotal3.Text
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblHST.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.H4()))
                     Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.Show()
                 End If
@@ -23836,6 +23864,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.My.MyProject.Forms.frmChangeRate.lblSet.Text = "Express Billing"
                 If Me.DataGridView5.Rows.Count > 0 Then
+                    If Me.DataGridView5.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView5.SelectedRows(0)
                     RestaurantPOS14.My.MyProject.Forms.frmChangeRate.txtNotes.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((13))).Value)
                     RestaurantPOS14.My.MyProject.Forms.frmChangeRate.txtR.Text = Me.txtEBDiscountPer.Text
@@ -23852,6 +23881,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.My.MyProject.Forms.frmChangeQty.lblSet.Text = "Express Billing"
                 If Me.DataGridView5.Rows.Count > 0 Then
+                    If Me.DataGridView5.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView5.SelectedRows(0)
                     RestaurantPOS14.My.MyProject.Forms.frmChangeQty.txtNotes.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((13))).Value)
                     RestaurantPOS14.My.MyProject.Forms.frmChangeQty.txtQ.Text = Me.txtEBDiscountPer.Text
@@ -24052,7 +24082,8 @@ Namespace RestaurantPOS14
                             bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png)
                             qrBytes = ms.ToArray()
                         End Using
-                    Catch
+                    Catch suppressedException As System.Exception
+                        RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                     End Try
                 End If
 
@@ -24061,7 +24092,8 @@ Namespace RestaurantPOS14
                 row("QRImage") = If((CObj(qrBytes)), (CObj(System.DBNull.Value)))
                 dt.Rows.Add(row)
                 Return dt
-            Catch
+            Catch suppressedException As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
             End Try
 
             Return Nothing
@@ -24076,7 +24108,8 @@ Namespace RestaurantPOS14
                 Me.Print4Func2()
                 Try
                     RestaurantPOS14.frmEInvoicePreview.ShowFor(Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(Microsoft.VisualBasic.Conversion.Val(Me.txtBillID3.Text)), "EB")
-                Catch
+                Catch suppressedException As System.Exception
+                    RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                 End Try
             Catch ex As System.Exception
                 Call System.Windows.Forms.MessageBox.Show(ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
@@ -24272,7 +24305,7 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModFunc.ODN(Me.lblOrderNo.Text, Me.lblBillNo3.Text)
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_BillingInfoEB( Id,BillNo, BillDate, GrandTotal,Cash,Change,Operator,PaymentMode,ExchangeRate,CurrencyCode,BillNote,EB_Status,EBDiscountPer,EBDiscountAmt,Member_ID,EB_PhoneNo,ODN,GiftCardID,GiftCardAmount,LP,LA,CustomerName,TaxType,Card,Tip) Values (" & Me.txtBillID3.Text & ",'" & Me.lblBillNo3.Text & "',@d1," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal3.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCash3.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtChange3.Text)) & ",@d2,@d3," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtExchangeRate.Text)) & ",@d4,@d5,@d6," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtEBDiscountPer.Text)) & ",@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCard3.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtTip3.Text)) & ")")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_BillingInfoEB( Id,BillNo, BillDate, GrandTotal,Cash,Change,Operator,PaymentMode,ExchangeRate,CurrencyCode,BillNote,EB_Status,EBDiscountPer,EBDiscountAmt,Member_ID,EB_PhoneNo,ODN,GiftCardID,GiftCardAmount,LP,LA,CustomerName,TaxType,Card,Tip) Values (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID3.Text, "Record ID") & ",'" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.lblBillNo3.Text) & "',@d1," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal3.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCash3.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtChange3.Text)) & ",@d2,@d3," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtExchangeRate.Text)) & ",@d4,@d5,@d6," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtEBDiscountPer.Text)) & ",@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCard3.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtTip3.Text)) & ")")
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Microsoft.VisualBasic.DateAndTime.Now)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", Me.lblUserVAL.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d3", Me.lblPaymentMode3.Text)
@@ -24310,7 +24343,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillEB(BillID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,DishNameArabic) VALUES (" & Me.txtBillID3.Text & ",@d1,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16,@d17)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillEB(BillID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,DishNameArabic) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID3.Text, "Record ID") & ",@d1,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16,@d17)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow5 As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView5.Rows, System.Collections.IEnumerable)
@@ -24361,7 +24394,7 @@ Namespace RestaurantPOS14
                         End If
                     Next
 
-                    Dim num7 As Integer = CInt(System.Math.Round(System.Math.Floor(Microsoft.VisualBasic.Conversion.Val(num6) / Microsoft.VisualBasic.Conversion.Val(Me.LA))))
+                    Dim num7 As Integer = CInt(System.Math.Round(System.Math.Floor(RestaurantPOS14.ModFunc.SafeDivide(Microsoft.VisualBasic.Conversion.Val(num6), Microsoft.VisualBasic.Conversion.Val(Me.LA)))))
                     RestaurantPOS14.ModFunc.LoyaltyCardMemberLedgerSave(System.DateTime.Today, Me.lblBillNo3.Text, "Points for express billing", CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(num7))), CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.txtLP3.Text))), CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.lblMemberID.Text))))
                 End If
 
@@ -24540,7 +24573,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillEB(BillID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,DishNameArabic) VALUES (" & Me.txtBillID3.Text & ",@d1,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16,@d17)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillEB(BillID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,DishNameArabic) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID3.Text, "Record ID") & ",@d1,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16,@d17)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView5.Rows, System.Collections.IEnumerable)
@@ -24598,7 +24631,7 @@ Namespace RestaurantPOS14
                         End If
                     Next
 
-                    Dim num2 As Integer = CInt(System.Math.Round(System.Math.Floor(Microsoft.VisualBasic.Conversion.Val(num) / Microsoft.VisualBasic.Conversion.Val(Me.LA))))
+                    Dim num2 As Integer = CInt(System.Math.Round(System.Math.Floor(RestaurantPOS14.ModFunc.SafeDivide(Microsoft.VisualBasic.Conversion.Val(num), Microsoft.VisualBasic.Conversion.Val(Me.LA)))))
                     RestaurantPOS14.ModFunc.LoyaltyCardMemberLedgerSave(System.DateTime.Today, Me.lblBillNo3.Text, "Points for express billing", CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(num2))), CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.txtLP3.Text))), CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.lblMemberID.Text))))
                 End If
 
@@ -24831,7 +24864,7 @@ Namespace RestaurantPOS14
 
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Update RestaurantPOS_OrderInfoKOT set  GrandTotal=" & Me.lblBalance.Text & ",tableNo=@d1,GroupName=@d4,TicketNote=@d5 where ID=" & Me.txtTicketID.Text)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Update RestaurantPOS_OrderInfoKOT set  GrandTotal=" & RestaurantPOS14.Security.SqlInput.RequireDecimal(Me.lblBalance.Text, "Amount") & ",tableNo=@d1,GroupName=@d4,TicketNote=@d5 where ID=" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtTicketID.Text, "Record ID"))
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Me.lblTableNo.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d4", Me.cmbGroup.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d5", Me.txtNotes.Text)
@@ -24851,7 +24884,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductKOT(TicketID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,T_Number,DishNameArabic,ItemStatus) VALUES (" & Me.txtTicketID.Text & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16,@d17,@d18)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductKOT(TicketID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,T_Number,DishNameArabic,ItemStatus) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtTicketID.Text, "Record ID") & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16,@d17,@d18)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow2 As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView1.Rows, System.Collections.IEnumerable)
@@ -24945,7 +24978,8 @@ Namespace RestaurantPOS14
                     Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                     RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                     RestaurantPOS14.ModClasses.con.Open()
-                    RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select RTRIM(TableNo),RTRIM(Dish),(Rate),Sum(Quantity),Sum(Amount),(DiscountPer), Sum(DiscountAmount), RTRIM(STPer), Sum(STAmount), RTRIM(VATPer), Sum(VATAmount),SCPer,Sum(SCAmount),Sum(TotalAmount),RTRIM(GroupName),(DiscountPer),RTRIM(Category),RTRIM(DishNameArabic) from RestaurantPOS_OrderedProductKOT,RestaurantPOS_OrderInfoKOT where RestaurantPOS_OrderedProductKOT.TicketID=RestaurantPOS_OrderInfoKOT.ID and TableNo in (" & Me.txtMergedTables.Text & ") and KOT_Status in ('Open','Served','Prepared') and ItemStatus <> 'Canceled' group by TableNo,Dish,Rate,DiscountPer,STPer,VATPer,SCPer,GroupName,Category,DishNameArabic order by TableNo", RestaurantPOS14.ModClasses.con)
+                    RestaurantPOS14.ModClasses.cmd = RestaurantPOS14.Billing.DineInBillQueries.CreateUnpaidBillItemsCommand(
+                        RestaurantPOS14.ModClasses.con, System.Convert.ToInt32(Me.txtTempBillID.Text, System.Globalization.CultureInfo.InvariantCulture))
                     RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
                     Dim sqlDataReader3 As System.Data.SqlClient.SqlDataReader = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                     Me.DataGridView2X.Rows.Clear()
@@ -24957,7 +24991,7 @@ Namespace RestaurantPOS14
                     Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                     RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                     RestaurantPOS14.ModClasses.con.Open()
-                    RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Update RestaurantPOS_BillingInfoKOT set Cash=0,Change=0,PaymentMode=@d1,KOTDiscountPer=0,KOTDiscountAmt=0,GiftCardID=@d11,GiftCardAmount=@d12,LP=@d13,LA=@d14,Card=0,Tip=0,GrandTotal=" & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Me.GrandTotal_Food1X()) & " where RestaurantPOS_BillingInfoKOT.ID=" & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtTempBillID.Text)))
+                    RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Update RestaurantPOS_BillingInfoKOT set Cash=0,Change=0,PaymentMode=@d1,KOTDiscountPer=0,KOTDiscountAmt=0,GiftCardID=@d11,GiftCardAmount=@d12,LP=@d13,LA=@d14,Card=0,Tip=0,GrandTotal=" & RestaurantPOS14.Configuration.MoneyMath.FormatPayableTotal(Me.GrandTotal_Food1X()) & " where RestaurantPOS_BillingInfoKOT.ID=" & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtTempBillID.Text)))
                     RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", "Cash")
                     RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d11", "")
                     RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d12", 0)
@@ -24978,7 +25012,7 @@ Namespace RestaurantPOS14
                     Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                     RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                     RestaurantPOS14.ModClasses.con.Open()
-                    RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillKOT(BillID,TableNo,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Category,DishNameArabic) VALUES (" & Me.txtTempBillID.Text & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16)")
+                    RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillKOT(BillID,TableNo,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Category,DishNameArabic) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtTempBillID.Text, "Record ID") & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16)")
                     RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                     RestaurantPOS14.ModClasses.cmd.Prepare()
                     For Each dataGridViewRow3 As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView2X.Rows, System.Collections.IEnumerable)
@@ -25161,9 +25195,9 @@ Namespace RestaurantPOS14
 
                     Dim hasP2 As Boolean = False
                     Dim hasP3 As Boolean = False
-                    Using cmd2 As System.Data.SqlClient.SqlCommand = con.CreateCommand()
-                        cmd2.CommandText = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='Kitchen' AND COLUMN_NAME IN ('Printer2','Printer3')"
-                        Using r2 As System.Data.SqlClient.SqlDataReader = cmd2.ExecuteReader()
+                    Using schemaCommand As System.Data.SqlClient.SqlCommand = con.CreateCommand()
+                        schemaCommand.CommandText = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='Kitchen' AND COLUMN_NAME IN ('Printer2','Printer3')"
+                        Using r2 As System.Data.SqlClient.SqlDataReader = schemaCommand.ExecuteReader()
                             While r2.Read()
                                 Dim obj As String = r2.GetString(CInt((0))).Trim()
                                 If String.Equals(obj, "Printer2", System.StringComparison.OrdinalIgnoreCase) Then
@@ -25178,10 +25212,10 @@ Namespace RestaurantPOS14
                     End Using
 
                     If hasP2 OrElse hasP3 Then
-                        Using cmd3 As System.Data.SqlClient.SqlCommand = con.CreateCommand()
-                            cmd3.CommandText = "SELECT " & (If(hasP2, "RTRIM(ISNULL(Printer2,''))", "''")) & "," & (If(hasP3, "RTRIM(ISNULL(Printer3,''))", "''")) & " FROM Kitchen WHERE KitchenName=@k AND IsEnabled='Yes'"
-                            cmd3.Parameters.AddWithValue("@k", kitchen)
-                            Using r3 As System.Data.SqlClient.SqlDataReader = cmd3.ExecuteReader()
+                        Using printerCommand As System.Data.SqlClient.SqlCommand = con.CreateCommand()
+                            printerCommand.CommandText = "SELECT " & (If(hasP2, "RTRIM(ISNULL(Printer2,''))", "''")) & "," & (If(hasP3, "RTRIM(ISNULL(Printer3,''))", "''")) & " FROM Kitchen WHERE KitchenName=@k AND IsEnabled='Yes'"
+                            printerCommand.Parameters.AddWithValue("@k", kitchen)
+                            Using r3 As System.Data.SqlClient.SqlDataReader = printerCommand.ExecuteReader()
                                 If r3.Read() Then
                                     If hasP2 Then
                                         Dim p2 As String =(If(r3.IsDBNull(0), "", r3.GetString(CInt((0))).Trim()))
@@ -25201,7 +25235,8 @@ Namespace RestaurantPOS14
                         End Using
                     End If
                 End Using
-            Catch
+            Catch suppressedException As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
             End Try
 
             Return printers
@@ -25343,7 +25378,8 @@ Namespace RestaurantPOS14
                     AddHandler btnTAView.Click, Sub()
                         Try
                             RestaurantPOS14.frmEInvoicePreview.ShowFor(Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(Microsoft.VisualBasic.Conversion.Val(Me.txtBillID1.Text)), "TA")
-                        Catch
+                        Catch suppressedException As System.Exception
+                            RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                         End Try
                     End Sub
                     MyBase.Controls.Add(btnTAView)
@@ -25357,7 +25393,8 @@ Namespace RestaurantPOS14
                     AddHandler btnHDView.Click, Sub()
                         Try
                             RestaurantPOS14.frmEInvoicePreview.ShowFor(Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(Microsoft.VisualBasic.Conversion.Val(Me.txtBillID2.Text)), "HD")
-                        Catch
+                        Catch suppressedException As System.Exception
+                            RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                         End Try
                     End Sub
                     MyBase.Controls.Add(btnHDView)
@@ -25371,7 +25408,8 @@ Namespace RestaurantPOS14
                     AddHandler btnEBView.Click, Sub()
                         Try
                             RestaurantPOS14.frmEInvoicePreview.ShowFor(Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(Microsoft.VisualBasic.Conversion.Val(Me.txtBillID3.Text)), "EB")
-                        Catch
+                        Catch suppressedException As System.Exception
+                            RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                         End Try
                     End Sub
                     MyBase.Controls.Add(btnEBView)
@@ -25383,7 +25421,8 @@ Namespace RestaurantPOS14
                         Try
                             Me.EnqueueResubmit(Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(Microsoft.VisualBasic.Conversion.Val(Me.txtBillID1.Text)), "TA")
                             Call System.Windows.Forms.MessageBox.Show("Queued resubmit for TA.")
-                        Catch
+                        Catch suppressedException As System.Exception
+                            RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                         End Try
                     End Sub
                     MyBase.Controls.Add(btnTAResubmit)
@@ -25396,7 +25435,8 @@ Namespace RestaurantPOS14
                             Dim reason As String = Microsoft.VisualBasic.Interaction.InputBox("Reason for cancel:", "Cancel E-Invoice")
                             Me.EnqueueCancel(Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(Microsoft.VisualBasic.Conversion.Val(Me.txtBillID1.Text)), "TA", reason)
                             Call System.Windows.Forms.MessageBox.Show("Queued cancel for TA.")
-                        Catch
+                        Catch suppressedException As System.Exception
+                            RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                         End Try
                     End Sub
                     MyBase.Controls.Add(btnTACancel)
@@ -25409,7 +25449,8 @@ Namespace RestaurantPOS14
                             Dim payload As String = Me.BuildReplacePayload(Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(Microsoft.VisualBasic.Conversion.Val(Me.txtBillID1.Text)), "TA")
                             Me.EnqueueReplace(Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(Microsoft.VisualBasic.Conversion.Val(Me.txtBillID1.Text)), "TA", payload)
                             Call System.Windows.Forms.MessageBox.Show("Queued replace for TA.")
-                        Catch
+                        Catch suppressedException As System.Exception
+                            RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                         End Try
                     End Sub
                     MyBase.Controls.Add(btnTAReplace)
@@ -25421,7 +25462,8 @@ Namespace RestaurantPOS14
                         Try
                             Me.EnqueueResubmit(Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(Microsoft.VisualBasic.Conversion.Val(Me.txtBillID2.Text)), "HD")
                             Call System.Windows.Forms.MessageBox.Show("Queued resubmit for HD.")
-                        Catch
+                        Catch suppressedException As System.Exception
+                            RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                         End Try
                     End Sub
                     MyBase.Controls.Add(btnHDResubmit)
@@ -25434,7 +25476,8 @@ Namespace RestaurantPOS14
                             Dim reason As String = Microsoft.VisualBasic.Interaction.InputBox("Reason for cancel:", "Cancel E-Invoice")
                             Me.EnqueueCancel(Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(Microsoft.VisualBasic.Conversion.Val(Me.txtBillID2.Text)), "HD", reason)
                             Call System.Windows.Forms.MessageBox.Show("Queued cancel for HD.")
-                        Catch
+                        Catch suppressedException As System.Exception
+                            RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                         End Try
                     End Sub
                     MyBase.Controls.Add(btnHDCancel)
@@ -25447,7 +25490,8 @@ Namespace RestaurantPOS14
                             Dim payload As String = Me.BuildReplacePayload(Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(Microsoft.VisualBasic.Conversion.Val(Me.txtBillID2.Text)), "HD")
                             Me.EnqueueReplace(Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(Microsoft.VisualBasic.Conversion.Val(Me.txtBillID2.Text)), "HD", payload)
                             Call System.Windows.Forms.MessageBox.Show("Queued replace for HD.")
-                        Catch
+                        Catch suppressedException As System.Exception
+                            RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                         End Try
                     End Sub
                     MyBase.Controls.Add(btnHDReplace)
@@ -25459,7 +25503,8 @@ Namespace RestaurantPOS14
                         Try
                             Me.EnqueueResubmit(Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(Microsoft.VisualBasic.Conversion.Val(Me.txtBillID3.Text)), "EB")
                             Call System.Windows.Forms.MessageBox.Show("Queued resubmit for EB.")
-                        Catch
+                        Catch suppressedException As System.Exception
+                            RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                         End Try
                     End Sub
                     MyBase.Controls.Add(btnEBResubmit)
@@ -25472,7 +25517,8 @@ Namespace RestaurantPOS14
                             Dim reason As String = Microsoft.VisualBasic.Interaction.InputBox("Reason for cancel:", "Cancel E-Invoice")
                             Me.EnqueueCancel(Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(Microsoft.VisualBasic.Conversion.Val(Me.txtBillID3.Text)), "EB", reason)
                             Call System.Windows.Forms.MessageBox.Show("Queued cancel for EB.")
-                        Catch
+                        Catch suppressedException As System.Exception
+                            RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                         End Try
                     End Sub
                     MyBase.Controls.Add(btnEBCancel)
@@ -25485,7 +25531,8 @@ Namespace RestaurantPOS14
                             Dim payload As String = Me.BuildReplacePayload(Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(Microsoft.VisualBasic.Conversion.Val(Me.txtBillID3.Text)), "EB")
                             Me.EnqueueReplace(Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(Microsoft.VisualBasic.Conversion.Val(Me.txtBillID3.Text)), "EB", payload)
                             Call System.Windows.Forms.MessageBox.Show("Queued replace for EB.")
-                        Catch
+                        Catch suppressedException As System.Exception
+                            RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                         End Try
                     End Sub
                     MyBase.Controls.Add(btnEBReplace)
@@ -25514,7 +25561,8 @@ Namespace RestaurantPOS14
                     Me.einvProcTimer.Interval = 10000
                     AddHandler Me.einvProcTimer.Tick, Async Sub() Await Me.ProcessEInvoiceQueueAsync()
                     Me.einvProcTimer.Start()
-                Catch
+                Catch suppressedException As System.Exception
+                    RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                 End Try
             Catch ex As System.Exception
                 Call System.Windows.Forms.MessageBox.Show(ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
@@ -25526,7 +25574,8 @@ Namespace RestaurantPOS14
                 Me.UpdateEInvoiceStatus(Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(Microsoft.VisualBasic.Conversion.Val(Me.txtBillID1.Text)), "TA", Me.lblTAStatus, Me.lblTAError)
                 Me.UpdateEInvoiceStatus(Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(Microsoft.VisualBasic.Conversion.Val(Me.txtBillID2.Text)), "HD", Me.lblHDStatus, Me.lblHDError)
                 Me.UpdateEInvoiceStatus(Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(Microsoft.VisualBasic.Conversion.Val(Me.txtBillID3.Text)), "EB", Me.lblEBStatus, Me.lblEBError)
-            Catch
+            Catch suppressedException As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
             End Try
         End Sub
 
@@ -25548,10 +25597,10 @@ Namespace RestaurantPOS14
                         status =(If((o Is Nothing OrElse TypeOf o Is System.DBNull), "", System.Convert.ToString(o)))
                     End Using
 
-                    Using cmd2 As System.Data.SqlClient.SqlCommand = New System.Data.SqlClient.SqlCommand("SELECT TOP 1 LastError FROM [dbo].[EInvoiceQueue] WHERE BillId=@id AND BillType=@t ORDER BY QueueId DESC", con)
-                        cmd2.Parameters.AddWithValue("@id", billId)
-                        cmd2.Parameters.AddWithValue("@t", billType)
-                        Dim o2 As Object = cmd2.ExecuteScalar()
+                    Using errorCommand As System.Data.SqlClient.SqlCommand = New System.Data.SqlClient.SqlCommand("SELECT TOP 1 LastError FROM [dbo].[EInvoiceQueue] WHERE BillId=@id AND BillType=@t ORDER BY QueueId DESC", con)
+                        errorCommand.Parameters.AddWithValue("@id", billId)
+                        errorCommand.Parameters.AddWithValue("@t", billType)
+                        Dim o2 As Object = errorCommand.ExecuteScalar()
                         lblError.Text =(If((o2 Is Nothing OrElse TypeOf o2 Is System.DBNull), "", System.Convert.ToString(o2)))
                     End Using
                 End Using
@@ -25577,7 +25626,8 @@ Namespace RestaurantPOS14
                     Me.einvTip.SetToolTip(lblStatus, If(String.IsNullOrEmpty(lblError.Text), status, (status & Global.Microsoft.VisualBasic.Constants.vbLf & lblError.Text)))
                     Me.einvTip.SetToolTip(lblError, lblError.Text)
                 End If
-            Catch
+            Catch suppressedException As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
             End Try
         End Sub
 
@@ -25646,8 +25696,8 @@ Namespace RestaurantPOS14
                 Dim supplierEmail As String = Nothing
                 Dim supplierPhone As String = Nothing
                 Dim address1 As String = Nothing
-                Using cmd2 As System.Data.SqlClient.SqlCommand = New System.Data.SqlClient.SqlCommand("SELECT TOP 1 HotelName, EmailID, ContactNo, AddressLine1 FROM Hotel", con)
-                    Using r2 As System.Data.SqlClient.SqlDataReader = cmd2.ExecuteReader()
+                Using supplierCommand As System.Data.SqlClient.SqlCommand = New System.Data.SqlClient.SqlCommand("SELECT TOP 1 HotelName, EmailID, ContactNo, AddressLine1 FROM Hotel", con)
+                    Using r2 As System.Data.SqlClient.SqlDataReader = supplierCommand.ExecuteReader()
                         If r2.Read() Then
                             supplierName =(If(r2.IsDBNull(0), Nothing, r2.GetString(CInt((0))).Trim()))
                             supplierEmail =(If(r2.IsDBNull(1), Nothing, r2.GetString(CInt((1))).Trim()))
@@ -25658,9 +25708,9 @@ Namespace RestaurantPOS14
                 End Using
 
                 Dim sbItems As System.Text.StringBuilder = New System.Text.StringBuilder()
-                Using cmd3 As System.Data.SqlClient.SqlCommand = New System.Data.SqlClient.SqlCommand("SELECT Dish, Quantity, Rate, TotalAmount, VATPer, VATAmount, STPer, STAmount FROM " & linesTable & " WHERE BillID=@id", con)
-                    cmd3.Parameters.AddWithValue("@id", billId)
-                    Using r3 As System.Data.SqlClient.SqlDataReader = cmd3.ExecuteReader()
+                Using lineCommand As System.Data.SqlClient.SqlCommand = New System.Data.SqlClient.SqlCommand("SELECT Dish, Quantity, Rate, TotalAmount, VATPer, VATAmount, STPer, STAmount FROM " & linesTable & " WHERE BillID=@id", con)
+                    lineCommand.Parameters.AddWithValue("@id", billId)
+                    Using r3 As System.Data.SqlClient.SqlDataReader = lineCommand.ExecuteReader()
                         Dim first As Boolean = True
                         While r3.Read()
                             If Not first Then
@@ -25694,7 +25744,8 @@ Namespace RestaurantPOS14
                 json.Append("}")
                 Return json.ToString()
                 End Using
-            Catch
+            Catch suppressedException As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
             End Try
 
             Return "{}"
@@ -25709,66 +25760,62 @@ Namespace RestaurantPOS14
         End Function
 
         Private Sub EnsureEInvoiceSchema()
-            Try
-                Using con As System.Data.SqlClient.SqlConnection = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
-                    con.Open()
-                    Using cmd As System.Data.SqlClient.SqlCommand = New System.Data.SqlClient.SqlCommand("IF OBJECT_ID('dbo.EInvoiceQueue','U') IS NULL" & Global.Microsoft.VisualBasic.Constants.vbCrLf & "BEGIN" & Global.Microsoft.VisualBasic.Constants.vbCrLf & "CREATE TABLE [dbo].[EInvoiceQueue](" & Global.Microsoft.VisualBasic.Constants.vbCrLf & "    [QueueId] [int] IDENTITY(1,1) NOT NULL," & Global.Microsoft.VisualBasic.Constants.vbCrLf & "    [BillId] [int] NOT NULL," & Global.Microsoft.VisualBasic.Constants.vbCrLf & "    [BillType] [nchar](10) NOT NULL," & Global.Microsoft.VisualBasic.Constants.vbCrLf & "    [Payload] [nvarchar](max) NULL," & Global.Microsoft.VisualBasic.Constants.vbCrLf & "    [Status] [nchar](20) NOT NULL," & Global.Microsoft.VisualBasic.Constants.vbCrLf & "    [AttemptCount] [int] NOT NULL CONSTRAINT [DF_EInvoiceQueue_AttemptCount] DEFAULT ((0))," & Global.Microsoft.VisualBasic.Constants.vbCrLf & "    [NextAttemptAt] [datetime] NULL," & Global.Microsoft.VisualBasic.Constants.vbCrLf & "    [LastError] [nvarchar](max) NULL," & Global.Microsoft.VisualBasic.Constants.vbCrLf & "    [SubmissionId] [nchar](128) NULL," & Global.Microsoft.VisualBasic.Constants.vbCrLf & "    CONSTRAINT [PK_EInvoiceQueue] PRIMARY KEY CLUSTERED ([QueueId] ASC)" & Global.Microsoft.VisualBasic.Constants.vbCrLf & ")" & Global.Microsoft.VisualBasic.Constants.vbCrLf & "END", con)
-                        cmd.ExecuteNonQuery()
-                    End Using
-
-                    Dim array As String() = New String(20) {"IF COL_LENGTH('dbo.RestaurantPOS_BillingInfoEB','UIN') IS NULL ALTER TABLE [dbo].[RestaurantPOS_BillingInfoEB] ADD [UIN] [nchar](64) NULL", "IF COL_LENGTH('dbo.RestaurantPOS_BillingInfoEB','EInvoiceStatus') IS NULL ALTER TABLE [dbo].[RestaurantPOS_BillingInfoEB] ADD [EInvoiceStatus] [nchar](20) NULL", "IF COL_LENGTH('dbo.RestaurantPOS_BillingInfoEB','QRUrl') IS NULL ALTER TABLE [dbo].[RestaurantPOS_BillingInfoEB] ADD [QRUrl] [nvarchar](512) NULL", "IF COL_LENGTH('dbo.RestaurantPOS_BillingInfoEB','LastSyncedAt') IS NULL ALTER TABLE [dbo].[RestaurantPOS_BillingInfoEB] ADD [LastSyncedAt] [datetime] NULL", "IF COL_LENGTH('dbo.RestaurantPOS_BillingInfoEB','ApiSubmissionId') IS NULL ALTER TABLE [dbo].[RestaurantPOS_BillingInfoEB] ADD [ApiSubmissionId] [nchar](128) NULL", "IF COL_LENGTH('dbo.RestaurantPOS_BillingInfoEB','ErrorCode') IS NULL ALTER TABLE [dbo].[RestaurantPOS_BillingInfoEB] ADD [ErrorCode] [nchar](64) NULL", "IF COL_LENGTH('dbo.RestaurantPOS_BillingInfoEB','ErrorMessage') IS NULL ALTER TABLE [dbo].[RestaurantPOS_BillingInfoEB] ADD [ErrorMessage] [nvarchar](max) NULL", "IF COL_LENGTH('dbo.RestaurantPOS_BillingInfoHD','UIN') IS NULL ALTER TABLE [dbo].[RestaurantPOS_BillingInfoHD] ADD [UIN] [nchar](64) NULL", "IF COL_LENGTH('dbo.RestaurantPOS_BillingInfoHD','EInvoiceStatus') IS NULL ALTER TABLE [dbo].[RestaurantPOS_BillingInfoHD] ADD [EInvoiceStatus] [nchar](20) NULL", "IF COL_LENGTH('dbo.RestaurantPOS_BillingInfoHD','QRUrl') IS NULL ALTER TABLE [dbo].[RestaurantPOS_BillingInfoHD] ADD [QRUrl] [nvarchar](512) NULL", "IF COL_LENGTH('dbo.RestaurantPOS_BillingInfoHD','LastSyncedAt') IS NULL ALTER TABLE [dbo].[RestaurantPOS_BillingInfoHD] ADD [LastSyncedAt] [datetime] NULL", "IF COL_LENGTH('dbo.RestaurantPOS_BillingInfoHD','ApiSubmissionId') IS NULL ALTER TABLE [dbo].[RestaurantPOS_BillingInfoHD] ADD [ApiSubmissionId] [nchar](128) NULL", "IF COL_LENGTH('dbo.RestaurantPOS_BillingInfoHD','ErrorCode') IS NULL ALTER TABLE [dbo].[RestaurantPOS_BillingInfoHD] ADD [ErrorCode] [nchar](64) NULL", "IF COL_LENGTH('dbo.RestaurantPOS_BillingInfoHD','ErrorMessage') IS NULL ALTER TABLE [dbo].[RestaurantPOS_BillingInfoHD] ADD [ErrorMessage] [nvarchar](max) NULL", "IF COL_LENGTH('dbo.RestaurantPOS_BillingInfoTA','UIN') IS NULL ALTER TABLE [dbo].[RestaurantPOS_BillingInfoTA] ADD [UIN] [nchar](64) NULL", "IF COL_LENGTH('dbo.RestaurantPOS_BillingInfoTA','EInvoiceStatus') IS NULL ALTER TABLE [dbo].[RestaurantPOS_BillingInfoTA] ADD [EInvoiceStatus] [nchar](20) NULL", "IF COL_LENGTH('dbo.RestaurantPOS_BillingInfoTA','QRUrl') IS NULL ALTER TABLE [dbo].[RestaurantPOS_BillingInfoTA] ADD [QRUrl] [nvarchar](512) NULL", "IF COL_LENGTH('dbo.RestaurantPOS_BillingInfoTA','LastSyncedAt') IS NULL ALTER TABLE [dbo].[RestaurantPOS_BillingInfoTA] ADD [LastSyncedAt] [datetime] NULL", "IF COL_LENGTH('dbo.RestaurantPOS_BillingInfoTA','ApiSubmissionId') IS NULL ALTER TABLE [dbo].[RestaurantPOS_BillingInfoTA] ADD [ApiSubmissionId] [nchar](128) NULL", "IF COL_LENGTH('dbo.RestaurantPOS_BillingInfoTA','ErrorCode') IS NULL ALTER TABLE [dbo].[RestaurantPOS_BillingInfoTA] ADD [ErrorCode] [nchar](64) NULL", "IF COL_LENGTH('dbo.RestaurantPOS_BillingInfoTA','ErrorMessage') IS NULL ALTER TABLE [dbo].[RestaurantPOS_BillingInfoTA] ADD [ErrorMessage] [nvarchar](max) NULL"}
-                    For i As Integer = 0 To array.Length - 1
-                        Using up As System.Data.SqlClient.SqlCommand = New System.Data.SqlClient.SqlCommand(array(i), con)
-                            up.ExecuteNonQuery()
-                        End Using
-                    Next
-                End Using
-            Catch
-            End Try
+            Using con As System.Data.SqlClient.SqlConnection = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
+                con.Open()
+                RestaurantPOS14.Configuration.DatabaseMaintenance.EnsureCompatibleSchema(con)
+            End Using
         End Sub
 
         Private Sub LoadEInvoiceConfig()
             Try
                 Dim settings = RestaurantPOS14.Configuration.SettingsHost.Current.EInvoice
-                RestaurantPOS14.frmPOS.EBaseUrl = settings.BaseUrl
+                RestaurantPOS14.frmPOS.EBaseUrl = String.Empty
+                If Not String.IsNullOrWhiteSpace(settings.BaseUrl) Then
+                    RestaurantPOS14.frmPOS.EBaseUrl = RestaurantPOS14.Security.ExternalResourceGuard.RequireHttpUri(settings.BaseUrl, False).AbsoluteUri.TrimEnd("/"c)
+                End If
                 RestaurantPOS14.frmPOS.EClientId = settings.ClientId
                 RestaurantPOS14.frmPOS.EClientSecret = settings.ClientSecret
-                RestaurantPOS14.frmPOS.EHttp.Timeout = System.TimeSpan.FromSeconds(settings.RequestTimeoutSeconds)
+                RestaurantPOS14.frmPOS.EHttp.Timeout = System.TimeSpan.FromSeconds(Math.Max(5, Math.Min(120, settings.RequestTimeoutSeconds)))
                 If Not String.IsNullOrEmpty(RestaurantPOS14.frmPOS.EBaseUrl) Then
                     RestaurantPOS14.frmPOS.EHttp.BaseAddress = New System.Uri(RestaurantPOS14.frmPOS.EBaseUrl)
                 End If
-            Catch
+            Catch suppressedException As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
             End Try
         End Sub
 
         Private Async Function AcquireTokenAsync() As System.Threading.Tasks.Task(Of String)
             Try
-                If String.IsNullOrEmpty(RestaurantPOS14.frmPOS.EClientId) OrElse String.IsNullOrEmpty(RestaurantPOS14.frmPOS.EClientSecret) Then
+                If String.IsNullOrEmpty(RestaurantPOS14.frmPOS.EBaseUrl) OrElse String.IsNullOrEmpty(RestaurantPOS14.frmPOS.EClientId) OrElse String.IsNullOrEmpty(RestaurantPOS14.frmPOS.EClientSecret) Then
                     Return Nothing
                 End If
 
-                Dim req As System.Net.Http.HttpRequestMessage = New System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, RestaurantPOS14.frmPOS.EBaseUrl & "/oauth/token")
-                Dim form As System.Text.StringBuilder = New System.Text.StringBuilder()
-                form.Append("grant_type=client_credentials")
-                form.Append("&client_id=" & System.Uri.EscapeDataString(RestaurantPOS14.frmPOS.EClientId))
-                form.Append("&client_secret=" & System.Uri.EscapeDataString(RestaurantPOS14.frmPOS.EClientSecret))
-                req.Content = CType(New System.Net.Http.StringContent(form.ToString(), System.Text.Encoding.UTF8, "application/x-www-form-urlencoded"), System.Net.Http.HttpContent)
-                Dim resp As System.Net.Http.HttpResponseMessage = Await RestaurantPOS14.frmPOS.EHttp.SendAsync(req)
-                If Not resp.IsSuccessStatusCode Then
-                    Return Nothing
-                End If
-
-                Dim jo As Newtonsoft.Json.Linq.JObject = Newtonsoft.Json.Linq.JObject.Parse(Await resp.Content.ReadAsStringAsync())
-                Return CStr((If(jo("access_token"), jo("token"))))
-            Catch
+                Dim fields As New System.Collections.Generic.Dictionary(Of String, String) From {
+                    {"grant_type", "client_credentials"},
+                    {"client_id", RestaurantPOS14.frmPOS.EClientId},
+                    {"client_secret", RestaurantPOS14.frmPOS.EClientSecret}
+                }
+                Using req As New System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, New System.Uri(New System.Uri(RestaurantPOS14.frmPOS.EBaseUrl & "/"), "oauth/token"))
+                    req.Content = New System.Net.Http.FormUrlEncodedContent(fields)
+                    Using resp As System.Net.Http.HttpResponseMessage = Await RestaurantPOS14.frmPOS.EHttp.SendAsync(req)
+                        If Not resp.IsSuccessStatusCode Then Return Nothing
+                        Dim jo As Newtonsoft.Json.Linq.JObject = Newtonsoft.Json.Linq.JObject.Parse(Await resp.Content.ReadAsStringAsync())
+                        Dim token = CStr(If(jo("access_token"), jo("token")))
+                        Return If(String.IsNullOrWhiteSpace(token), Nothing, token.Trim())
+                    End Using
+                End Using
+            Catch ex As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Acquire e-invoice access token", ex)
                 Return Nothing
             End Try
         End Function
 
         Private Async Function GetNextQueueAsync(con As System.Data.SqlClient.SqlConnection) As System.Threading.Tasks.Task(Of System.Data.DataRow)
-            Using da As System.Data.SqlClient.SqlDataAdapter = New System.Data.SqlClient.SqlDataAdapter("SELECT TOP 1 QueueId,BillId,BillType,Status,Payload FROM [dbo].[EInvoiceQueue] WHERE Status IN ('Pending','CancelPending','ReplacePending') AND (NextAttemptAt IS NULL OR NextAttemptAt<=GETDATE()) ORDER BY QueueId", con)
+            Using command As New System.Data.SqlClient.SqlCommand("SELECT TOP 1 QueueId,BillId,BillType,Status,Payload FROM [dbo].[EInvoiceQueue] WHERE Status IN ('Pending','CancelPending','ReplacePending') AND (NextAttemptAt IS NULL OR NextAttemptAt<=GETDATE()) ORDER BY QueueId", con)
                 Dim dt As System.Data.DataTable = New System.Data.DataTable()
-                da.Fill(dt)
+                Using reader = Await command.ExecuteReaderAsync()
+                    dt.Load(reader)
+                End Using
                 Return If((dt.Rows.Count = 0), Nothing, dt.Rows(0))
             End Using
         End Function
@@ -25793,22 +25840,8 @@ Namespace RestaurantPOS14
                 Dim status As String = System.Convert.ToString(CObj((row(CInt((3)))))).Trim()
                 Dim payload As String =(If(row.IsNull(4), Nothing, System.Convert.ToString(row(4))))
                 Dim token As String = Await Me.AcquireTokenAsync()
-                If Not String.IsNullOrEmpty(token) Then
-                    RestaurantPOS14.frmPOS.EHttp.DefaultRequestHeaders.Authorization = New System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token)
-                End If
-
-                If String.IsNullOrEmpty(token) AndAlso (String.IsNullOrEmpty(RestaurantPOS14.frmPOS.EClientId) OrElse String.IsNullOrEmpty(RestaurantPOS14.frmPOS.EClientSecret)) Then
-                    Dim table As String = GetEInvoiceBillingTable(billType)
-                    Dim uinSim As String = billType & "-" & billId.ToString() & "-" & System.DateTime.Now.ToString("yyyyMMddHHmmss")
-                    Dim qrSim As String = "https://example.com/qr/" & System.Uri.EscapeDataString(uinSim)
-                    Using upSimulation As System.Data.SqlClient.SqlCommand = New System.Data.SqlClient.SqlCommand("UPDATE " & table & " SET EInvoiceStatus='Validated', LastSyncedAt=GETDATE(), UIN=@u, QRUrl=@q WHERE Id=@id", con)
-                        upSimulation.Parameters.AddWithValue("@id", billId)
-                        upSimulation.Parameters.AddWithValue("@u", If((CObj(uinSim)), (CObj(System.DBNull.Value))))
-                        upSimulation.Parameters.AddWithValue("@q", If((CObj(qrSim)), (CObj(System.DBNull.Value))))
-                        Await upSimulation.ExecuteNonQueryAsync()
-                    End Using
-
-                    Await Me.UpdateQueueStatusAsync(con, queueId, "Validated", Nothing)
+                If String.IsNullOrEmpty(token) Then
+                    Await Me.MarkErrorAsync(con, queueId, "E-invoice service is not configured or authentication failed", 300)
                     Return
                 End If
 
@@ -25819,19 +25852,23 @@ Namespace RestaurantPOS14
                         Return
                     End If
 
-                    Dim req As System.Net.Http.HttpRequestMessage = New System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, RestaurantPOS14.frmPOS.EBaseUrl & "/einvoice/" & System.Uri.EscapeDataString(uin) & "/cancel")
-                    req.Content = CType(New System.Net.Http.StringContent(If(payload, String.Empty), System.Text.Encoding.UTF8, "text/plain"), System.Net.Http.HttpContent)
-                    Dim resp As System.Net.Http.HttpResponseMessage = Await RestaurantPOS14.frmPOS.EHttp.SendAsync(req)
-                    If resp.IsSuccessStatusCode Then
-                        Await Me.UpdateQueueStatusAsync(con, queueId, "Cancelled", Nothing)
-                        Dim cancelTable As String = GetEInvoiceBillingTable(billType)
-                        Using upCancel As System.Data.SqlClient.SqlCommand = New System.Data.SqlClient.SqlCommand("UPDATE " & cancelTable & " SET EInvoiceStatus='Cancelled', LastSyncedAt=GETDATE() WHERE Id=@id", con)
-                            upCancel.Parameters.AddWithValue("@id", billId)
-                            Await upCancel.ExecuteNonQueryAsync()
+                    Dim cancelUri As New System.Uri(New System.Uri(RestaurantPOS14.frmPOS.EBaseUrl & "/"), "einvoice/" & System.Uri.EscapeDataString(uin) & "/cancel")
+                    Using req As New System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, cancelUri)
+                        req.Headers.Authorization = New System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token)
+                        req.Content = New System.Net.Http.StringContent(If(payload, String.Empty), System.Text.Encoding.UTF8, "text/plain")
+                        Using resp As System.Net.Http.HttpResponseMessage = Await RestaurantPOS14.frmPOS.EHttp.SendAsync(req)
+                            If resp.IsSuccessStatusCode Then
+                                Await Me.UpdateQueueStatusAsync(con, queueId, "Cancelled", Nothing)
+                                Dim cancelTable As String = GetEInvoiceBillingTable(billType)
+                                Using upCancel As System.Data.SqlClient.SqlCommand = New System.Data.SqlClient.SqlCommand("UPDATE " & cancelTable & " SET EInvoiceStatus='Cancelled', LastSyncedAt=GETDATE() WHERE Id=@id", con)
+                                    upCancel.Parameters.Add("@id", System.Data.SqlDbType.Int).Value = billId
+                                    Await upCancel.ExecuteNonQueryAsync()
+                                End Using
+                            Else
+                                Await Me.MarkErrorAsync(con, queueId, "HTTP " & CInt(resp.StatusCode).ToString(), 600)
+                            End If
                         End Using
-                    Else
-                        Await Me.MarkErrorAsync(con, queueId, "HTTP " & resp.StatusCode.ToString(), 600)
-                    End If
+                    End Using
 
                     Return
                 End If
@@ -25846,11 +25883,13 @@ Namespace RestaurantPOS14
                         Return
                     End If
 
-                    Dim req2 As System.Net.Http.HttpRequestMessage = New System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, RestaurantPOS14.frmPOS.EBaseUrl & "/einvoice/" & System.Uri.EscapeDataString(uin2) & "/replace")
-                    req2.Content = CType(New System.Net.Http.StringContent(If(payload, "{}"), System.Text.Encoding.UTF8, "application/json"), System.Net.Http.HttpContent)
-                    Dim resp2 As System.Net.Http.HttpResponseMessage = Await RestaurantPOS14.frmPOS.EHttp.SendAsync(req2)
-                    If resp2.IsSuccessStatusCode Then
-                        Dim body As String = Await resp2.Content.ReadAsStringAsync()
+                    Dim replaceUri As New System.Uri(New System.Uri(RestaurantPOS14.frmPOS.EBaseUrl & "/"), "einvoice/" & System.Uri.EscapeDataString(uin2) & "/replace")
+                    Using req2 As New System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, replaceUri)
+                        req2.Headers.Authorization = New System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token)
+                        req2.Content = New System.Net.Http.StringContent(If(payload, "{}"), System.Text.Encoding.UTF8, "application/json")
+                        Using resp2 As System.Net.Http.HttpResponseMessage = Await RestaurantPOS14.frmPOS.EHttp.SendAsync(req2)
+                            If resp2.IsSuccessStatusCode Then
+                                Dim body As String = Await resp2.Content.ReadAsStringAsync()
                         newUIN = Nothing
                         qrUrl = Nothing
                         submissionId = Nothing
@@ -25866,7 +25905,8 @@ Namespace RestaurantPOS14
                             If String.IsNullOrEmpty(qrUrl) AndAlso dataObject IsNot Nothing Then qrUrl = dataObject.Value(Of String)("qr")
                             submissionId = jo.Value(Of String)("submissionId")
                             If String.IsNullOrEmpty(submissionId) AndAlso dataObject IsNot Nothing Then submissionId = dataObject.Value(Of String)("submissionId")
-                        Catch
+                        Catch suppressedException As System.Exception
+                            RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                         End Try
 
                         Await Me.UpdateQueueStatusAsync(con, queueId, "Replaced", submissionId)
@@ -25878,23 +25918,27 @@ Namespace RestaurantPOS14
                             upReplace.Parameters.AddWithValue("@s", If((CObj(submissionId)), (CObj(System.DBNull.Value))))
                             Await upReplace.ExecuteNonQueryAsync()
                         End Using
-                    Else
-                        Await Me.MarkErrorAsync(con, queueId, "HTTP " & resp2.StatusCode.ToString(), 600)
-                    End If
+                            Else
+                                Await Me.MarkErrorAsync(con, queueId, "HTTP " & CInt(resp2.StatusCode).ToString(), 600)
+                            End If
+                        End Using
+                    End Using
 
                     Return
                 End If
 
                 Dim payloadS As String = Await Me.BuildPayloadAsync(con, billId, billType)
-                Dim reqS As System.Net.Http.HttpRequestMessage = New System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, RestaurantPOS14.frmPOS.EBaseUrl & "/einvoice/submit")
-                reqS.Content = CType(New System.Net.Http.StringContent(payloadS, System.Text.Encoding.UTF8, "application/json"), System.Net.Http.HttpContent)
-                Dim respS As System.Net.Http.HttpResponseMessage = Await RestaurantPOS14.frmPOS.EHttp.SendAsync(reqS)
-                If respS.StatusCode < System.Net.HttpStatusCode.OK OrElse respS.StatusCode >= System.Net.HttpStatusCode.MultipleChoices Then
-                    Await Me.MarkErrorAsync(con, queueId, "HTTP " & respS.StatusCode.ToString(), 60)
-                    Return
-                End If
+                Dim submitUri As New System.Uri(New System.Uri(RestaurantPOS14.frmPOS.EBaseUrl & "/"), "einvoice/submit")
+                Using reqS As New System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, submitUri)
+                    reqS.Headers.Authorization = New System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token)
+                    reqS.Content = New System.Net.Http.StringContent(payloadS, System.Text.Encoding.UTF8, "application/json")
+                    Using respS As System.Net.Http.HttpResponseMessage = Await RestaurantPOS14.frmPOS.EHttp.SendAsync(reqS)
+                        If respS.StatusCode < System.Net.HttpStatusCode.OK OrElse respS.StatusCode >= System.Net.HttpStatusCode.MultipleChoices Then
+                            Await Me.MarkErrorAsync(con, queueId, "HTTP " & CInt(respS.StatusCode).ToString(), 60)
+                            Return
+                        End If
 
-                Dim body2 As String = Await respS.Content.ReadAsStringAsync()
+                        Dim body2 As String = Await respS.Content.ReadAsStringAsync()
                 submissionId = Nothing
                 qrUrl = Nothing
                 newUIN = Nothing
@@ -25910,7 +25954,8 @@ Namespace RestaurantPOS14
                     If String.IsNullOrEmpty(qrUrl) AndAlso dataObject IsNot Nothing Then qrUrl = dataObject.Value(Of String)("qr")
                     newUIN = jo2.Value(Of String)("submissionId")
                     If String.IsNullOrEmpty(newUIN) AndAlso dataObject IsNot Nothing Then newUIN = dataObject.Value(Of String)("submissionId")
-                Catch
+                Catch suppressedException As System.Exception
+                    RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPOS", suppressedException)
                 End Try
 
                 Await Me.UpdateQueueStatusAsync(con, queueId, "Validated", newUIN)
@@ -25922,8 +25967,11 @@ Namespace RestaurantPOS14
                     up2.Parameters.AddWithValue("@s", If((CObj(newUIN)), (CObj(System.DBNull.Value))))
                     Await up2.ExecuteNonQueryAsync()
                 End Using
+                    End Using
                 End Using
-            Catch __unusedException1__ As System.Exception
+                End Using
+            Catch ex As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Process e-invoice queue", ex)
             Finally
                 Me.einvBusy = False
                 Me.RefreshEInvoiceStatusUI()
@@ -26268,7 +26316,7 @@ Namespace RestaurantPOS14
 
                     RestaurantPOS14.ModClasses.con.Close()
                     Me.txtSalesRatePerKG.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtSub2.Text) / 1000.0)
-                    Dim value As Double = Microsoft.VisualBasic.Conversion.Val(Me.txtSalesRatePerKG.Text) / Microsoft.VisualBasic.Conversion.Val(Me.txtRate_Food.Text)
+                    Dim value As Double = RestaurantPOS14.ModFunc.SafeDivide(Microsoft.VisualBasic.Conversion.Val(Me.txtSalesRatePerKG.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtRate_Food.Text))
                     value = System.Math.Round(value, 3)
                     Me.txtQty_Food.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(value)
                     If RestaurantPOS14.ModClasses.rdr IsNot Nothing Then
@@ -26422,8 +26470,8 @@ Namespace RestaurantPOS14
                     Dim location As System.Drawing.Point = screen.Bounds.Location
                     Dim p As System.Drawing.Point = New System.Drawing.Point(100, 100)
                     obj.Location = location + CType(p, System.Drawing.Size)
-                    Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Add(text, Microsoft.VisualBasic.Conversion.Val(Me.txtRate_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtQty_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
-                    RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.lblBalance.Text))
+                    Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.AddItem(text, Microsoft.VisualBasic.Conversion.Val(Me.txtRate_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtQty_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxPer_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxAmount_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
+                    RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = RestaurantPOS14.Configuration.MoneyMath.FormatPayableTotal(Microsoft.VisualBasic.Conversion.Val(Me.lblBalance.Text))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblHST.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.H1()))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.CurrentCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Count - 1))).Cells(0)
                     Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.Show()
@@ -26479,7 +26527,7 @@ Namespace RestaurantPOS14
 
                     RestaurantPOS14.ModClasses.con.Close()
                     Me.txtSalesRatePerKG.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtSub2.Text) / 1000.0)
-                    Dim value As Double = Microsoft.VisualBasic.Conversion.Val(Me.txtSalesRatePerKG.Text) / Microsoft.VisualBasic.Conversion.Val(Me.txtRate_Food.Text)
+                    Dim value As Double = RestaurantPOS14.ModFunc.SafeDivide(Microsoft.VisualBasic.Conversion.Val(Me.txtSalesRatePerKG.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtRate_Food.Text))
                     value = System.Math.Round(value, 3)
                     Me.txtQty_Food.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(value)
                     If RestaurantPOS14.ModClasses.rdr IsNot Nothing Then
@@ -26640,7 +26688,7 @@ Namespace RestaurantPOS14
                     Dim location As System.Drawing.Point = screen.Bounds.Location
                     Dim p As System.Drawing.Point = New System.Drawing.Point(100, 100)
                     obj.Location = location + CType(p, System.Drawing.Size)
-                    Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Add(text, Microsoft.VisualBasic.Conversion.Val(Me.txtRate_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtQty_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
+                    Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.AddItem(text, Microsoft.VisualBasic.Conversion.Val(Me.txtRate_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtQty_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxPer_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxAmount_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal1.Text))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblHST.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.H2()))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.CurrentCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Count - 1))).Cells(0)
@@ -26697,7 +26745,7 @@ Namespace RestaurantPOS14
 
                     RestaurantPOS14.ModClasses.con.Close()
                     Me.txtSalesRatePerKG.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtSub2.Text) / 1000.0)
-                    Dim value As Double = Microsoft.VisualBasic.Conversion.Val(Me.txtSalesRatePerKG.Text) / Microsoft.VisualBasic.Conversion.Val(Me.txtRate_Food.Text)
+                    Dim value As Double = RestaurantPOS14.ModFunc.SafeDivide(Microsoft.VisualBasic.Conversion.Val(Me.txtSalesRatePerKG.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtRate_Food.Text))
                     value = System.Math.Round(value, 3)
                     Me.txtQty_Food.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(value)
                     If RestaurantPOS14.ModClasses.rdr IsNot Nothing Then
@@ -26853,7 +26901,7 @@ Namespace RestaurantPOS14
                     Dim location As System.Drawing.Point = screen.Bounds.Location
                     Dim p As System.Drawing.Point = New System.Drawing.Point(100, 100)
                     obj.Location = location + CType(p, System.Drawing.Size)
-                    Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Add(text, Microsoft.VisualBasic.Conversion.Val(Me.txtRate_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtQty_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
+                    Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.AddItem(text, Microsoft.VisualBasic.Conversion.Val(Me.txtRate_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtQty_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxPer_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxAmount_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal2.Text))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblHST.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.H3()))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.CurrentCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Count - 1))).Cells(0)
@@ -26910,7 +26958,7 @@ Namespace RestaurantPOS14
 
                     RestaurantPOS14.ModClasses.con.Close()
                     Me.txtSalesRatePerKG.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtSub2.Text) / 1000.0)
-                    Dim value As Double = Microsoft.VisualBasic.Conversion.Val(Me.txtSalesRatePerKG.Text) / Microsoft.VisualBasic.Conversion.Val(Me.txtRate_Food.Text)
+                    Dim value As Double = RestaurantPOS14.ModFunc.SafeDivide(Microsoft.VisualBasic.Conversion.Val(Me.txtSalesRatePerKG.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtRate_Food.Text))
                     value = System.Math.Round(value, 3)
                     Me.txtQty_Food.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(value)
                     If RestaurantPOS14.ModClasses.rdr IsNot Nothing Then
@@ -27067,7 +27115,7 @@ Namespace RestaurantPOS14
                     Dim location As System.Drawing.Point = screen.Bounds.Location
                     Dim p As System.Drawing.Point = New System.Drawing.Point(100, 100)
                     obj.Location = location + CType(p, System.Drawing.Size)
-                    Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Add(text, Microsoft.VisualBasic.Conversion.Val(Me.txtRate_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtQty_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
+                    Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.AddItem(text, Microsoft.VisualBasic.Conversion.Val(Me.txtRate_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtQty_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxPer_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtServiceTaxAmount_Food.Text), Microsoft.VisualBasic.Conversion.Val(Me.txtTotalAmt_Food.Text))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal3.Text))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblHST.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.H4()))
                     RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.CurrentCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Count - 1))).Cells(0)
@@ -27095,7 +27143,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(DishName),Dish.BackColor,RTRIM(Photo),DIRate,RTRIM(FColor) from Category,Dish where Category.CategoryName=Dish.Category and DishName like N'%" & Me.txtItemsKOT.Text & "%' and MI_Status='Active' order by 1")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(DishName),Dish.BackColor,RTRIM(Photo),DIRate,RTRIM(FColor) from Category,Dish where Category.CategoryName=Dish.Category and DishName like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtItemsKOT.Text) & "%' and MI_Status='Active' order by 1")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader()
@@ -27244,7 +27292,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(DishName),Dish.BackColor,RTRIM(Photo),TARate,RTRIM(FColor) from Category,Dish where Category.CategoryName=Dish.Category and DishName like N'%" & Me.txtItemsTA.Text & "%' and MI_Status='Active' order by 1")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(DishName),Dish.BackColor,RTRIM(Photo),TARate,RTRIM(FColor) from Category,Dish where Category.CategoryName=Dish.Category and DishName like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtItemsTA.Text) & "%' and MI_Status='Active' order by 1")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader()
@@ -27393,7 +27441,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(DishName),Dish.BackColor,RTRIM(Photo),HDRate,RTRIM(FColor) from Category,Dish where Category.CategoryName=Dish.Category and DishName like N'%" & Me.txtItemsHD.Text & "%' and MI_Status='Active' order by 1")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(DishName),Dish.BackColor,RTRIM(Photo),HDRate,RTRIM(FColor) from Category,Dish where Category.CategoryName=Dish.Category and DishName like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtItemsHD.Text) & "%' and MI_Status='Active' order by 1")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader()
@@ -27542,7 +27590,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(DishName),Dish.BackColor,RTRIM(Photo),DIRate,RTRIM(FColor) from Category,Dish where Category.CategoryName=Dish.Category and DishName like N'%" & Me.txtItemsEB.Text & "%' and MI_Status='Active' order by 1")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(DishName),Dish.BackColor,RTRIM(Photo),DIRate,RTRIM(FColor) from Category,Dish where Category.CategoryName=Dish.Category and DishName like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtItemsEB.Text) & "%' and MI_Status='Active' order by 1")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader()
@@ -27706,7 +27754,7 @@ Namespace RestaurantPOS14
                 Me.SaveLastFinalBillState()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Update RestaurantPOS_BillingInfoKOT set GrandTotal=" & Me.txtGrandTotal.Text & ",Cash=" & Me.txtCash.Text & ",Change=" & Me.txtChange.Text & ",PaymentMode=@d1,ExchangeRate=" & Me.txtExchangeRate.Text & ",CurrencyCode=@d2,KOTDiscountPer=" & Me.txtKOTDiscPer.Text & ",DiscountReason=@d3 where BillNo= '" & Me.lblBillNo.Text & "'")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Update RestaurantPOS_BillingInfoKOT set GrandTotal=" & RestaurantPOS14.Security.SqlInput.RequireDecimal(Me.txtGrandTotal.Text, "Amount") & ",Cash=" & RestaurantPOS14.Security.SqlInput.RequireDecimal(Me.txtCash.Text, "Amount") & ",Change=" & RestaurantPOS14.Security.SqlInput.RequireDecimal(Me.txtChange.Text, "Amount") & ",PaymentMode=@d1,ExchangeRate=" & RestaurantPOS14.Security.SqlInput.RequireDecimal(Me.txtExchangeRate.Text, "Amount") & ",CurrencyCode=@d2,KOTDiscountPer=" & RestaurantPOS14.Security.SqlInput.RequireDecimal(Me.txtKOTDiscPer.Text, "Amount") & ",DiscountReason=@d3 where BillNo= '" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.lblBillNo.Text) & "'")
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Me.lblPaymentMode.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", Me.str)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d3", Me.txtKOTDiscountAmount.Text)
@@ -27722,7 +27770,7 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModClasses.con.Close()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillKOT(BillID,TableNo,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount) VALUES (" & Me.txtBillID.Text & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillKOT(BillID,TableNo,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID.Text, "Record ID") & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView2.Rows, System.Collections.IEnumerable)
@@ -28165,78 +28213,17 @@ Namespace RestaurantPOS14
 
         Private Sub btnUndoDIB_Click(sender As Object, e As System.EventArgs)
             Try
-                Dim billNo As String = Me.ShowUndoBillPicker()
-                If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(billNo, "", TextCompare:=False) <> 0 Then
-                    Me.RestoreUnpaidBillToNormal(billNo)
-                    Call System.Windows.Forms.MessageBox.Show("Unpaid bill converted to Normal Bill (Paid)", "Undo", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Asterisk)
-                End If
+                Using dialog As New RestaurantPOS14.frmCancelUnpaidBill(RestaurantPOS14.ConnectionString.cs, Me.lblUserVAL.Text)
+                    dialog.ShowDialog(Me)
+                    If dialog.BillWasCancelled Then
+                        If Microsoft.VisualBasic.Conversion.Val(Me.txtBillID.Text) = dialog.CancelledBillId Then Me.Reset1()
+                        Me.fillTableNo()
+                    End If
+                End Using
             Catch ex As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Open unpaid bill cancellation", ex)
                 Call System.Windows.Forms.MessageBox.Show(ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
             End Try
-        End Sub
-
-        Private Function ShowUndoBillPicker() As String
-            Dim selected As String = ""
-            Dim f As System.Windows.Forms.Form = New System.Windows.Forms.Form()
-            f.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
-            f.Text = "Select Bill to Undo"
-            f.Width = 360
-            f.Height = 160
-            Dim cb As System.Windows.Forms.ComboBox = New System.Windows.Forms.ComboBox()
-            cb.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-            cb.Left = 20
-            cb.Top = 20
-            cb.Width = 300
-            Dim ok As System.Windows.Forms.Button = New System.Windows.Forms.Button()
-            ok.Text = "OK"
-            ok.Left = 160
-            ok.Top = 60
-            Dim cancel As System.Windows.Forms.Button = New System.Windows.Forms.Button()
-            cancel.Text = "Cancel"
-            cancel.Left = 240
-            cancel.Top = 60
-            ok.DialogResult = System.Windows.Forms.DialogResult.OK
-            cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel
-            f.Controls.Add(cb)
-            f.Controls.Add(ok)
-            f.Controls.Add(cancel)
-            Try
-                Call System.Data.SqlClient.SqlConnection.ClearAllPools()
-                RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
-                RestaurantPOS14.ModClasses.con.Open()
-                Dim st As String =(If((Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblUserType.Text, "Super Admin", TextCompare:=False) <> 0), "SELECT distinct RTRIM(BillNo) FROM RestaurantPOS_BillingInfoKOT where DIB_Status='Unpaid' and Operator=@d1 order by 1", "SELECT distinct RTRIM(BillNo) FROM RestaurantPOS_BillingInfoKOT where DIB_Status='Unpaid' order by 1"))
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand(st, RestaurantPOS14.ModClasses.con)
-                If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblUserType.Text, "Super Admin", TextCompare:=False) <> 0 Then
-                    RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Me.lblUserVAL.Text)
-                End If
-
-                RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
-                RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
-                While RestaurantPOS14.ModClasses.rdr.Read()
-                    cb.Items.Add(RestaurantPOS14.ModClasses.rdr.GetValue(CInt((0))).ToString())
-                End While
-
-                RestaurantPOS14.ModClasses.con.Close()
-            Catch
-            End Try
-
-            If f.ShowDialog(Me) = System.Windows.Forms.DialogResult.OK AndAlso cb.SelectedItem IsNot Nothing Then
-                selected = cb.SelectedItem.ToString()
-            End If
-
-            f.Dispose()
-            Return selected
-        End Function
-
-        Private Sub RestoreUnpaidBillToNormal(billNo As String)
-            Call System.Data.SqlClient.SqlConnection.ClearAllPools()
-            RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
-            RestaurantPOS14.ModClasses.con.Open()
-            RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Update RestaurantPOS_BillingInfoKOT set PaymentMode='Cash', Cash=(GrandTotal), Change=0, Card=0, DIB_Status='Paid', BillType='Normal Bill', NPPaid=1 where BillNo=@d1 and DIB_Status='Unpaid'", RestaurantPOS14.ModClasses.con)
-            RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", billNo)
-            RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
-            RestaurantPOS14.ModClasses.cmd.ExecuteNonQuery()
-            RestaurantPOS14.ModClasses.con.Close()
         End Sub
 
         Protected Overrides Function ProcessCmdKey(ByRef msg As System.Windows.Forms.Message, keyData As System.Windows.Forms.Keys) As Boolean
@@ -28896,6 +28883,7 @@ Namespace RestaurantPOS14
             If Me.DataGridView1.Rows.Count > 0 Then
                 RestaurantPOS14.My.MyProject.Forms.frmModifiersList.lblSet.Text = "KOT"
                 Call RestaurantPOS14.My.MyProject.Forms.frmModifiersList.Reset()
+                If Me.DataGridView1.SelectedRows.Count = 0 Then Return
                 Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView1.SelectedRows(0)
                 RestaurantPOS14.My.MyProject.Forms.frmModifiersList.lblItemName.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                 RestaurantPOS14.My.MyProject.Forms.frmModifiersList.lblItemRate.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((1))).Value)
@@ -28953,6 +28941,7 @@ Namespace RestaurantPOS14
             If Me.DataGridView3.Rows.Count > 0 Then
                 RestaurantPOS14.My.MyProject.Forms.frmModifiersList.lblSet.Text = "TA"
                 Call RestaurantPOS14.My.MyProject.Forms.frmModifiersList.Reset()
+                If Me.DataGridView3.SelectedRows.Count = 0 Then Return
                 Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView3.SelectedRows(0)
                 RestaurantPOS14.My.MyProject.Forms.frmModifiersList.lblItemName.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                 RestaurantPOS14.My.MyProject.Forms.frmModifiersList.lblItemRate.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((1))).Value)
@@ -29009,6 +28998,7 @@ Namespace RestaurantPOS14
             If Me.DataGridView4.Rows.Count > 0 Then
                 RestaurantPOS14.My.MyProject.Forms.frmModifiersList.lblSet.Text = "HD"
                 Call RestaurantPOS14.My.MyProject.Forms.frmModifiersList.Reset()
+                If Me.DataGridView4.SelectedRows.Count = 0 Then Return
                 Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView4.SelectedRows(0)
                 RestaurantPOS14.My.MyProject.Forms.frmModifiersList.lblItemName.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                 RestaurantPOS14.My.MyProject.Forms.frmModifiersList.lblItemRate.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((1))).Value)
@@ -29065,6 +29055,7 @@ Namespace RestaurantPOS14
             If Me.DataGridView5.Rows.Count > 0 Then
                 RestaurantPOS14.My.MyProject.Forms.frmModifiersList.lblSet.Text = "EB"
                 Call RestaurantPOS14.My.MyProject.Forms.frmModifiersList.Reset()
+                If Me.DataGridView5.SelectedRows.Count = 0 Then Return
                 Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView5.SelectedRows(0)
                 RestaurantPOS14.My.MyProject.Forms.frmModifiersList.lblItemName.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                 RestaurantPOS14.My.MyProject.Forms.frmModifiersList.lblItemRate.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(dataGridViewRow.Cells(CInt((1))).Value)
@@ -29861,7 +29852,7 @@ Namespace RestaurantPOS14
                         RestaurantPOS14.ModFunc.ODN(Me.lblOrderNo.Text, Me.lblBillNo3.Text)
                         RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                         RestaurantPOS14.ModClasses.con.Open()
-                        RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_BillingInfoEB( Id,BillNo, BillDate, GrandTotal,Cash,Change,Operator,PaymentMode,ExchangeRate,CurrencyCode,BillNote,EB_Status,EBDiscountPer,EBDiscountAmt,Member_ID,EB_PhoneNo,ODN,GiftCardID,GiftCardAmount,LP,LA,CustomerName,TaxType,Tip,Card) Values (" & Me.txtBillID3.Text & ",'" & Me.lblBillNo3.Text & "',@d1," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal3.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCash3.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtChange3.Text)) & ",@d2,@d3," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtExchangeRate.Text)) & ",@d4,@d5,'Unpaid'," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtEBDiscountPer.Text)) & ",@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtTip3.Text)) & ",0)")
+                        RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_BillingInfoEB( Id,BillNo, BillDate, GrandTotal,Cash,Change,Operator,PaymentMode,ExchangeRate,CurrencyCode,BillNote,EB_Status,EBDiscountPer,EBDiscountAmt,Member_ID,EB_PhoneNo,ODN,GiftCardID,GiftCardAmount,LP,LA,CustomerName,TaxType,Tip,Card) Values (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID3.Text, "Record ID") & ",'" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.lblBillNo3.Text) & "',@d1," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal3.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCash3.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtChange3.Text)) & ",@d2,@d3," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtExchangeRate.Text)) & ",@d4,@d5,'Unpaid'," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtEBDiscountPer.Text)) & ",@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtTip3.Text)) & ",0)")
                         RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Microsoft.VisualBasic.DateAndTime.Now)
                         RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", Me.lblUserVAL.Text)
                         RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d3", "Cash")
@@ -29884,7 +29875,7 @@ Namespace RestaurantPOS14
                         Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                         RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                         RestaurantPOS14.ModClasses.con.Open()
-                        RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillEB(BillID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,DishNameArabic) VALUES (" & Me.txtBillID3.Text & ",@d1,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16,@d17)")
+                        RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillEB(BillID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,DishNameArabic) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID3.Text, "Record ID") & ",@d1,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16,@d17)")
                         RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                         RestaurantPOS14.ModClasses.cmd.Prepare()
                         For Each dataGridViewRow5 As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView5.Rows, System.Collections.IEnumerable)
@@ -30027,7 +30018,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillEB(BillID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,DishNameArabic) VALUES (" & Me.txtBillID3.Text & ",@d1,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16,@d17)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillEB(BillID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,DishNameArabic) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID3.Text, "Record ID") & ",@d1,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16,@d17)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow6 As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView5.Rows, System.Collections.IEnumerable)
@@ -30216,7 +30207,7 @@ Namespace RestaurantPOS14
                         RestaurantPOS14.ModFunc.ODN(Me.lblOrderNo.Text, Me.lblBillNo1.Text)
                         RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                         RestaurantPOS14.ModClasses.con.Open()
-                        RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_BillingInfoTA( Id,BillNo, BillDate, GrandTotal,Cash,Change,Operator,SubTotal,ParcelCharges,PaymentMode,BillNote,ExchangeRate,CurrencyCode,TADiscountPer,TADiscountAmt,Member_ID,PhoneNo,ODN,TA_Status,GiftCardID,GiftCardAmount,LP,LA,CustomerName,TaxType,Tip,Card) Values (" & Me.txtBillID1.Text & ",'" & Me.lblBillNo1.Text & "',@d1," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal1.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCash1.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtChange1.Text)) & ",@d2," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtSubTotal1.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtParcelCharges.Text)) & ",@d3,@d4," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtExchangeRate.Text)) & ",@d5," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtTADiscountPer.Text)) & ",@d6,@d7,@d8,@d9,'Unpaid',@d11,@d12,@d13,@d14,@d15,@d16," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtTip1.Text)) & ",0)")
+                        RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_BillingInfoTA( Id,BillNo, BillDate, GrandTotal,Cash,Change,Operator,SubTotal,ParcelCharges,PaymentMode,BillNote,ExchangeRate,CurrencyCode,TADiscountPer,TADiscountAmt,Member_ID,PhoneNo,ODN,TA_Status,GiftCardID,GiftCardAmount,LP,LA,CustomerName,TaxType,Tip,Card) Values (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID1.Text, "Record ID") & ",'" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.lblBillNo1.Text) & "',@d1," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal1.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCash1.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtChange1.Text)) & ",@d2," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtSubTotal1.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtParcelCharges.Text)) & ",@d3,@d4," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtExchangeRate.Text)) & ",@d5," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtTADiscountPer.Text)) & ",@d6,@d7,@d8,@d9,'Unpaid',@d11,@d12,@d13,@d14,@d15,@d16," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtTip1.Text)) & ",0)")
                         RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Microsoft.VisualBasic.DateAndTime.Now)
                         RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", Me.lblUserVAL.Text)
                         RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d3", "Cash")
@@ -30244,7 +30235,7 @@ Namespace RestaurantPOS14
                         Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                         RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                         RestaurantPOS14.ModClasses.con.Open()
-                        RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillTA(BillID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,DishNameArabic) VALUES (" & Me.txtBillID1.Text & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16)")
+                        RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillTA(BillID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,DishNameArabic) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID1.Text, "Record ID") & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16)")
                         RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                         RestaurantPOS14.ModClasses.cmd.Prepare()
                         For Each dataGridViewRow5 As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView3.Rows, System.Collections.IEnumerable)
@@ -30398,7 +30389,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillTA(BillID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,DishNameArabic) VALUES (" & Me.txtBillID1.Text & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillTA(BillID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,DishNameArabic) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID1.Text, "Record ID") & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow6 As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView3.Rows, System.Collections.IEnumerable)
@@ -30580,7 +30571,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillTA(BillID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,DishNameArabic) VALUES (" & Me.txtBillID1.Text & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillTA(BillID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,DishNameArabic) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID1.Text, "Record ID") & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView3.Rows, System.Collections.IEnumerable)
@@ -30639,7 +30630,7 @@ Namespace RestaurantPOS14
                         End If
                     Next
 
-                    Dim num2 As Integer = CInt(System.Math.Round(System.Math.Floor(Microsoft.VisualBasic.Conversion.Val(num) / Microsoft.VisualBasic.Conversion.Val(Me.LA))))
+                    Dim num2 As Integer = CInt(System.Math.Round(System.Math.Floor(RestaurantPOS14.ModFunc.SafeDivide(Microsoft.VisualBasic.Conversion.Val(num), Microsoft.VisualBasic.Conversion.Val(Me.LA)))))
                     RestaurantPOS14.ModFunc.LoyaltyCardMemberLedgerSave(System.DateTime.Today, Me.lblBillNo1.Text, "Points for Take Away billing", CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(num2))), CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.txtLP1.Text))), CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.lblMemberID.Text))))
                 End If
 
@@ -30855,7 +30846,7 @@ Namespace RestaurantPOS14
         End Sub
 
         Public Sub btnOpenCashDrawer_Click(sender As Object, e As System.EventArgs)
-            Me.OpenCashdrawer()
+            Me.OpenCashdrawer(showNotConfigured:=True)
         End Sub
 
         Public Sub Timer6_Tick(sender As Object, e As System.EventArgs)
@@ -31219,7 +31210,7 @@ Namespace RestaurantPOS14
 
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Update RestaurantPOS_BillingInfoKOT set Cash=Case when '" & Me.lblBillTypeVAL.Text & "' = 'Equal Split' then Cash + " & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCash.Text)) & " else " & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCash.Text)) & " end,Change=Case when '" & Me.lblBillTypeVAL.Text & "' = 'Equal Split' then Change + " & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtChange.Text)) & " else " & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtChange.Text)) & " end,PaymentMode=@d1,Operator=@d2,KOTDiscountPer=" & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtKOTDiscPer.Text)) & ",KOTDiscountAmt=" & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtKOTDiscountAmount.Text)) & ",Member_ID=@d6,Waiter=@d8,GiftCardID=@d11,GiftCardAmount=@d12,LP=@d13,LA=@d14,CustomerName=@d15,PhoneNo=@d16,EmailID=@d17,TaxType=@d18,Card=Case when '" & Me.lblBillTypeVAL.Text & "' = 'Equal Split' then Card + " & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCard.Text)) & " else " & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCard.Text)) & " end,DIB_Status=@d19,NPPaid=Case when '" & Me.lblBillTypeVAL.Text & "' = 'Equal Split' then NPPaid + 1 else 1 end,Tip=" & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtTip.Text)) & ",GrandTotal=" & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal.Text)) & " where ID=" & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtBillID.Text)))
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Update RestaurantPOS_BillingInfoKOT set Cash=Case when '" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.lblBillTypeVAL.Text) & "' = 'Equal Split' then Cash + " & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCash.Text)) & " else " & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCash.Text)) & " end,Change=Case when '" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.lblBillTypeVAL.Text) & "' = 'Equal Split' then Change + " & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtChange.Text)) & " else " & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtChange.Text)) & " end,PaymentMode=@d1,Operator=@d2,KOTDiscountPer=" & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtKOTDiscPer.Text)) & ",KOTDiscountAmt=" & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtKOTDiscountAmount.Text)) & ",Member_ID=@d6,Waiter=@d8,GiftCardID=@d11,GiftCardAmount=@d12,LP=@d13,LA=@d14,CustomerName=@d15,PhoneNo=@d16,EmailID=@d17,TaxType=@d18,Card=Case when '" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.lblBillTypeVAL.Text) & "' = 'Equal Split' then Card + " & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCard.Text)) & " else " & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtCard.Text)) & " end,DIB_Status=@d19,NPPaid=Case when '" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.lblBillTypeVAL.Text) & "' = 'Equal Split' then NPPaid + 1 else 1 end,Tip=" & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtTip.Text)) & ",GrandTotal=" & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal.Text)) & " where ID=" & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtBillID.Text)))
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Me.lblPaymentMode.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", Me.lblUserVAL.Text)
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblMemberID.Text, "", TextCompare:=False) = 0 Then
@@ -31267,7 +31258,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillKOT(BillID,TableNo,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Category,DishNameArabic) VALUES (" & Me.txtBillID.Text & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillKOT(BillID,TableNo,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Category,DishNameArabic) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID.Text, "Record ID") & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView2.Rows, System.Collections.IEnumerable)
@@ -31418,7 +31409,7 @@ Namespace RestaurantPOS14
                             End If
                         Next
 
-                        Dim num2 As Integer = CInt(System.Math.Round(System.Math.Floor(Microsoft.VisualBasic.Conversion.Val(num) / Microsoft.VisualBasic.Conversion.Val(Me.LA))))
+                        Dim num2 As Integer = CInt(System.Math.Round(System.Math.Floor(RestaurantPOS14.ModFunc.SafeDivide(Microsoft.VisualBasic.Conversion.Val(num), Microsoft.VisualBasic.Conversion.Val(Me.LA)))))
                         RestaurantPOS14.ModFunc.LoyaltyCardMemberLedgerSave(System.DateTime.Today, Me.lblBillNo.Text, "Points for dine in billing", CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(num2))), CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.txtLP.Text))), CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(Me.lblMemberID.Text))))
                     End If
 
@@ -31943,7 +31934,7 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModFunc.ODN(Me.lblOrderNo.Text, Me.lblBillNo1.Text)
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_BillingInfoTA( Id,BillNo, BillDate, GrandTotal,Cash,Change,Operator,SubTotal,ParcelCharges,PaymentMode,BillNote,ExchangeRate,CurrencyCode,TADiscountPer,TADiscountAmt,Member_ID,PhoneNo,ODN,TA_Status,GiftCardID,GiftCardAmount,LP,LA,CustomerName,TaxType,card,Tip) Values (" & Me.txtBillID1.Text & ",'" & Me.lblBillNo1.Text & "',@d1," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal1.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal1.Text)) & ",0,@d2," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtSubTotal1.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtParcelCharges.Text)) & ",@d3,@d4," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtExchangeRate.Text)) & ",@d5,0,@d6,@d7,@d8,@d9,'Paid Directly',@d11,@d12,@d13,@d14,@d15,@d16,0,0)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_BillingInfoTA( Id,BillNo, BillDate, GrandTotal,Cash,Change,Operator,SubTotal,ParcelCharges,PaymentMode,BillNote,ExchangeRate,CurrencyCode,TADiscountPer,TADiscountAmt,Member_ID,PhoneNo,ODN,TA_Status,GiftCardID,GiftCardAmount,LP,LA,CustomerName,TaxType,card,Tip) Values (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID1.Text, "Record ID") & ",'" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.lblBillNo1.Text) & "',@d1," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal1.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal1.Text)) & ",0,@d2," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtSubTotal1.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtParcelCharges.Text)) & ",@d3,@d4," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtExchangeRate.Text)) & ",@d5,0,@d6,@d7,@d8,@d9,'Paid Directly',@d11,@d12,@d13,@d14,@d15,@d16,0,0)")
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Microsoft.VisualBasic.DateAndTime.Now)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", Me.lblUserVAL.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d3", Me.lblPaymentMode1.Text)
@@ -31976,7 +31967,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillTA(BillID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,DishNameArabic) VALUES (" & Me.txtBillID1.Text & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillTA(BillID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,DishNameArabic) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID1.Text, "Record ID") & ",@d1,@d2,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow5 As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView3.Rows, System.Collections.IEnumerable)
@@ -32197,7 +32188,7 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModFunc.ODN(Me.lblOrderNo.Text, Me.lblBillNo3.Text)
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_BillingInfoEB( Id,BillNo, BillDate, GrandTotal,Cash,Change,Operator,PaymentMode,ExchangeRate,CurrencyCode,BillNote,EB_Status,EBDiscountPer,EBDiscountAmt,Member_ID,EB_PhoneNo,ODN,GiftCardID,GiftCardAmount,LP,LA,CustomerName,TaxType,Card,Tip) Values (" & Me.txtBillID3.Text & ",'" & Me.lblBillNo3.Text & "',@d1," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal3.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal3.Text)) & ",0,@d2,@d3," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtExchangeRate.Text)) & ",@d4,@d5,'Paid Directly',0,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16,0,0)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_BillingInfoEB( Id,BillNo, BillDate, GrandTotal,Cash,Change,Operator,PaymentMode,ExchangeRate,CurrencyCode,BillNote,EB_Status,EBDiscountPer,EBDiscountAmt,Member_ID,EB_PhoneNo,ODN,GiftCardID,GiftCardAmount,LP,LA,CustomerName,TaxType,Card,Tip) Values (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID3.Text, "Record ID") & ",'" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.lblBillNo3.Text) & "',@d1," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal3.Text)) & "," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtGrandTotal3.Text)) & ",0,@d2,@d3," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtExchangeRate.Text)) & ",@d4,@d5,'Paid Directly',0,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16,0,0)")
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", System.DateTime.Now)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", Me.lblUserVAL.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d3", Me.lblPaymentMode3.Text)
@@ -32225,7 +32216,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillEB(BillID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,DishNameArabic) VALUES (" & Me.txtBillID3.Text & ",@d1,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16,@d17)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into RestaurantPOS_OrderedProductBillEB(BillID,Dish,Rate,Quantity,Amount,DiscountPer, DiscountAmount, STPer, STAmount, VATPer, VATAmount,SCPer,SCAmount,TotalAmount,Notes,Category,DishNameArabic) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtBillID3.Text, "Record ID") & ",@d1,@d3,@d4,@d5,@d6,@d7,@d8,@d9,@d10,@d11,@d12,@d13,@d14,@d15,@d16,@d17)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow5 As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView5.Rows, System.Collections.IEnumerable)

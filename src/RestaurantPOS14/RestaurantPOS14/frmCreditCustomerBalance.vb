@@ -412,6 +412,7 @@ Namespace RestaurantPOS14
         Private Sub dgw_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Me.dgw.Rows.Count > 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblSet.Text, "HD", TextCompare:=False) = 0 Then
                         RestaurantPOS14.My.MyProject.Forms.frmPOS.lblPaymentMode2.Text = "Credit Customer"
@@ -562,7 +563,7 @@ Namespace RestaurantPOS14
                 Try
                     RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                     RestaurantPOS14.ModClasses.con.Open()
-                    RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT CC_ID,CreditCustomer.CreditCustomerID,RTRIM(CreditCustomer.Name),RTRIM(ContactNo),IsNull(sum(Credit)-sum(Debit),0) FROM CreditCustomer Left join LedgerBook on CreditCustomer.CreditCustomerID=LedgerBook.PartyID where Active='Yes' and CreditCustomer.Name like N'%" & Me.txtKeyword.Text & "%' group by CC_ID, CreditCustomerID,CreditCustomer.name,ContactNo order by CreditCustomer.Name", RestaurantPOS14.ModClasses.con)
+                    RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT CC_ID,CreditCustomer.CreditCustomerID,RTRIM(CreditCustomer.Name),RTRIM(ContactNo),IsNull(sum(Credit)-sum(Debit),0) FROM CreditCustomer Left join LedgerBook on CreditCustomer.CreditCustomerID=LedgerBook.PartyID where Active='Yes' and CreditCustomer.Name like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtKeyword.Text) & "%' group by CC_ID, CreditCustomerID,CreditCustomer.name,ContactNo order by CreditCustomer.Name", RestaurantPOS14.ModClasses.con)
                     RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                     Me.dgw.Rows.Clear()
                     While RestaurantPOS14.ModClasses.rdr.Read()
@@ -582,7 +583,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT CC_ID,CreditCustomer.CreditCustomerID,RTRIM(CreditCustomer.Name),RTRIM(ContactNo),IsNull(sum(Credit)-sum(Debit),0) FROM CreditCustomer Left join LedgerBook on CreditCustomer.CreditCustomerID=LedgerBook.PartyID where Active='Yes' and ContactNo like N'%" & Me.txtKeyword.Text & "%' group by CC_ID, CreditCustomerID,CreditCustomer.name,ContactNo order by CreditCustomer.Name", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT CC_ID,CreditCustomer.CreditCustomerID,RTRIM(CreditCustomer.Name),RTRIM(ContactNo),IsNull(sum(Credit)-sum(Debit),0) FROM CreditCustomer Left join LedgerBook on CreditCustomer.CreditCustomerID=LedgerBook.PartyID where Active='Yes' and ContactNo like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtKeyword.Text) & "%' group by CC_ID, CreditCustomerID,CreditCustomer.name,ContactNo order by CreditCustomer.Name", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()
                 While RestaurantPOS14.ModClasses.rdr.Read()

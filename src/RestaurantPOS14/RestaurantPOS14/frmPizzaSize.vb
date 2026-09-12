@@ -329,6 +329,8 @@ Namespace RestaurantPOS14
 
         <System.Diagnostics.DebuggerNonUserCodeAttribute>
         Public Sub New()
+            Call RestaurantPOS14.frmPizzaSize.__ENCAddToList(Me)
+            Me.InitializeComponent()
             MyBase.Hide()
         End Sub
 
@@ -521,6 +523,7 @@ Namespace RestaurantPOS14
         Private Sub dgw_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Me.dgw.Rows.Count > 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     Me.txtSize.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                     Me.txtPizzaSize.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()

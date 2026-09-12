@@ -259,6 +259,7 @@ Namespace RestaurantPOS14
         Private Sub dgw_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblSet.Text, "EB", TextCompare:=False) = 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     MyBase.Hide()
                     Call RestaurantPOS14.My.MyProject.Forms.frmCards_POS.Hide()
@@ -268,6 +269,7 @@ Namespace RestaurantPOS14
                 End If
 
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblSet.Text, "HD", TextCompare:=False) = 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow2 As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     MyBase.Hide()
                     Call RestaurantPOS14.My.MyProject.Forms.frmCards_POS.Hide()
@@ -277,6 +279,7 @@ Namespace RestaurantPOS14
                 End If
 
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblSet.Text, "TA", TextCompare:=False) = 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow3 As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     MyBase.Hide()
                     Call RestaurantPOS14.My.MyProject.Forms.frmCards_POS.Hide()
@@ -286,6 +289,7 @@ Namespace RestaurantPOS14
                 End If
 
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblSet.Text, "KOT", TextCompare:=False) = 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow4 As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     MyBase.Hide()
                     Call RestaurantPOS14.My.MyProject.Forms.frmCards_POS.Hide()
@@ -295,6 +299,7 @@ Namespace RestaurantPOS14
                 End If
 
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblSet.Text, "BS", TextCompare:=False) = 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow5 As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     MyBase.Hide()
                     Call RestaurantPOS14.My.MyProject.Forms.frmCards_POS.Hide()
@@ -324,7 +329,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(ID),Amount,RTRIM(CustomerName) from GiftCard where ID not in (Select GiftCardID from RestaurantPOS_BillingInfoEB where GiftCardID is not null and EB_Status<>'Void' Union Select GiftCardID from RestaurantPOS_BillingInfoTA where GiftCardID is not null and TA_Status<>'Void' union Select GiftCardID from RestaurantPOS_BillingInfoHD where GiftCardID is not null and HD_Status<>'Canceled' Union Select GiftCardID from RestaurantPOS_BillingInfoKOT where GiftCardID is not null) and ID like N'%" & Me.txtGiftCardID.Text & "%' order by 1", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(ID),Amount,RTRIM(CustomerName) from GiftCard where ID not in (Select GiftCardID from RestaurantPOS_BillingInfoEB where GiftCardID is not null and EB_Status<>'Void' Union Select GiftCardID from RestaurantPOS_BillingInfoTA where GiftCardID is not null and TA_Status<>'Void' union Select GiftCardID from RestaurantPOS_BillingInfoHD where GiftCardID is not null and HD_Status<>'Canceled' Union Select GiftCardID from RestaurantPOS_BillingInfoKOT where GiftCardID is not null) and ID like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtGiftCardID.Text) & "%' order by 1", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()
                 While RestaurantPOS14.ModClasses.rdr.Read()

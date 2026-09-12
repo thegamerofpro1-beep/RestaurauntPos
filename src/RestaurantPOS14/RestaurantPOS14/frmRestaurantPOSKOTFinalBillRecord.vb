@@ -929,6 +929,7 @@ Namespace RestaurantPOS14
                     Return
                 End If
 
+                If Me.dgw.SelectedRows.Count = 0 Then Return
                 Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                 RestaurantPOS14.My.MyProject.Forms.frmPOS.txtBillID.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                 RestaurantPOS14.My.MyProject.Forms.frmPOS.lblBillNo.Text = dataGridViewRow.Cells(CInt((1))).Value.ToString()

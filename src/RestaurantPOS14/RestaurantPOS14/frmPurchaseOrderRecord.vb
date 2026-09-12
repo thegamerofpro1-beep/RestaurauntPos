@@ -675,6 +675,7 @@ Namespace RestaurantPOS14
         Private Sub dgw_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Me.dgw.Rows.Count > 0 AndAlso Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblSet.Text, "PO", TextCompare:=False) = 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     Call RestaurantPOS14.My.MyProject.Forms.frmPurchaseOrder.Reset()
                     Call RestaurantPOS14.My.MyProject.Forms.frmPurchaseOrder.Show()
@@ -765,7 +766,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT Rtrim(PurchaseOrder.PO_ID),Rtrim(PurchaseOrder.PONumber),PurchaseOrder.Date,Rtrim(PurchaseOrder.Supplier_ID),Rtrim(Supplier.SupplierID),Rtrim(Supplier.Name),Rtrim(Supplier.Address),Rtrim(Supplier.City),Rtrim(Supplier.ContactNo),Rtrim(PurchaseOrder.Terms),Rtrim(PurchaseOrder.SubTotal),Rtrim(PurchaseOrder.VATPer),Rtrim(PurchaseOrder.VATAmount),GrandTotal,RTRIM(TaxType) FROM PurchaseOrder  INNER JOIN Supplier ON PurchaseOrder.Supplier_ID = Supplier.ID and Supplier.Name like N'%" & Me.txtSupplierName.Text & "%' order by Date", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT Rtrim(PurchaseOrder.PO_ID),Rtrim(PurchaseOrder.PONumber),PurchaseOrder.Date,Rtrim(PurchaseOrder.Supplier_ID),Rtrim(Supplier.SupplierID),Rtrim(Supplier.Name),Rtrim(Supplier.Address),Rtrim(Supplier.City),Rtrim(Supplier.ContactNo),Rtrim(PurchaseOrder.Terms),Rtrim(PurchaseOrder.SubTotal),Rtrim(PurchaseOrder.VATPer),Rtrim(PurchaseOrder.VATAmount),GrandTotal,RTRIM(TaxType) FROM PurchaseOrder  INNER JOIN Supplier ON PurchaseOrder.Supplier_ID = Supplier.ID and Supplier.Name like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtSupplierName.Text) & "%' order by Date", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()
                 While RestaurantPOS14.ModClasses.rdr.Read()

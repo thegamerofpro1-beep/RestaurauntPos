@@ -345,6 +345,8 @@ Namespace RestaurantPOS14
 
         <System.Diagnostics.DebuggerNonUserCodeAttribute>
         Public Sub New()
+            Call RestaurantPOS14.frmPizzasExportImport.__ENCAddToList(Me)
+            Me.InitializeComponent()
             MyBase.Hide()
         End Sub
 

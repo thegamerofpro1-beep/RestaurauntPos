@@ -252,7 +252,8 @@ Namespace RestaurantPOS14
                     End If
                 Next
 
-            Catch
+            Catch reportInitializationException As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Initialize rptRestaurantPOSKOTInvoice_Kitchen", reportInitializationException)
             End Try
         End Sub
 

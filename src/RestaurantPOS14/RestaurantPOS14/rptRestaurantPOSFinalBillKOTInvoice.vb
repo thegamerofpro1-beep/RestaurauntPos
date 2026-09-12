@@ -345,6 +345,7 @@ Namespace RestaurantPOS14
 
         Public Sub New()
             Call RestaurantPOS14.rptRestaurantPOSFinalBillKOTInvoice.__ENCAddToList(Me)
+            RestaurantPOS14.Reporting.ReceiptReportCompatibility.Apply(Me)
 
             Dim textObject As CrystalDecisions.CrystalReports.Engine.TextObject = Nothing, text As String = Nothing, fieldHeadingObject As CrystalDecisions.CrystalReports.Engine.FieldHeadingObject = Nothing, text2 As String = Nothing
             For Each section As CrystalDecisions.CrystalReports.Engine.Section In MyBase.ReportDefinition.Sections
@@ -459,7 +460,8 @@ Namespace RestaurantPOS14
                     End If
                 Next
 
-            Catch
+            Catch reportInitializationException As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Initialize rptRestaurantPOSFinalBillKOTInvoice", reportInitializationException)
             End Try
         End Sub
 

@@ -621,7 +621,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select PID, RTRIM(ProductCode),RTRIM(Productname),RTRIM(Category), RTRIM(Description),RTRIM(P_Supplier), RTRIM(Unit),Price,ReorderPoint,RTRIM(Warehouse),Qty,RTRIM(HasExpiryDate),RTRIM(ExpiryDate) from Product,Product_OpeningStock where Product.PID=Product_OpeningStock.ProductID and Productname like N'%" & Me.txtProductName.Text & "%' order by ProductName", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select PID, RTRIM(ProductCode),RTRIM(Productname),RTRIM(Category), RTRIM(Description),RTRIM(P_Supplier), RTRIM(Unit),Price,ReorderPoint,RTRIM(Warehouse),Qty,RTRIM(HasExpiryDate),RTRIM(ExpiryDate) from Product,Product_OpeningStock where Product.PID=Product_OpeningStock.ProductID and Productname like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtProductName.Text) & "%' order by ProductName", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()
                 While RestaurantPOS14.ModClasses.rdr.Read()

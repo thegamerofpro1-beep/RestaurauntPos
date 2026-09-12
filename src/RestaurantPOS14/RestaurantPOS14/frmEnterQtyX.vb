@@ -586,6 +586,7 @@ Namespace RestaurantPOS14
                     End If
 
                     For Each dataGridViewRow As System.Windows.Forms.DataGridViewRow In CType(RestaurantPOS14.My.MyProject.Forms.frmItemsTransfer.DataGridView2.Rows, System.Collections.IEnumerable)
+                        If RestaurantPOS14.My.MyProject.Forms.frmItemsTransfer.DataGridView1.SelectedRows.Count = 0 Then Return
                         Dim dataGridViewRow2 As System.Windows.Forms.DataGridViewRow = RestaurantPOS14.My.MyProject.Forms.frmItemsTransfer.DataGridView1.SelectedRows(0)
                         If Not((Microsoft.VisualBasic.CompilerServices.Operators.CompareString(dataGridViewRow.Cells(CInt((0))).Value.ToString(), dataGridViewRow2.Cells(CInt((0))).Value.ToString(), TextCompare:=False) = 0) And (Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow.Cells(CInt((1))).Value)) = Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(dataGridViewRow2.Cells(CInt((1))).Value)))) Then
                             Continue For
@@ -624,6 +625,7 @@ Namespace RestaurantPOS14
                         Return
                     Next
 
+                    If RestaurantPOS14.My.MyProject.Forms.frmItemsTransfer.DataGridView1.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow4 As System.Windows.Forms.DataGridViewRow = RestaurantPOS14.My.MyProject.Forms.frmItemsTransfer.DataGridView1.SelectedRows(0)
                     RestaurantPOS14.My.MyProject.Forms.frmPOS.txtFoodName.Text = dataGridViewRow4.Cells(CInt((0))).Value.ToString()
                     RestaurantPOS14.My.MyProject.Forms.frmPOS.txtRate_Food.Text = dataGridViewRow4.Cells(CInt((1))).Value.ToString()

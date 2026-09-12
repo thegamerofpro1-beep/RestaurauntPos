@@ -587,6 +587,7 @@ Namespace RestaurantPOS14
         Private Sub dgw_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Me.dgw.Rows.Count > 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     Call RestaurantPOS14.My.MyProject.Forms.frmProduct.Show()
                     MyBase.Hide()
@@ -655,7 +656,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select PID, RTRIM(ProductCode),RTRIM(Productname),RTRIM(Category), RTRIM(Description),RTRIM(P_Supplier), RTRIM(Unit),Price,ReorderPoint from Product where Productname like N'%" & Me.txtProductName.Text & "%' order by ProductName", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select PID, RTRIM(ProductCode),RTRIM(Productname),RTRIM(Category), RTRIM(Description),RTRIM(P_Supplier), RTRIM(Unit),Price,ReorderPoint from Product where Productname like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtProductName.Text) & "%' order by ProductName", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()
                 While RestaurantPOS14.ModClasses.rdr.Read()
@@ -672,7 +673,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select PID, RTRIM(ProductCode),RTRIM(Productname),RTRIM(Category), RTRIM(Description),RTRIM(P_Supplier), RTRIM(Unit),Price,ReorderPoint from Product where Category like N'%" & Me.txtCategory.Text & "%' order by ProductName", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select PID, RTRIM(ProductCode),RTRIM(Productname),RTRIM(Category), RTRIM(Description),RTRIM(P_Supplier), RTRIM(Unit),Price,ReorderPoint from Product where Category like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtCategory.Text) & "%' order by ProductName", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()
                 While RestaurantPOS14.ModClasses.rdr.Read()
@@ -701,7 +702,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select PID, RTRIM(ProductCode),RTRIM(Productname),RTRIM(Category), RTRIM(Description),RTRIM(P_Supplier), RTRIM(Unit),Price,ReorderPoint from Product where P_Supplier like N'%" & Me.txtSupplier.Text & "%' order by ProductName", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select PID, RTRIM(ProductCode),RTRIM(Productname),RTRIM(Category), RTRIM(Description),RTRIM(P_Supplier), RTRIM(Unit),Price,ReorderPoint from Product where P_Supplier like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtSupplier.Text) & "%' order by ProductName", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()
                 While RestaurantPOS14.ModClasses.rdr.Read()

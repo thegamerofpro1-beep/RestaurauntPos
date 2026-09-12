@@ -1,6 +1,6 @@
 # Operational validation
 
-Validation was performed on 2026-08-31 against the recovered `RestaurantPOS14` source and the locally configured workstation. The checks intentionally avoid production mutations and financial side effects.
+Validation was performed against the recovered `RestaurantPOS14` source and the locally configured workstation. Operational checks avoid financial side effects; the additive schema-version upgrade was explicitly applied to the configured database as part of the requested compatibility work.
 
 ## Verified
 
@@ -11,10 +11,15 @@ Validation was performed on 2026-08-31 against the recovered `RestaurantPOS14` s
 - The print-service dry run completes without creating a Windows print job.
 - The integration-event dry run completes without publishing to an external endpoint.
 - Crystal Reports can load `RestaurantPOS14.rptCreditCustomerBalance.rpt`: one table, zero parameters, and five sections were discovered, and a Crystal viewer control created its window handle.
+- The invoice print smoke test rendered the exact reported `DIB-0008` dataset through `rptRestaurantPOSFinalBillKOTInvoice`, exported a non-empty PDF through the Microsoft Print to PDF route, and rejected a missing printer with a clear result without creating a Windows print job.
 - The freshly rebuilt Debug application remained running throughout a bounded eight-second startup observation and was then stopped by the test harness.
 - Visual Studio loads the solution and opens recovered VB source files.
+- The untouched original `DBscript.sql` and `BlankDBscript.sql` schemas each created 104-table disposable databases and upgraded successfully to schema version 4.
+- Both original-schema upgrade cases produced all 6 Advanced Setting columns, 3 printer compatibility columns, 21 invoice MyInvois columns, and the complete 11-column e-invoice queue.
+- A second migration run preserved the upgraded legacy row counts, proving idempotency. Both uniquely named disposable databases were removed after verification.
+- The configured `RPOS_DB` was upgraded and independently passed the complete current-schema check; repeated current-schema checks left the four migration-history rows unchanged.
 
-The repeatable diagnostic source is `build\phase3\OperationalSmoke.vb`. Its configuration file redirects the recovered Crystal `13.0.3500.0` references to the installed `13.0.4000.0` runtime for this diagnostic only; it does not change the application deployment policy.
+The repeatable diagnostic source is `build\phase3\OperationalSmoke.vb`. Its configuration file now targets the same Crystal `13.0.3500.0` assembly version as the application and installed SP24 x86 runtime.
 
 ## Designer limitation
 
@@ -26,7 +31,7 @@ The application source remains buildable, but designer round-tripping is not cla
 
 - Windows printers detected: AnyDesk Printer, Brother DCP-T420W, Microsoft Print to PDF, OneNote, and PDF-XChange Lite.
 - No COM ports were detected, so caller ID, weighing scale, customer display, cash drawer, and payment-terminal serial communication could not be exercised.
-- The installed x86 Crystal runtime is `13.0.39.5601` and exposes assemblies versioned `13.0.4000.0`; the recovered local compile-time assemblies are `13.0.3500.0`. The diagnostic binding redirect proves report loading on this workstation, but production deployment should install the matching 13.0.35 x86 runtime or use a deliberately tested binding policy.
+- The installed x86 Crystal runtime is SP24 `13.0.24.2970` and exposes assemblies versioned `13.0.3500.0`, matching the application's compile-time assemblies.
 
 ## Deliberately not executed
 

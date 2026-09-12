@@ -110,6 +110,12 @@ Namespace RestaurantPOS14
         Private s As String
         Private x As String
         Private components As System.ComponentModel.IContainer
+
+        Private NotInheritable Class LoginCredential
+            Public UserId As String
+            Public UserType As String
+            Public StoredPin As String
+        End Class
         Friend Overridable Property UserID As System.Windows.Forms.TextBox
             <System.Diagnostics.DebuggerNonUserCodeAttribute>
             Get
@@ -875,14 +881,11 @@ Namespace RestaurantPOS14
         Private Sub Cancel_Click(sender As Object, e As System.EventArgs)
             Me.txtDBLocation.Text = RestaurantPOS14.ModFunc.DBBackupLocation()
             If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.txtDBLocation.Text, "", TextCompare:=False) <> 0 Then
-                Dim files As String() = System.IO.Directory.GetFiles(Me.txtDBLocation.Text, "*.*", System.IO.SearchOption.TopDirectoryOnly)
-                For i As Integer = 0 To files.Length - 1
-                    Call System.IO.File.Delete(files(i))
-                Next
-
+                ' Never clear the selected directory. It may contain unrelated customer files.
+                Call System.IO.Directory.CreateDirectory(Me.txtDBLocation.Text)
                 Me.autoBackup()
                 Me.ClearCustomerDisplay()
-                Call Microsoft.VisualBasic.CompilerServices.ProjectData.EndApp()
+                RestaurantPOS14.Diagnostics.ApplicationLifecycle.ExitApplication()
             Else
                 Call RestaurantPOS14.My.MyProject.Forms.frmCustomDialog8X.ShowDialog()
             End If
@@ -930,7 +933,8 @@ Namespace RestaurantPOS14
             Me.cmbLoginType.SelectedIndex = 0
             If Not RestaurantPOS14.ModFunc.HandleFirstRunDate() Then
                 Call System.Windows.Forms.MessageBox.Show("System Datetime has been changed to previous date, Software won't work.", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
-                Call Microsoft.VisualBasic.CompilerServices.ProjectData.EndApp()
+                RestaurantPOS14.Diagnostics.ApplicationLifecycle.ExitApplication()
+                Return
             End If
 
             If Not System.IO.File.Exists(System.Windows.Forms.Application.StartupPath & "\LC.txt") Then
@@ -950,7 +954,7 @@ Namespace RestaurantPOS14
 
         <System.Runtime.CompilerServices.MethodImplAttribute(System.Runtime.CompilerServices.MethodImplOptions.NoInlining Or System.Runtime.CompilerServices.MethodImplOptions.NoOptimization)>
         Private Sub frmLogin_FormClosing(sender As Object, e As System.Windows.Forms.FormClosingEventArgs)
-            Call Microsoft.VisualBasic.CompilerServices.ProjectData.EndApp()
+            RestaurantPOS14.Diagnostics.ApplicationLifecycle.ExitApplication()
         End Sub
 
         Public Sub GetNumerpadValue(a As Integer)
@@ -1089,116 +1093,177 @@ Namespace RestaurantPOS14
         End Sub
 
         Public Sub GetCardData()
-            RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
-            RestaurantPOS14.ModClasses.con.Open()
-            RestaurantPOS14.ModClasses.cmd = RestaurantPOS14.ModClasses.con.CreateCommand()
-            RestaurantPOS14.ModClasses.cmd.CommandText = "SELECT RTRIM(UserID),RTRIM(Password),RTRIM(UserType) FROM Registration where CardNo=@d1 and Active='Yes'"
-            RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Me.Password.Text.Replace(CStr((";")), CStr((""))).Replace(CStr(("?")), CStr((""))).Replace("%", ""))
-            RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader()
-            If RestaurantPOS14.ModClasses.rdr.Read() Then
-                Me.UserID.Text = RestaurantPOS14.ModClasses.rdr.GetValue(CInt((0))).ToString()
-                Me.UserType.Text = RestaurantPOS14.ModClasses.rdr.GetValue(CInt((2))).ToString()
-                Me.ValidatedData()
-            Else
+            Dim cardNumber = Me.Password.Text.Replace(";", String.Empty).Replace("?", String.Empty).Replace("%", String.Empty).Trim()
+            If cardNumber.Length = 0 OrElse cardNumber.Length > 100 Then
                 Me.btnScanCard.PerformClick()
+                Return
             End If
-
-            RestaurantPOS14.ModClasses.con.Close()
+            Using connection As New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
+                connection.Open()
+                Using command As New System.Data.SqlClient.SqlCommand("SELECT RTRIM(UserID),RTRIM(UserType) FROM Registration where CardNo=@card and Active='Yes'", connection)
+                    command.Parameters.Add("@card", System.Data.SqlDbType.NVarChar, 100).Value = cardNumber
+                    Using reader = command.ExecuteReader(System.Data.CommandBehavior.SingleRow)
+                        If reader.Read() Then
+                            Me.UserID.Text = reader.GetString(0).Trim()
+                            Me.UserType.Text = reader.GetString(1).Trim()
+                        Else
+                            Me.btnScanCard.PerformClick()
+                            Return
+                        End If
+                    End Using
+                End Using
+            End Using
+            Me.ValidatedData()
         End Sub
 
         Public Sub GetData()
             Try
-                RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
-                RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = RestaurantPOS14.ModClasses.con.CreateCommand()
-                RestaurantPOS14.ModClasses.cmd.CommandText = "SELECT RTRIM(UserID),RTRIM(Password),RTRIM(UserType) FROM Registration where Password=@d1 and Active='Yes'"
-                RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", RestaurantPOS14.ModFunc.Encrypt(Me.Password.Text))
-                RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader()
-                If RestaurantPOS14.ModClasses.rdr.Read() Then
-                    Me.UserID.Text = RestaurantPOS14.ModClasses.rdr.GetValue(CInt((0))).ToString()
-                    Me.UserType.Text = RestaurantPOS14.ModClasses.rdr.GetValue(CInt((2))).ToString()
+                Dim throttleKey = System.Environment.MachineName
+                Dim waitSeconds As Integer
+                If Not RestaurantPOS14.Security.PinSecurity.CanAttempt(throttleKey, waitSeconds) Then
+                    Me.Password.PasswordChar = Global.Microsoft.VisualBasic.Strings.ChrW(0)
+                    Me.Password.Text = "ENTER PIN"
+                    Call System.Windows.Forms.MessageBox.Show("Too many unsuccessful attempts. Try again in " & waitSeconds.ToString() & " seconds.", "Login temporarily locked", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning)
+                    Return
+                End If
+
+                Dim suppliedPin = Me.Password.Text
+                RestaurantPOS14.Security.PinSecurity.ValidatePin(suppliedPin)
+                Dim matchedUserId As String = Nothing
+                Dim matchedUserType As String = Nothing
+                Dim matchedStoredPin As String = Nothing
+                Dim credentials As New System.Collections.Generic.List(Of LoginCredential)()
+
+                Using connection As New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
+                    connection.Open()
+                    Using command As New System.Data.SqlClient.SqlCommand("SELECT RTRIM(UserID),RTRIM(Password),RTRIM(UserType) FROM Registration where Active='Yes'", connection)
+                        Using reader = command.ExecuteReader()
+                            While reader.Read()
+                                credentials.Add(New LoginCredential With {
+                                    .UserId = If(reader.IsDBNull(0), String.Empty, reader.GetString(0).Trim()),
+                                    .StoredPin = If(reader.IsDBNull(1), String.Empty, reader.GetString(1).Trim()),
+                                    .UserType = If(reader.IsDBNull(2), String.Empty, reader.GetString(2).Trim())
+                                })
+                            End While
+                        End Using
+                    End Using
+
+                    Dim matchedCredential = FindMatchingCredential(suppliedPin, credentials)
+                    If matchedCredential IsNot Nothing Then
+                        matchedUserId = matchedCredential.UserId
+                        matchedUserType = matchedCredential.UserType
+                        matchedStoredPin = matchedCredential.StoredPin
+                    End If
+
+                    If matchedUserId IsNot Nothing AndAlso Not RestaurantPOS14.Security.PinSecurity.IsStrongHash(matchedStoredPin) Then
+                        Using upgradeCommand As New System.Data.SqlClient.SqlCommand("UPDATE Registration SET Password=@password WHERE UserID=@userId AND Password=@legacyPassword", connection)
+                            upgradeCommand.Parameters.Add("@password", System.Data.SqlDbType.NChar, 50).Value = RestaurantPOS14.Security.PinSecurity.HashPin(suppliedPin)
+                            upgradeCommand.Parameters.Add("@userId", System.Data.SqlDbType.NChar, 100).Value = matchedUserId
+                            upgradeCommand.Parameters.Add("@legacyPassword", System.Data.SqlDbType.NChar, 50).Value = matchedStoredPin
+                            upgradeCommand.ExecuteNonQuery()
+                        End Using
+                    End If
+                End Using
+
+                If matchedUserId IsNot Nothing Then
+                    RestaurantPOS14.Security.PinSecurity.ResetFailures(throttleKey)
+                    Me.UserID.Text = matchedUserId
+                    Me.UserType.Text = matchedUserType
                     Me.ValidatedData()
                 Else
+                    RestaurantPOS14.Security.PinSecurity.RegisterFailure(throttleKey)
                     Me.Password.PasswordChar = Global.Microsoft.VisualBasic.Strings.ChrW(0)
                     Me.Password.Text = "ENTER PIN"
                 End If
-
-                RestaurantPOS14.ModClasses.cmd.Dispose()
-                RestaurantPOS14.ModClasses.con.Close()
             Catch ex As System.Exception
-                MetroFramework.MetroMessageBox.Show(Me, ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("PIN login", ex)
+                MetroFramework.MetroMessageBox.Show(Me, "Login could not be completed. Check the database connection and try again.", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
             End Try
         End Sub
 
+        Private Shared Function FindMatchingCredential(suppliedPin As String, credentials As System.Collections.Generic.IList(Of LoginCredential)) As LoginCredential
+            If credentials Is Nothing OrElse credentials.Count = 0 Then Return Nothing
+
+            ' Legacy PINs are inexpensive to check and should be migrated first.
+            For Each credential In credentials
+                If Not RestaurantPOS14.Security.PinSecurity.IsStrongHash(credential.StoredPin) AndAlso RestaurantPOS14.Security.PinSecurity.VerifyPin(suppliedPin, credential.StoredPin) Then Return credential
+            Next
+
+            ' Every salted PBKDF2 value is intentionally expensive. Verify them in
+            ' parallel so login time does not grow linearly with the employee count.
+            Dim matches(credentials.Count - 1) As Boolean
+            System.Threading.Tasks.Parallel.For(0, credentials.Count, Sub(index)
+                Dim credential = credentials(index)
+                If RestaurantPOS14.Security.PinSecurity.IsStrongHash(credential.StoredPin) Then
+                    matches(index) = RestaurantPOS14.Security.PinSecurity.VerifyPin(suppliedPin, credential.StoredPin)
+                End If
+            End Sub)
+
+            For index = 0 To credentials.Count - 1
+                If matches(index) Then Return credentials(index)
+            Next
+            Return Nothing
+        End Function
+
         Public Sub ValidatedData()
+            RestaurantPOS14.ModFunc.ClearUserRightsCache()
             If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.UserType.Text, "Cashier", TextCompare:=False) = 0 Then
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.lblUser.Text = Me.UserID.Text
+                Dim frontOffice = RestaurantPOS14.My.MyProject.Forms.frmFrontOffice
+                frontOffice.lblUser.Text = Me.UserID.Text
                 Dim st As String = "Successfully logged in"
-                RestaurantPOS14.ModFunc.LogFunc(Me.UserID.Text, st)
                 MyBase.Hide()
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnOpenCashDrawer.Enabled = False
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnPOS.Enabled = True
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnClockOut.Enabled = True
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnKitchenDisplay.Enabled = True
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnWorkPeriod.Enabled = True
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnReport.Enabled = True
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.lblUserType.Text = Me.UserType.Text
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.lblUser.Text = Me.UserID.Text
-                Call RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.Show()
+                frontOffice.btnOpenCashDrawer.Enabled = False
+                frontOffice.btnPOS.Enabled = True
+                frontOffice.btnClockOut.Enabled = True
+                frontOffice.btnKitchenDisplay.Enabled = True
+                frontOffice.btnWorkPeriod.Enabled = True
+                frontOffice.btnReport.Enabled = True
+                frontOffice.lblUserType.Text = Me.UserType.Text
+                frontOffice.lblUser.Text = Me.UserID.Text
+                frontOffice.Show()
+                RestaurantPOS14.ModFunc.LogFuncAsync(Me.UserID.Text, st)
             End If
 
             If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.UserType.Text, "Kitchen User", TextCompare:=False) = 0 Then
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.lblUser.Text = Me.UserID.Text
+                Dim frontOffice = RestaurantPOS14.My.MyProject.Forms.frmFrontOffice
+                frontOffice.lblUser.Text = Me.UserID.Text
                 Dim st2 As String = "Successfully logged in"
-                RestaurantPOS14.ModFunc.LogFunc(Me.UserID.Text, st2)
                 MyBase.Hide()
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnOpenCashDrawer.Enabled = False
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnPOS.Enabled = False
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnClockOut.Enabled = True
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnWorkPeriod.Enabled = False
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnKitchenDisplay.Enabled = True
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnReport.Enabled = False
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.lblUserType.Text = Me.UserType.Text
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.lblUser.Text = Me.UserID.Text
-                Call RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.Show()
+                frontOffice.btnOpenCashDrawer.Enabled = False
+                frontOffice.btnPOS.Enabled = False
+                frontOffice.btnClockOut.Enabled = True
+                frontOffice.btnWorkPeriod.Enabled = False
+                frontOffice.btnKitchenDisplay.Enabled = True
+                frontOffice.btnReport.Enabled = False
+                frontOffice.lblUserType.Text = Me.UserType.Text
+                frontOffice.lblUser.Text = Me.UserID.Text
+                frontOffice.Show()
+                RestaurantPOS14.ModFunc.LogFuncAsync(Me.UserID.Text, st2)
             End If
 
             If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.UserType.Text, "Waiter", TextCompare:=False) = 0 Then
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.lblUser.Text = Me.UserID.Text
+                Dim frontOffice = RestaurantPOS14.My.MyProject.Forms.frmFrontOffice
+                frontOffice.lblUser.Text = Me.UserID.Text
                 Dim st3 As String = "Successfully logged in"
-                RestaurantPOS14.ModFunc.LogFunc(Me.UserID.Text, st3)
                 MyBase.Hide()
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnOpenCashDrawer.Enabled = False
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnPOS.Enabled = True
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnClockOut.Enabled = True
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnWorkPeriod.Enabled = False
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnKitchenDisplay.Enabled = False
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnReport.Enabled = False
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.lblUserType.Text = Me.UserType.Text
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.lblUser.Text = Me.UserID.Text
-                Call RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.Show()
+                frontOffice.btnOpenCashDrawer.Enabled = False
+                frontOffice.btnPOS.Enabled = True
+                frontOffice.btnClockOut.Enabled = True
+                frontOffice.btnWorkPeriod.Enabled = False
+                frontOffice.btnKitchenDisplay.Enabled = False
+                frontOffice.btnReport.Enabled = False
+                frontOffice.lblUserType.Text = Me.UserType.Text
+                frontOffice.lblUser.Text = Me.UserID.Text
+                frontOffice.Show()
+                RestaurantPOS14.ModFunc.LogFuncAsync(Me.UserID.Text, st3)
             End If
 
             If (Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.UserType.Text, "Store Keeper", TextCompare:=False) = 0) Or (Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.UserType.Text, "Inventory Manager", TextCompare:=False) = 0) Then
-                RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
-                RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = RestaurantPOS14.ModClasses.con.CreateCommand()
-                RestaurantPOS14.ModClasses.cmd.CommandText = "SELECT * FROM UserRights WHERE UserID=@d1"
-                RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Me.UserID.Text)
-                RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader()
-                If Not RestaurantPOS14.ModClasses.rdr.Read() Then
+                If Not RestaurantPOS14.ModFunc.LoadUserRightsCache(Me.UserID.Text) Then
                     MetroFramework.MetroMessageBox.Show(Me, "User Rights are not granted...Please contact super administrator", "", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
                     Me.Password.PasswordChar = Global.Microsoft.VisualBasic.Strings.ChrW(0)
                     Me.Password.Text = "ENTER PIN"
                     Return
-                End If
-
-                If RestaurantPOS14.ModClasses.rdr IsNot Nothing Then
-                    RestaurantPOS14.ModClasses.rdr.Close()
-                End If
-
-                If RestaurantPOS14.ModClasses.con.State = System.Data.ConnectionState.Open Then
-                    RestaurantPOS14.ModClasses.con.Close()
                 End If
 
                 Me.frm.lblUser.Text = Me.UserID.Text
@@ -1206,89 +1271,52 @@ Namespace RestaurantPOS14
                 Me.frm.btnBackOffice.Enabled = True
                 Me.frm.btnFrontOffice.Enabled = False
                 Dim st4 As String = "Successfully logged in"
-                RestaurantPOS14.ModFunc.LogFunc(Me.UserID.Text, st4)
                 MyBase.Hide()
                 Me.frm.lblUser.Text = Me.UserID.Text
                 Me.frm.Show()
+                RestaurantPOS14.ModFunc.LogFuncAsync(Me.UserID.Text, st4)
             End If
 
             If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.UserType.Text, "Super Admin", TextCompare:=False) = 0 Then
-                RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
-                RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = RestaurantPOS14.ModClasses.con.CreateCommand()
-                RestaurantPOS14.ModClasses.cmd.CommandText = "SELECT * FROM UserRights WHERE UserID=@d1"
-                RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Me.UserID.Text)
-                RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader()
-                If Not RestaurantPOS14.ModClasses.rdr.Read() AndAlso Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.UserID.Text, "sa", TextCompare:=False) <> 0 Then
+                Dim hasUserRights = RestaurantPOS14.ModFunc.LoadUserRightsCache(Me.UserID.Text)
+                If Not hasUserRights AndAlso Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.UserID.Text, "sa", TextCompare:=False) <> 0 Then
                     MetroFramework.MetroMessageBox.Show(Me, "User Rights are not granted...Please contact super administrator", "", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
                     Me.Password.PasswordChar = Global.Microsoft.VisualBasic.Strings.ChrW(0)
                     Me.Password.Text = "ENTER PIN"
                     Return
                 End If
 
-                If RestaurantPOS14.ModClasses.rdr IsNot Nothing Then
-                    RestaurantPOS14.ModClasses.rdr.Close()
-                End If
-
-                If RestaurantPOS14.ModClasses.con.State = System.Data.ConnectionState.Open Then
-                    RestaurantPOS14.ModClasses.con.Close()
-                End If
-
                 Me.frm.lblUser.Text = Me.UserID.Text
                 Me.frm.lblUserType.Text = Me.UserType.Text
                 Me.frm.btnBackOffice.Enabled = True
                 Me.frm.btnFrontOffice.Enabled = True
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnPOS.Enabled = True
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnClockOut.Enabled = True
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnKitchenDisplay.Enabled = True
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnWorkPeriod.Enabled = True
-                RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnReport.Enabled = True
                 Dim st5 As String = "Successfully logged in"
-                RestaurantPOS14.ModFunc.LogFunc(Me.UserID.Text, st5)
                 MyBase.Hide()
                 Me.frm.lblUser.Text = Me.UserID.Text
                 Me.frm.Show()
+                RestaurantPOS14.ModFunc.LogFuncAsync(Me.UserID.Text, st5)
             End If
 
             If Not ((Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.UserType.Text, "Admin", TextCompare:=False) = 0) Or (Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.UserType.Text, "Store Manager", TextCompare:=False) = 0)) Then
                 Return
             End If
 
-            RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
-            RestaurantPOS14.ModClasses.con.Open()
-            RestaurantPOS14.ModClasses.cmd = RestaurantPOS14.ModClasses.con.CreateCommand()
-            RestaurantPOS14.ModClasses.cmd.CommandText = "SELECT * FROM UserRights WHERE UserID=@d1"
-            RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Me.UserID.Text)
-            RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader()
-            If Not RestaurantPOS14.ModClasses.rdr.Read() Then
+            If Not RestaurantPOS14.ModFunc.LoadUserRightsCache(Me.UserID.Text) Then
                 MetroFramework.MetroMessageBox.Show(Me, "User Rights are not granted...Please contact super administrator", "", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
                 Me.Password.PasswordChar = Global.Microsoft.VisualBasic.Strings.ChrW(0)
                 Me.Password.Text = "ENTER PIN"
                 Return
             End If
 
-            If RestaurantPOS14.ModClasses.rdr IsNot Nothing Then
-                RestaurantPOS14.ModClasses.rdr.Close()
-            End If
-
-            If RestaurantPOS14.ModClasses.con.State = System.Data.ConnectionState.Open Then
-                RestaurantPOS14.ModClasses.con.Close()
-            End If
-
             Me.frm.lblUser.Text = Me.UserID.Text
             Me.frm.lblUserType.Text = Me.UserType.Text
             Me.frm.btnBackOffice.Enabled = True
             Me.frm.btnFrontOffice.Enabled = True
-            RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnPOS.Enabled = True
-            RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnClockOut.Enabled = True
-            RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnKitchenDisplay.Enabled = True
-            RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnWorkPeriod.Enabled = True
-            RestaurantPOS14.My.MyProject.Forms.frmFrontOffice.btnReport.Enabled = True
             Dim st6 As String = "Successfully logged in"
-            RestaurantPOS14.ModFunc.LogFunc(Me.UserID.Text, st6)
             MyBase.Hide()
             Me.frm.lblUser.Text = Me.UserID.Text
             Me.frm.Show()
+            RestaurantPOS14.ModFunc.LogFuncAsync(Me.UserID.Text, st6)
         End Sub
 
         Private Sub Timer1_Tick(sender As Object, e As System.EventArgs)

@@ -706,47 +706,19 @@ Namespace RestaurantPOS14
 
         Private Sub btnOpenCashDrawer_Click(sender As Object, e As System.EventArgs)
             Try
-                RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
-                RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = RestaurantPOS14.ModClasses.con.CreateCommand()
-                RestaurantPOS14.ModClasses.cmd.CommandText = "SELECT RTRIM(CashDrawer) from POSPrinterSetting where TillID=@d1 and CashDrawer='Enabled'"
-                RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Me.txtTillID.Text)
-                RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader()
-                If Not RestaurantPOS14.ModClasses.rdr.Read() Then
-                    Call RestaurantPOS14.My.MyProject.Forms.frmCustomDialog11.ShowDialog()
+                Dim errorMessage As String = String.Empty
+                If RestaurantPOS14.ModCashDrawer.TryOpenConfiguredDrawer(Me.txtTillID.Text, errorMessage) Then
                     Return
                 End If
 
-                If RestaurantPOS14.ModClasses.rdr IsNot Nothing Then
-                    RestaurantPOS14.ModClasses.rdr.Close()
+                If String.IsNullOrWhiteSpace(errorMessage) Then
+                    Call RestaurantPOS14.My.MyProject.Forms.frmCustomDialog11.ShowDialog()
+                Else
+                    Call System.Windows.Forms.MessageBox.Show(errorMessage, "Cash Drawer", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
                 End If
-
-                If RestaurantPOS14.ModClasses.con.State = System.Data.ConnectionState.Open Then
-                    RestaurantPOS14.ModClasses.con.Close()
-                End If
-
-                Dim origString As String = Global.Microsoft.VisualBasic.Strings.ChrW(27) & "p0@@"
-                RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
-                RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = RestaurantPOS14.ModClasses.con.CreateCommand()
-                RestaurantPOS14.ModClasses.cmd.CommandText = "SELECT RTRIM(PrinterName) from POSPrinterSetting where TillID=@d1 and IsEnabled='Yes'"
-                RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Me.txtTillID.Text)
-                RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader()
-                If RestaurantPOS14.ModClasses.rdr.Read() Then
-                    Me.s4 = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(RestaurantPOS14.ModClasses.rdr.GetValue(0))
-                End If
-
-                If RestaurantPOS14.ModClasses.rdr IsNot Nothing Then
-                    RestaurantPOS14.ModClasses.rdr.Close()
-                End If
-
-                If RestaurantPOS14.ModClasses.con.State = System.Data.ConnectionState.Open Then
-                    RestaurantPOS14.ModClasses.con.Close()
-                End If
-
-                RestaurantPOS14.ModCashDrawer.RawPrinter.PrintRaw(Me.s4, origString)
             Catch ex As System.Exception
-                Call System.Windows.Forms.MessageBox.Show(ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Open Cash Drawer from Front Office", ex)
+                Call System.Windows.Forms.MessageBox.Show("Cash Drawer could not be opened. " & ex.GetBaseException().Message, "Cash Drawer", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
             End Try
         End Sub
 

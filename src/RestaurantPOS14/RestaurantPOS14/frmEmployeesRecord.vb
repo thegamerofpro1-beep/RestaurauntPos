@@ -480,6 +480,7 @@ Namespace RestaurantPOS14
                 End If
 
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblSet.Text, "Employee", TextCompare:=False) = 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     RestaurantPOS14.My.MyProject.Forms.frmEmployeeRegistration.txtID.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                     RestaurantPOS14.My.MyProject.Forms.frmEmployeeRegistration.txtEmployeeID.Text = dataGridViewRow.Cells(CInt((1))).Value.ToString()
@@ -524,6 +525,7 @@ Namespace RestaurantPOS14
                 End If
 
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblSet.Text, "Collections Report", TextCompare:=False) = 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow2 As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     RestaurantPOS14.My.MyProject.Forms.frmDeliveryPersonLedger.txtDPID.Text = dataGridViewRow2.Cells(CInt((1))).Value.ToString()
                     RestaurantPOS14.My.MyProject.Forms.frmDeliveryPersonLedger.txtDPName.Text = dataGridViewRow2.Cells(CInt((2))).Value.ToString()
@@ -550,7 +552,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select EmpID,RTRIM(EmployeeID),RTRIM(EmployeeName),RTRIM(Address),RTRIM(City),RTRIM(ContactNo),RTRIM(Email),DateofJoining,RTRIM(Active) from EmployeeRegistration where Employeename like N'%" & Me.txtEmployeeName.Text & "%' order by EmployeeName", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select EmpID,RTRIM(EmployeeID),RTRIM(EmployeeName),RTRIM(Address),RTRIM(City),RTRIM(ContactNo),RTRIM(Email),DateofJoining,RTRIM(Active) from EmployeeRegistration where Employeename like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtEmployeeName.Text) & "%' order by EmployeeName", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()
                 While RestaurantPOS14.ModClasses.rdr.Read()

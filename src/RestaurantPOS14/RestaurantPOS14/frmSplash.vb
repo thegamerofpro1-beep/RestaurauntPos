@@ -262,7 +262,18 @@ Namespace RestaurantPOS14
                     ElseIf Me.ProgressBar1.Value = 100 Then
                         Me.Timer2.Enabled = False
                         MyBase.Hide()
-                        Call RestaurantPOS14.My.MyProject.Forms.frmLogin.Show()
+                        Dim databaseError As String = Nothing
+                        If Me.IsConfiguredDatabaseProvisioned(databaseError) Then
+                            Call RestaurantPOS14.My.MyProject.Forms.frmLogin.Show()
+                        Else
+                            Dim message As String = "The saved database is unavailable or its setup did not finish. SQL Server Setting will open so you can test or recreate the database."
+                            If Not System.String.IsNullOrWhiteSpace(databaseError) Then
+                                message &= Global.Microsoft.VisualBasic.Constants.vbCrLf & Global.Microsoft.VisualBasic.Constants.vbCrLf & databaseError
+                            End If
+                            Call System.Windows.Forms.MessageBox.Show(message, "Database setup required", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning)
+                            Call RestaurantPOS14.My.MyProject.Forms.frmSqlServerSetting.Reset()
+                            Call RestaurantPOS14.My.MyProject.Forms.frmSqlServerSetting.Show()
+                        End If
                     End If
 
                     Return
@@ -289,6 +300,34 @@ Namespace RestaurantPOS14
                 Call Microsoft.VisualBasic.Interaction.MsgBox(ex.Message, Microsoft.VisualBasic.MsgBoxStyle.Critical, "Error!")
             End Try
         End Sub
+
+        Private Function IsConfiguredDatabaseProvisioned(ByRef errorMessage As String) As Boolean
+            Try
+                Dim isProvisioned As Boolean
+                Using connection As New System.Data.SqlClient.SqlConnection(RestaurantPOS14.Configuration.SettingsHost.Current.Database.ConnectionString)
+                    connection.Open()
+                    RestaurantPOS14.Configuration.DatabaseMaintenance.EnsureCompatibleSchema(connection)
+                    Using command As System.Data.SqlClient.SqlCommand = RestaurantPOS14.Configuration.DatabaseMaintenance.CreateDatabaseProvisionedCommand(connection)
+                        isProvisioned = System.Convert.ToInt32(command.ExecuteScalar()) = 1
+                    End Using
+                End Using
+                If isProvisioned Then
+                    RestaurantPOS14.Configuration.SettingsHost.Service.Reload()
+                End If
+                Return isProvisioned
+            Catch ex As System.Exception
+                Dim messages As New System.Collections.Generic.List(Of String)()
+                Dim current As System.Exception = ex
+                While current IsNot Nothing
+                    If Not System.String.IsNullOrWhiteSpace(current.Message) AndAlso Not messages.Contains(current.Message) Then
+                        messages.Add(current.Message)
+                    End If
+                    current = current.InnerException
+                End While
+                errorMessage = System.String.Join(Global.Microsoft.VisualBasic.Constants.vbCrLf, messages.ToArray())
+                Return False
+            End Try
+        End Function
 
         <System.Diagnostics.DebuggerNonUserCodeAttribute>
         Protected Overrides Sub Dispose(disposing As Boolean)

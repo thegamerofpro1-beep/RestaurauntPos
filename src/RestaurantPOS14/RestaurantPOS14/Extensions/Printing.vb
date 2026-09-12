@@ -100,12 +100,29 @@ Namespace RestaurantPOS14.Extensions.Printing
             Dim report = TryCast(job.Payload, ReportDocument)
             If report Is Nothing Then Throw New ArgumentException("Crystal Reports printing requires a ReportDocument payload.", NameOf(job))
 
-            report.PrintOptions.DissociatePageSizeAndPrinterPaperSize = True
             Dim printerSettings As New PrinterSettings With {.PrinterName = job.PrinterName, .Copies = CShort(job.Copies)}
-            Dim paperWidth = CInt(Math.Truncate(SettingsHost.Current.Printing.ThermalPaperWidthMm / 25.4R * 100.0R))
-            Dim pageSettings As New PageSettings With {.PaperSize = New System.Drawing.Printing.PaperSize("Custom", paperWidth, 60000)}
-            report.PrintToPrinter(printerSettings, pageSettings, False)
-            Return New PrintResult With {.Accepted = True, .Message = "Print job submitted."}
+            If Not printerSettings.IsValid Then
+                Return New PrintResult With {.Accepted = False, .Message = "The configured printer '" & job.PrinterName & "' is not installed or is unavailable."}
+            End If
+
+            ' Microsoft Print to PDF cannot accept a silent Crystal print job without
+            ' an output file. Exporting directly also avoids the driver's null-reference
+            ' failure when Crystal is given a thermal custom paper size.
+            If String.Equals(job.PrinterName.Trim(), "Microsoft Print to PDF", StringComparison.OrdinalIgnoreCase) Then
+                Return New PdfPrintService().Print(job)
+            End If
+
+            Try
+                report.PrintOptions.PrinterName = job.PrinterName
+                report.PrintOptions.DissociatePageSizeAndPrinterPaperSize = True
+                ' The report template and printer driver own the page size. The previous
+                ' overload combined the target printer with PageSettings created for the
+                ' Windows default printer, which can fail inside Crystal Reports.
+                report.PrintToPrinter(job.Copies, collated:=False, 0, 0)
+                Return New PrintResult With {.Accepted = True, .Message = "Print job submitted to '" & job.PrinterName & "'."}
+            Catch ex As Exception
+                Throw New InvalidOperationException("Crystal Reports could not print to '" & job.PrinterName & "'. Verify the printer is online and that its Windows driver supports this invoice layout. " & ex.Message, ex)
+            End Try
         End Function
     End Class
 

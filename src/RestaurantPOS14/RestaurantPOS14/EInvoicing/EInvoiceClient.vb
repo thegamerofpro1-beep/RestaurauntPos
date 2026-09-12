@@ -62,7 +62,8 @@ Namespace RestaurantPOS14.EInvoicing
                         r.UIN = myInvoisResponse.acceptedDocuments(CInt((0))).uuid
                     End If
 
-                Catch
+                Catch suppressedException As System.Exception
+                    RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in EInvoiceClient", suppressedException)
                 End Try
             Else
                 r.ErrorMessage = Await resp.Content.ReadAsStringAsync()
@@ -96,7 +97,8 @@ Namespace RestaurantPOS14.EInvoicing
                         r.UIN = myInvoisResponse.acceptedDocuments(CInt((0))).uuid
                     End If
 
-                Catch
+                Catch suppressedException As System.Exception
+                    RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in EInvoiceClient", suppressedException)
                 End Try
             Else
                 r.ErrorMessage = Await resp.Content.ReadAsStringAsync()
@@ -185,7 +187,8 @@ Namespace RestaurantPOS14.EInvoicing
                     firstUuid = jo.documentSummary(CInt((0))).uuid
                 End If
 
-            Catch
+            Catch suppressedException As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in EInvoiceClient", suppressedException)
             End Try
 
             Return (True, status, firstUuid)

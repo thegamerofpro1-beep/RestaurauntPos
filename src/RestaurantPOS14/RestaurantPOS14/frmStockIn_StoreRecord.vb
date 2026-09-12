@@ -330,7 +330,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select RTRIM(Dish),RTRIM(Category),Qty,DIRate * Qty from temp_stock_Store,Dish where Temp_Stock_Store.Dish=Dish.DishName and Qty > 0 and Dish like N'%" & Me.txtItemName.Text & "%' order by Dish", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select RTRIM(Dish),RTRIM(Category),Qty,DIRate * Qty from temp_stock_Store,Dish where Temp_Stock_Store.Dish=Dish.DishName and Qty > 0 and Dish like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtItemName.Text) & "%' order by Dish", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()

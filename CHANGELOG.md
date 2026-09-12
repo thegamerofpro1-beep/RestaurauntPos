@@ -1,5 +1,178 @@
 # Changelog
 
+## 2026-09-04 — Final payable totals rounded to 10 sen
+
+- New/recalculated bills round the final payable amount to the nearest RM0.10, with midpoint values rounded away from zero (RM1.65/RM1.67 become RM1.70).
+- Applies after tax, service/parcel/delivery charges, tips, gift-card deductions and loyalty redemption; item prices, quantities, discounts and tax amounts retain their existing precision.
+- Dine-in, takeaway, home delivery, express and item-split billing store the rounded payable total for receipts and accounting. Cash/card payment checks and change use that same amount.
+- Colored and existing pole-display balance updates use the payable total instead of a pre-charge subtotal. Home delivery no longer opens a disabled colored display during calculation.
+- Historical receipt reprints remain unchanged; no database backfill or schema change. Installer version 14.1.5.10.
+
+## 2026-09-04 — Safe unpaid-bill cancellation for every user
+
+### Added
+
+- Replaced the misleading Undo Bill cash-settlement action with Cancel Unpaid Bill, available to every signed-in user without an operator/administrator restriction.
+- Requires a reason and confirmation of the bill and affected tables. Cancels fully unpaid normal dine-in bills only; paid/part-paid, split, account-linked, loyalty-ledger and e-invoice bills are protected.
+- Archives complete bill, item and accounting snapshots and adds an entry to the existing canceled-invoice history in the same transaction as removal from active billing. Existing kitchen orders and stock are never changed.
+- Automatically upgrades existing databases to schema version 6, reserves canceled bill numbers, and raises installer version to 14.1.5.9.
+
+## 2026-09-04 — Unpaid dine-in bill table-name compatibility
+
+### Fixed
+
+- Fixed the intermittent "Table number must be a non-negative whole number" error when sending or updating an order for a table with an existing unpaid bill.
+- Both paths now use one parameterized bill lookup, preserving first-version text table names and merged-table aggregation without parsing quoted table names as numeric IDs.
+- Raised the installer file version to 14.1.5.8 for a definite in-place upgrade.
+
+## 2026-09-04 — Receipt subtotal order and quantity alignment
+
+### Changed
+
+- Restored Sub Total above SST in Dine In, Take Away, Home Delivery, and Express receipt templates.
+- Aligned each receipt's total quantity with the item quantity column and kept its label clear of the numeric column.
+- Preserved whole-number quantities, RM formatting, SST/service-charge values, and right-aligned footer amounts.
+- Raised the installer file version to 14.1.5.7 for a definite in-place upgrade.
+
+## 2026-09-03 — Receipt SST before Sub Total
+
+### Changed
+
+- Moved the SST row above the Sub Total row in Dine In, Take Away, Home Delivery, and Express receipt templates.
+- Preserved right alignment with the receipt Amount column and widened the SST percentage field to prevent clipping.
+- Raised the installer file version to 14.1.5.6 for a definite in-place upgrade.
+
+## 2026-09-03 — Optional SST column on colored customer display
+
+### Added
+
+- Added a Back Office → Other Settings checkbox to show or hide the `SST Amt.` column on the colored secondary customer display.
+- Existing databases are upgraded automatically and retain the current visible SST-column behavior by default.
+- Raised the installer file version to 14.1.5.5 for a definite in-place upgrade.
+
+## 2026-09-03 — Faster login and office navigation
+
+### Improved
+
+- Kept all existing salted PBKDF2 PIN hashes compatible while moving the calculation to Windows native cryptography and checking independent employee records in parallel.
+- Reduced the measured 20-user PIN scan on the build PC from roughly 17 seconds to about 0.7 seconds.
+- Removed eager Front Office creation during administrator login and moved non-critical login audit writes off the navigation path.
+- Cached the signed-in user's complete permission set after one query, so Back Office no longer performs a separate database round trip for every report permission.
+- Invalidates the permission cache whenever user rights are granted, changed, or deleted.
+- Raised the installer file version to 14.1.5.4 for a definite in-place upgrade.
+
+## 2026-09-03 — Cash Drawer reliability
+
+### Fixed
+
+- Replaced the Front Office, Dine In billing, and split-bill cash-drawer paths with one guarded implementation that uses local database objects instead of shared mutable readers and connections.
+- Validates every Windows spooler operation and never continues with a null/invalid printer handle.
+- A disabled or unconfigured drawer remains silent during cash settlement; a real printer/driver failure displays a useful Cash Drawer message and no longer interrupts receipt printing.
+- Cash-drawer failures are recorded in the application diagnostic log with the underlying Windows error.
+- Raised the installer file version to 14.1.5.3 for a definite in-place upgrade.
+
+## 2026-09-02 — Upgraded receipt formula compatibility
+
+### Fixed
+
+- Customer receipts now repair stale Crystal Service Charge and SST percentage formulas before rendering, using the report's actual legacy `VATPer` and `STPer` field references instead of a hard-coded table alias.
+- Prevented the legacy VAT display-label cleanup from rewriting `VATPer` inside Crystal database formulas, and revalidates the formulas at the common Save & Print boundary.
+- A receipt with an incompatible optional percentage field no longer blocks Save & Print; the percentage is suppressed and the mismatch is written to the application diagnostic log.
+- Raised the installer file version to 14.1.5.2 so PCs already running the earlier packages receive an unambiguous in-place upgrade.
+
+## 2026-09-02 — Defensive code audit
+
+### Fixed
+
+- Removed an exit-time routine that deleted every file in the configured database-backup folder before creating a backup.
+- Added guards to every direct selected-row access found in the recovered forms and safe handling for zero-denominator financial and quantity calculations.
+- Guarded legacy dynamic SQL inputs by type or escaped literal value, while keeping first-version database compatibility.
+- Repaired ten pizza form constructors that accessed controls before `InitializeComponent`.
+- Replaced silent exception handlers with local diagnostics, including Crystal report initialization failures.
+- Replaced abrupt Visual Basic `EndApp` termination with graceful application shutdown and protected nullable cleanup in the KDS path.
+- Added bounded HTTPS network requests, blocked external clear-text endpoints, removed forced legacy TLS settings, and made Windows utility launches fail safely.
+- Replaced reversible new PIN storage with salted PBKDF2 hashes, retained transparent first-version PIN login, and added login throttling and secure temporary PIN generation.
+- Removed the fake MyInvois validation fallback; missing credentials now leave invoices queued with a retryable error instead of generating false approval data.
+
+### Added
+
+- Application-wide crash and non-fatal diagnostic logging under `%LocalAppData%\Hitech Computers\RestaurantPOS14\Logs` with bounded log rotation.
+- A repeatable defensive-guard smoke test and a Microsoft DevSkim SARIF audit artifact.
+- `docs/DEFENSIVE_CODE_AUDIT.md` with scope, checks, results, and remaining architectural constraints.
+
+## 2026-09-02 — Unified setup installer
+
+### Added
+
+- Added one offline setup executable for RestaurantPOS14 and its .NET Framework 4.8, Visual C++ x86, Crystal Reports x86, and barcode-font prerequisites.
+- Added version-aware prerequisite detection, silent runtime upgrades, Start Menu/Desktop shortcuts, uninstall support, and reproducible SHA-256 verification.
+- Added automatic migration from the original `%ProgramFiles(x86)%\Hi Tech Computers\Rest Touch\RestaurantPOS14` installation to `%ProgramFiles(x86)%\Hitech Computers\RestaurantPOS14`.
+
+### Changed
+
+- Upgrades preserve the licence file, legacy SQL/e-invoice configuration, menu images, PDF exports, secondary-display images, database settings, and SQL Server data.
+- Legacy executable configuration can now be imported after the former installer is removed.
+
+## 2026-09-02 — Original database automatic upgrade
+
+### Fixed
+
+- Databases created by the original demo and blank scripts now upgrade automatically to schema version 4 before login.
+- Centralized the Advanced Setting, terminal display, multi-printer kitchen, MyInvois queue, invoice-status, and layered-setting schema changes into one transactional migration path.
+- Added cross-terminal migration locking, persistent migration history, complete post-upgrade verification, and an idempotent fast path for already upgraded databases.
+- Added the missing MyInvois queue `UIN` and `QRUrl` columns required by the active queue implementation.
+- Blank original databases receive one complete default `OtherSetting` row rather than a partially initialized row.
+- New database provisioning and feature forms use the same compatibility migration instead of independent schema patches with swallowed errors.
+
+## 2026-09-02 — Legacy terminal printer settings
+
+### Fixed
+
+- Fixed older `OtherSetting` schemas preventing `POSPrinterSetting` from loading during application startup.
+- Isolated optional database settings so a missing feature column can no longer disable invoice printing.
+- Added a direct enabled-printer lookup by till ID when the centralized setting has not yet been populated, including first-run database creation sessions.
+- Terminal Setting changes now refresh the active settings immediately, and invoice printing rechecks the current till before every job.
+- Cash payments no longer call the raw-printer drawer command with a null printer when Cash Drawer is disabled.
+
+## 2026-09-02 — Invoice printing reliability
+
+### Fixed
+
+- Microsoft Print to PDF now exports the Crystal invoice to an explicit PDF file instead of sending an unsupported silent custom-paper print job.
+- Physical Crystal printers now use the selected printer driver's page settings, avoiding a mismatch with page settings created for the Windows default printer.
+- Missing, invalid, or rejected printers now produce a useful printer-specific message instead of a generic null-reference error.
+
+## 2026-09-02 — Database setup reliability
+
+### Fixed
+
+- First-run demo and blank database creation now use the authentication mode and credentials selected in SQL Server Setting for every provisioning connection.
+- Database configuration is saved only after the complete schema script succeeds and passes a required-schema check.
+- Failed provisioning no longer reports success or leaves a partial database behind.
+- Startup now detects a saved connection to an unavailable or incompletely provisioned database and returns to SQL Server Setting instead of continuing to login.
+- SQL setup errors now show the underlying SQL error number, procedure, line, and message instead of only the generic SMO batch exception.
+- Replacing an existing database now requires a separate, explicit data-loss confirmation.
+
+## 2026-09-02 — SST charge option
+
+### Added
+
+- Added a manually editable SST charge percentage beside Service Charge in Back Office Others Setting.
+- Applies the saved SST percentage to every menu category so dine-in, takeaway, home-delivery, express, and split-bill invoices use the same rate.
+
+### Changed
+
+- Activated the existing `STPer`/`STAmount` invoice path so exclusive SST is added to invoice totals and inclusive SST is extracted and displayed without increasing the total.
+- Dine-in, takeaway, home-delivery, express, split-bill, and reprint receipts now show the numeric SST percentage and charge amount immediately below Sub Total.
+- Reduced the SST receipt row typography to prevent overlap and prefixed every printed monetary value with `RM`.
+- Printed item and summary quantities now use whole numbers, while Sub Total and SST amounts align with the receipt Amount column.
+- Receipt Service Charge rows now show the saved percentage dynamically and align their amounts with the item Amount column.
+- The coloured customer display now shows the SST percentage beside Total and each item's SST amount in a dedicated grid column, including recalled and quantity-adjusted orders.
+- All monetary values on the coloured customer display now include the `RM` prefix and two decimal places.
+- Large customer-display totals now reflow the SST and Total summary from the right edge instead of being clipped off-screen.
+- An empty customer-display slideshow no longer raises an `Attempted to divide by zero` exception.
+- Reused the existing `OtherSetting.ServiceTax` and invoice tax columns, so no database schema migration is required.
+
 ## 2026-08-31 — Post-delivery verification
 
 ### Added

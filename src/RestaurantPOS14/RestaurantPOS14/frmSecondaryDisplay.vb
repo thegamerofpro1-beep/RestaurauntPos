@@ -66,6 +66,12 @@ Namespace RestaurantPOS14
         <System.Runtime.CompilerServices.AccessedThroughPropertyAttribute("lblHST")>
         Private _lblHST As System.Windows.Forms.Label
 
+        <System.Runtime.CompilerServices.AccessedThroughPropertyAttribute("lblSSTCaption")>
+        Private _lblSSTCaption As System.Windows.Forms.Label
+
+        <System.Runtime.CompilerServices.AccessedThroughPropertyAttribute("lblSSTPercent")>
+        Private _lblSSTPercent As System.Windows.Forms.Label
+
         <System.Runtime.CompilerServices.AccessedThroughPropertyAttribute("Column1")>
         Private _Column1 As System.Windows.Forms.DataGridViewTextBoxColumn
 
@@ -74,6 +80,9 @@ Namespace RestaurantPOS14
 
         <System.Runtime.CompilerServices.AccessedThroughPropertyAttribute("Column3")>
         Private _Column3 As System.Windows.Forms.DataGridViewTextBoxColumn
+
+        <System.Runtime.CompilerServices.AccessedThroughPropertyAttribute("ColumnSST")>
+        Private _ColumnSST As System.Windows.Forms.DataGridViewTextBoxColumn
 
         <System.Runtime.CompilerServices.AccessedThroughPropertyAttribute("Column11")>
         Private _Column11 As System.Windows.Forms.DataGridViewTextBoxColumn
@@ -87,6 +96,8 @@ Namespace RestaurantPOS14
         Private [end] As Integer
 
         Private components As System.ComponentModel.IContainer
+
+        Private formattingCurrencyLabel As Boolean
 
         Friend Overridable Property DataGridView1 As System.Windows.Forms.DataGridView
             <System.Diagnostics.DebuggerNonUserCodeAttribute>
@@ -214,7 +225,15 @@ Namespace RestaurantPOS14
             <System.Runtime.CompilerServices.MethodImplAttribute(System.Runtime.CompilerServices.MethodImplOptions.Synchronized)>
             <System.Diagnostics.DebuggerNonUserCodeAttribute>
             Set(value As System.Windows.Forms.Label)
+                Dim value2 As System.EventHandler = AddressOf Me.CurrencyLabel_TextChanged
+                If Me._lblTotal IsNot Nothing Then
+                    RemoveHandler Me._lblTotal.TextChanged, value2
+                End If
+
                 Me._lblTotal = value
+                If Me._lblTotal IsNot Nothing Then
+                    AddHandler Me._lblTotal.TextChanged, value2
+                End If
             End Set
         End Property
 
@@ -300,7 +319,41 @@ Namespace RestaurantPOS14
             <System.Runtime.CompilerServices.MethodImplAttribute(System.Runtime.CompilerServices.MethodImplOptions.Synchronized)>
             <System.Diagnostics.DebuggerNonUserCodeAttribute>
             Set(value As System.Windows.Forms.Label)
+                Dim value2 As System.EventHandler = AddressOf Me.CurrencyLabel_TextChanged
+                If Me._lblHST IsNot Nothing Then
+                    RemoveHandler Me._lblHST.TextChanged, value2
+                End If
+
                 Me._lblHST = value
+                If Me._lblHST IsNot Nothing Then
+                    AddHandler Me._lblHST.TextChanged, value2
+                End If
+            End Set
+        End Property
+
+        Friend Overridable Property lblSSTCaption As System.Windows.Forms.Label
+            <System.Diagnostics.DebuggerNonUserCodeAttribute>
+            Get
+                Return Me._lblSSTCaption
+            End Get
+
+            <System.Runtime.CompilerServices.MethodImplAttribute(System.Runtime.CompilerServices.MethodImplOptions.Synchronized)>
+            <System.Diagnostics.DebuggerNonUserCodeAttribute>
+            Set(value As System.Windows.Forms.Label)
+                Me._lblSSTCaption = value
+            End Set
+        End Property
+
+        Friend Overridable Property lblSSTPercent As System.Windows.Forms.Label
+            <System.Diagnostics.DebuggerNonUserCodeAttribute>
+            Get
+                Return Me._lblSSTPercent
+            End Get
+
+            <System.Runtime.CompilerServices.MethodImplAttribute(System.Runtime.CompilerServices.MethodImplOptions.Synchronized)>
+            <System.Diagnostics.DebuggerNonUserCodeAttribute>
+            Set(value As System.Windows.Forms.Label)
+                Me._lblSSTPercent = value
             End Set
         End Property
 
@@ -343,6 +396,19 @@ Namespace RestaurantPOS14
             End Set
         End Property
 
+        Friend Overridable Property ColumnSST As System.Windows.Forms.DataGridViewTextBoxColumn
+            <System.Diagnostics.DebuggerNonUserCodeAttribute>
+            Get
+                Return Me._ColumnSST
+            End Get
+
+            <System.Runtime.CompilerServices.MethodImplAttribute(System.Runtime.CompilerServices.MethodImplOptions.Synchronized)>
+            <System.Diagnostics.DebuggerNonUserCodeAttribute>
+            Set(value As System.Windows.Forms.DataGridViewTextBoxColumn)
+                Me._ColumnSST = value
+            End Set
+        End Property
+
         Friend Overridable Property Column11 As System.Windows.Forms.DataGridViewTextBoxColumn
             <System.Diagnostics.DebuggerNonUserCodeAttribute>
             Get
@@ -364,6 +430,8 @@ Namespace RestaurantPOS14
             Me.begin = 0
             Me.[end] = 0
             Me.InitializeComponent()
+            AddHandler MyBase.Resize, AddressOf Me.frmSecondaryDisplay_Resize
+            Me.LayoutSummaryLabels()
         End Sub
 
         <System.Diagnostics.DebuggerNonUserCodeAttribute>
@@ -400,6 +468,7 @@ Namespace RestaurantPOS14
         End Sub
 
         Private Sub frmSecondaryDisplay_Load(sender As Object, e As System.EventArgs)
+            Me.ApplySstColumnVisibility(RestaurantPOS14.Configuration.SecondaryDisplayOptions.ShowSstColumn)
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
@@ -419,7 +488,13 @@ Namespace RestaurantPOS14
                 Me.selected = 0
                 Me.begin = 0
                 Me.[end] = Me.imageFiles.Length
-                Call RestaurantPOS14.frmSecondaryDisplay.ShowImage(Me.imageFiles(Me.selected), Me.pbSlideShow)
+                If Me.imageFiles.Length > 0 Then
+                    Call RestaurantPOS14.frmSecondaryDisplay.ShowImage(Me.imageFiles(Me.selected), Me.pbSlideShow)
+                    Me.Timer1.Enabled = True
+                Else
+                    Me.pbSlideShow.Image = Nothing
+                    Me.Timer1.Enabled = False
+                End If
                 Me.lblHST.Location = New System.Drawing.Point(Me.Label4.Right + 10, Me.lblHST.Location.Y)
             Catch ex As System.Exception
                 Call System.Windows.Forms.MessageBox.Show(ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
@@ -479,8 +554,102 @@ Namespace RestaurantPOS14
         End Sub
 
         Private Sub ShowNextImage()
+            If Me.imageFiles Is Nothing OrElse Me.imageFiles.Length = 0 Then
+                Me.Timer1.Enabled = False
+                Return
+            End If
+
             Me.selected += 1
             Call RestaurantPOS14.frmSecondaryDisplay.ShowImage(Me.imageFiles(Me.selected Mod Me.imageFiles.Length), Me.pbSlideShow)
+        End Sub
+
+        Public Sub AddItem(itemName As Object, rate As Object, quantity As Object, sstPercent As Object, sstAmount As Object, totalAmount As Object)
+            Me.ApplySstColumnVisibility(RestaurantPOS14.Configuration.SecondaryDisplayOptions.ShowSstColumn)
+            Dim resetPercent As Boolean = Me.DataGridView1.Rows.Count = 0
+            Dim percentValue As Decimal = RestaurantPOS14.frmSecondaryDisplay.ToDecimalValue(sstPercent)
+            Dim rateValue As Decimal = RestaurantPOS14.Configuration.MoneyMath.RoundCurrency(RestaurantPOS14.frmSecondaryDisplay.ToDecimalValue(rate))
+            Dim amountValue As Decimal = RestaurantPOS14.Configuration.MoneyMath.RoundCurrency(RestaurantPOS14.frmSecondaryDisplay.ToDecimalValue(sstAmount))
+            Dim totalValue As Decimal = RestaurantPOS14.Configuration.MoneyMath.RoundCurrency(RestaurantPOS14.frmSecondaryDisplay.ToDecimalValue(totalAmount))
+            Call Me.DataGridView1.Rows.Add(itemName, rateValue, quantity, amountValue, totalValue)
+
+            If resetPercent OrElse percentValue > 0D Then
+                Me.lblSSTPercent.Text = percentValue.ToString("0.##", System.Globalization.CultureInfo.CurrentCulture) & "%"
+            End If
+
+            Me.LayoutSummaryLabels()
+        End Sub
+
+        Public Sub ApplySstColumnVisibility(showSstColumn As Boolean)
+            If Me.ColumnSST Is Nothing Then Return
+            Me.ColumnSST.Visible = showSstColumn
+        End Sub
+
+        Private Shared Function ToDecimalValue(value As Object) As Decimal
+            If value Is Nothing OrElse Convert.IsDBNull(value) Then
+                Return 0D
+            End If
+
+            Dim result As Decimal
+            Dim text As String = Convert.ToString(value, System.Globalization.CultureInfo.CurrentCulture)
+            If Decimal.TryParse(text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, result) Then
+                Return result
+            End If
+
+            If Decimal.TryParse(text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, result) Then
+                Return result
+            End If
+
+            Return 0D
+        End Function
+
+        Private Sub CurrencyLabel_TextChanged(sender As Object, e As System.EventArgs)
+            If Me.formattingCurrencyLabel Then
+                Return
+            End If
+
+            Dim label As System.Windows.Forms.Label = TryCast(sender, System.Windows.Forms.Label)
+            If label Is Nothing Then
+                Return
+            End If
+
+            Dim numericText As String = label.Text.Trim()
+            If numericText.StartsWith("RM", System.StringComparison.OrdinalIgnoreCase) Then
+                numericText = numericText.Substring(2).Trim()
+            End If
+
+            Dim amount As Decimal = RestaurantPOS14.frmSecondaryDisplay.ToDecimalValue(numericText)
+            Dim formatted As String = "RM " & amount.ToString("N2", System.Globalization.CultureInfo.CurrentCulture)
+            If System.String.Equals(label.Text, formatted, System.StringComparison.Ordinal) Then
+                Return
+            End If
+
+            Try
+                Me.formattingCurrencyLabel = True
+                label.Text = formatted
+            Finally
+                Me.formattingCurrencyLabel = False
+            End Try
+
+            Me.LayoutSummaryLabels()
+        End Sub
+
+        Private Sub frmSecondaryDisplay_Resize(sender As Object, e As System.EventArgs)
+            Me.LayoutSummaryLabels()
+        End Sub
+
+        Private Sub LayoutSummaryLabels()
+            If Me.Label2 Is Nothing OrElse Me.lblTotal Is Nothing OrElse Me.lblSSTCaption Is Nothing OrElse Me.lblSSTPercent Is Nothing Then
+                Return
+            End If
+
+            Const rightMargin As Integer = 12
+            Const labelGap As Integer = 8
+            Const sectionGap As Integer = 28
+
+            Me.lblTotal.Left = System.Math.Max(0, Me.ClientSize.Width - rightMargin - Me.lblTotal.Width)
+            Me.Label2.Left = System.Math.Max(0, Me.lblTotal.Left - labelGap - Me.Label2.Width)
+            Me.lblSSTPercent.Left = System.Math.Max(0, Me.Label2.Left - sectionGap - Me.lblSSTPercent.Width)
+            Me.lblSSTCaption.Left = System.Math.Max(0, Me.lblSSTPercent.Left - labelGap - Me.lblSSTCaption.Width)
         End Sub
 
         <System.Diagnostics.DebuggerNonUserCodeAttribute>
@@ -505,11 +674,13 @@ Namespace RestaurantPOS14
             Dim dataGridViewCellStyle6 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
             Dim dataGridViewCellStyle7 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
             Dim dataGridViewCellStyle8 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+            Dim dataGridViewCellStyle9 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
             Dim componentResourceManager As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(RestaurantPOS14.frmSecondaryDisplay))
             Me.DataGridView1 = New System.Windows.Forms.DataGridView()
             Me.Column1 = New System.Windows.Forms.DataGridViewTextBoxColumn()
             Me.Column2 = New System.Windows.Forms.DataGridViewTextBoxColumn()
             Me.Column3 = New System.Windows.Forms.DataGridViewTextBoxColumn()
+            Me.ColumnSST = New System.Windows.Forms.DataGridViewTextBoxColumn()
             Me.Column11 = New System.Windows.Forms.DataGridViewTextBoxColumn()
             Me.Panel1 = New System.Windows.Forms.Panel()
             Me.lblContactNo = New System.Windows.Forms.Label()
@@ -525,6 +696,8 @@ Namespace RestaurantPOS14
             Me.imageFolderBrowserDlg = New System.Windows.Forms.FolderBrowserDialog()
             Me.Label4 = New System.Windows.Forms.Label()
             Me.lblHST = New System.Windows.Forms.Label()
+            Me.lblSSTCaption = New System.Windows.Forms.Label()
+            Me.lblSSTPercent = New System.Windows.Forms.Label()
             CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).BeginInit()
             Me.Panel1.SuspendLayout()
             CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -549,7 +722,7 @@ Namespace RestaurantPOS14
             dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
             Me.DataGridView1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2
             Me.DataGridView1.ColumnHeadersHeight = 24
-            Me.DataGridView1.Columns.AddRange(Me.Column1, Me.Column2, Me.Column3, Me.Column11)
+            Me.DataGridView1.Columns.AddRange(Me.Column1, Me.Column2, Me.Column3, Me.ColumnSST, Me.Column11)
             Me.DataGridView1.Cursor = System.Windows.Forms.Cursors.Hand
             dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
             dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Window
@@ -598,6 +771,7 @@ Namespace RestaurantPOS14
             Me.Column1.Name = "Column1"
             Me.Column1.[ReadOnly] = True
             dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight
+            dataGridViewCellStyle6.Format = "'RM '#,##0.00"
             dataGridViewCellStyle6.NullValue = Nothing
             Me.Column2.DefaultCellStyle = dataGridViewCellStyle6
             Me.Column2.HeaderText = "Rate"
@@ -610,8 +784,17 @@ Namespace RestaurantPOS14
             Me.Column3.Name = "Column3"
             Me.Column3.[ReadOnly] = True
             dataGridViewCellStyle8.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight
-            dataGridViewCellStyle8.NullValue = Nothing
-            Me.Column11.DefaultCellStyle = dataGridViewCellStyle8
+            dataGridViewCellStyle8.Format = "'RM '#,##0.00"
+            dataGridViewCellStyle8.NullValue = "RM 0.00"
+            Me.ColumnSST.DefaultCellStyle = dataGridViewCellStyle8
+            Me.ColumnSST.FillWeight = 66F
+            Me.ColumnSST.HeaderText = "SST Amt."
+            Me.ColumnSST.Name = "ColumnSST"
+            Me.ColumnSST.[ReadOnly] = True
+            dataGridViewCellStyle9.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight
+            dataGridViewCellStyle9.Format = "'RM '#,##0.00"
+            dataGridViewCellStyle9.NullValue = Nothing
+            Me.Column11.DefaultCellStyle = dataGridViewCellStyle9
             Me.Column11.FillWeight = 81.3152F
             Me.Column11.HeaderText = "Total Amt."
             Me.Column11.Name = "Column11"
@@ -788,12 +971,30 @@ Namespace RestaurantPOS14
             label18.Size = size
             Me.lblHST.TabIndex = 40
             Me.lblHST.Text = "lblHST"
+            Me.lblSSTCaption.Anchor = System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right
+            Me.lblSSTCaption.AutoSize = True
+            Me.lblSSTCaption.Font = New System.Drawing.Font("Segoe UI Semibold", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0)
+            Me.lblSSTCaption.Location = New System.Drawing.Point(480, 321)
+            Me.lblSSTCaption.Name = "lblSSTCaption"
+            Me.lblSSTCaption.Size = New System.Drawing.Size(89, 32)
+            Me.lblSSTCaption.TabIndex = 41
+            Me.lblSSTCaption.Text = "SST % :"
+            Me.lblSSTPercent.Anchor = System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right
+            Me.lblSSTPercent.AutoSize = True
+            Me.lblSSTPercent.Font = New System.Drawing.Font("Segoe UI Semibold", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0)
+            Me.lblSSTPercent.Location = New System.Drawing.Point(568, 321)
+            Me.lblSSTPercent.Name = "lblSSTPercent"
+            Me.lblSSTPercent.Size = New System.Drawing.Size(73, 32)
+            Me.lblSSTPercent.TabIndex = 42
+            Me.lblSSTPercent.Text = "0.00%"
             Dim autoScaleDimensions As System.Drawing.SizeF = New System.Drawing.SizeF(6F, 13F)
             MyBase.AutoScaleDimensions = autoScaleDimensions
             MyBase.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
             Me.BackColor = System.Drawing.Color.White
             size = New System.Drawing.Size(888, 362)
             MyBase.ClientSize = size
+            MyBase.Controls.Add(Me.lblSSTPercent)
+            MyBase.Controls.Add(Me.lblSSTCaption)
             MyBase.Controls.Add(Me.lblHST)
             MyBase.Controls.Add(Me.Label4)
             MyBase.Controls.Add(Me.TableLayoutPanel1)

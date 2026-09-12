@@ -552,7 +552,7 @@ Namespace RestaurantPOS14
 
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into Currency(CurrencyName,CurrencyCode,Rate) VALUES (@d2,@d3," & Me.txtRate.Text & ")")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into Currency(CurrencyName,CurrencyCode,Rate) VALUES (@d2,@d3," & RestaurantPOS14.Security.SqlInput.RequireDecimal(Me.txtRate.Text, "Amount") & ")")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", Me.txtCurrency.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d3", Me.txtCurrencyCode.Text)
@@ -620,7 +620,7 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModClasses.con.Close()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Update Currency set CurrencyName=@d2,CurrencyCode=@d3,Rate=" & Me.txtRate.Text & " where CurrencyCode=@d4")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Update Currency set CurrencyName=@d2,CurrencyCode=@d3,Rate=" & RestaurantPOS14.Security.SqlInput.RequireDecimal(Me.txtRate.Text, "Amount") & " where CurrencyCode=@d4")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", Me.txtCurrency.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d3", Me.txtCurrencyCode.Text)
@@ -677,6 +677,7 @@ Namespace RestaurantPOS14
         Private Sub dgw_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Me.dgw.Rows.Count > 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     Me.txtCurrency.Text = dataGridViewRow.Cells(CInt((1))).Value.ToString()
                     Me.txtCurrencyCode.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()

@@ -1443,7 +1443,7 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModClasses.con.Close()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Update Hotel set HotelName=@d1, AddressLine1=@d2, ContactNo=@d3, EmailID=@d4, TIN=@d5, STNo=@d6, CIN=@d7, Logo=@d8,BaseCurrency=@d9,CurrencyCode=@d10,AddressLine2=@d11,AddressLine3=@d12,TicketFooterMessage=@d13,ShowLogo=@d14,CapitalAccount=@d15,DBLocation=@d16 where ID=" & Me.txtID.Text)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Update Hotel set HotelName=@d1, AddressLine1=@d2, ContactNo=@d3, EmailID=@d4, TIN=@d5, STNo=@d6, CIN=@d7, Logo=@d8,BaseCurrency=@d9,CurrencyCode=@d10,AddressLine2=@d11,AddressLine3=@d12,TicketFooterMessage=@d13,ShowLogo=@d14,CapitalAccount=@d15,DBLocation=@d16 where ID=" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtID.Text, "Record ID"))
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Me.txtHotelName.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", Me.txtAddressLine1.Text)
@@ -1501,6 +1501,7 @@ Namespace RestaurantPOS14
         Private Sub dgw_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Me.dgw.Rows.Count > 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     Me.txtID.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                     Me.txtHotelName.Text = dataGridViewRow.Cells(CInt((1))).Value.ToString()

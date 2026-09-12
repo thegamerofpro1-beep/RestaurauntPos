@@ -23,7 +23,8 @@ Namespace RestaurantPOS14.Customization
                     Using key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software\RestaurantPOS14")
                         If key IsNot Nothing Then configured = TryCast(key.GetValue("BackupFolder"), String)
                     End Using
-                Catch
+                Catch suppressedException As System.Exception
+                    RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in ApplicationPathResolver", suppressedException)
                 End Try
             End If
             If String.IsNullOrWhiteSpace(configured) Then
@@ -39,7 +40,8 @@ Namespace RestaurantPOS14.Customization
                 Using key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey("Software\RestaurantPOS14")
                     key.SetValue("BackupFolder", value)
                 End Using
-            Catch
+            Catch suppressedException As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in ApplicationPathResolver", suppressedException)
             End Try
         End Sub
 

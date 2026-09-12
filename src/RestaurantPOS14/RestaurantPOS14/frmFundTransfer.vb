@@ -1520,6 +1520,7 @@ Namespace RestaurantPOS14
         Private Sub DataGridView1_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Me.DataGridView1.Rows.Count > 0 Then
+                    If Me.DataGridView1.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView1.SelectedRows(0)
                     Me.txtID.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                     Me.txtOperator.Text = dataGridViewRow.Cells(CInt((1))).Value.ToString()
@@ -1552,7 +1553,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT FundTransfer.Id, RTRIM(Operator), Amount, FundTransfer.Date, RTRIM(FundTransfer.Notes),RTRIM(AccountTransFrom), RTRIM(AccountTransTo) from FundTransfer where AccountTransFrom like N'%" & Me.txtAccNo.Text & "%' or AccountTransTo like N'%" & Me.txtAccNo.Text & "%' order by Date", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT FundTransfer.Id, RTRIM(Operator), Amount, FundTransfer.Date, RTRIM(FundTransfer.Notes),RTRIM(AccountTransFrom), RTRIM(AccountTransTo) from FundTransfer where AccountTransFrom like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtAccNo.Text) & "%' or AccountTransTo like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtAccNo.Text) & "%' order by Date", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.DataGridView1.Rows.Clear()
                 While RestaurantPOS14.ModClasses.rdr.Read()

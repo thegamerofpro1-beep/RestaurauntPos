@@ -58,6 +58,12 @@ Build outputs are written to:
 
 Copy or deploy the complete output directory. The executable depends on the copied DLLs, SQL scripts, XML files, fonts, report assets, and image/output directories beside it.
 
+## Setup installer
+
+The supported workstation package is built with `installer\Build-Installer.ps1`. It rebuilds `Release|x86`, verifies the bundled prerequisite installers by SHA-256, and creates a single setup executable under `output\installer`.
+
+The package installs to `%ProgramFiles(x86)%\Hitech Computers\RestaurantPOS14`, silently installs missing/older .NET 4.8, Visual C++ x86, and Crystal Reports x86 runtimes, and preserves writable licence, image, and PDF data across upgrades. It also detects and removes the original `%ProgramFiles(x86)%\Hi Tech Computers\Rest Touch\RestaurantPOS14` Inno Setup installation.
+
 ## Project invariants
 
 - Platform must remain `x86`; do not introduce Any CPU solution mappings.
@@ -73,7 +79,7 @@ Copy or deploy the complete output directory. The executable depends on the copi
 For a production terminal, install or provide:
 
 - Windows with the .NET Framework 4.8 runtime
-- SAP Crystal Reports runtime for .NET Framework **x86**, matching runtime line 13.0.35 / assembly version `13.0.3500.0`, for report preview, printing, and export
+- SAP Crystal Reports runtime for .NET Framework **x86**, SP24 file version `13.0.24.2970` / assembly version `13.0.3500.0`, for report preview, printing, and export
 - Network access and credentials for the configured SQL Server/database
 - Microsoft Excel/Office when using recovered Excel automation workflows
 - Vendor drivers and reachable COM/network devices for configured printers, cash drawer, customer display, caller ID, weighing scale, and Ingenico terminal

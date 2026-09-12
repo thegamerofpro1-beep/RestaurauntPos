@@ -538,24 +538,22 @@ Namespace RestaurantPOS14
 
                     MyBase.Cursor = System.Windows.Forms.Cursors.WaitCursor
                     Me.Timer4.Enabled = True
-                    If Me.cmbAuthentication.SelectedIndex = 0 Then
-                        RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection("Data source=" & Me.cmbServerName.Text & ";Initial Catalog=master;Integrated Security=True;MultipleActiveResultSets=True")
-                    End If
+                    Using connection As New System.Data.SqlClient.SqlConnection(Me.BuildDatabaseConnectionString("master"))
+                        connection.Open()
+                    End Using
 
-                    If Me.cmbAuthentication.SelectedIndex = 1 Then
-                        RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection("Data Source=" & Me.cmbServerName.Text.Trim() & ";Initial Catalog=master;User ID=" & Me.txtUserName.Text.Trim() & ";Password=" & Me.txtPassword.Text & ";MultipleActiveResultSets=True")
-                    End If
-
-                    RestaurantPOS14.ModClasses.con.Open()
-                    If RestaurantPOS14.ModClasses.con.State <> System.Data.ConnectionState.Open OrElse Microsoft.VisualBasic.Interaction.MsgBox("It will create the DB and configure the sql server, Do you want to proceed?", Microsoft.VisualBasic.MsgBoxStyle.YesNo Or Microsoft.VisualBasic.MsgBoxStyle.Information) <> Microsoft.VisualBasic.MsgBoxResult.Yes Then
+                    If Microsoft.VisualBasic.Interaction.MsgBox("It will create the DB and configure the sql server, Do you want to proceed?", Microsoft.VisualBasic.MsgBoxStyle.YesNo Or Microsoft.VisualBasic.MsgBoxStyle.Information) <> Microsoft.VisualBasic.MsgBoxResult.Yes Then
                         Return
                     End If
 
                     Dim createDatabaseConnectionString = RestaurantPOS14.Configuration.DatabaseConnectionSettings.Build(Me.cmbServerName.Text.Trim(), RestaurantPOS14.Configuration.SettingsHost.Current.Database.DefaultCatalog, Me.cmbAuthentication.SelectedIndex = 0, Me.txtUserName.Text.Trim(), Me.txtPassword.Text)
+                    If Not Me.CreateDB() Then
+                        Return
+                    End If
+
                     RestaurantPOS14.Configuration.DatabaseConnectionSettings.Save(createDatabaseConnectionString)
-                    Me.CreateDB()
                     Call System.Windows.Forms.MessageBox.Show("DB has been created and SQL Server setting has been saved successfully..." & Global.Microsoft.VisualBasic.Constants.vbCrLf & "Application will be closed,Please start it again", "", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Asterisk)
-                    Call Microsoft.VisualBasic.CompilerServices.ProjectData.EndApp()
+                    RestaurantPOS14.Diagnostics.ApplicationLifecycle.ExitApplication()
                     Return
                 End If
 
@@ -592,9 +590,9 @@ Namespace RestaurantPOS14
                 Dim configureExistingConnectionString = RestaurantPOS14.Configuration.DatabaseConnectionSettings.Build(Me.cmbServerName.Text.Trim(), RestaurantPOS14.Configuration.SettingsHost.Current.Database.DefaultCatalog, Me.cmbAuthentication.SelectedIndex = 0, Me.txtUserName.Text.Trim(), Me.txtPassword.Text)
                 RestaurantPOS14.Configuration.DatabaseConnectionSettings.Save(configureExistingConnectionString)
                 Call System.Windows.Forms.MessageBox.Show("SQL Server setting has been saved successfully..." & Global.Microsoft.VisualBasic.Constants.vbCrLf & "Application will be closed,Please start it again", "", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Asterisk)
-                Call Microsoft.VisualBasic.CompilerServices.ProjectData.EndApp()
-            Catch __unusedException1__ As System.Exception
-                Call System.Windows.Forms.MessageBox.Show("Unable to connect to sql server" & Global.Microsoft.VisualBasic.Constants.vbCrLf & Microsoft.VisualBasic.Information.Err().Description, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
+                RestaurantPOS14.Diagnostics.ApplicationLifecycle.ExitApplication()
+            Catch ex As System.Exception
+                Me.ShowDatabaseError("Unable to create or configure the database.", ex)
             End Try
         End Sub
 
@@ -603,47 +601,149 @@ Namespace RestaurantPOS14
             If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblSet.Text, "Main Form", TextCompare:=False) = 0 Then
                 MyBase.Close()
             ElseIf Microsoft.VisualBasic.Interaction.MsgBox("Do you want to close the application....", Microsoft.VisualBasic.MsgBoxStyle.YesNo Or Microsoft.VisualBasic.MsgBoxStyle.Information) = Microsoft.VisualBasic.MsgBoxResult.Yes Then
-                Call Microsoft.VisualBasic.CompilerServices.ProjectData.EndApp()
+                RestaurantPOS14.Diagnostics.ApplicationLifecycle.ExitApplication()
             End If
         End Sub
 
-        Public Sub CreateDB()
+        Public Function CreateDB() As Boolean
+            Return Me.CreateDatabaseFromScript("DBScript.sql")
+        End Function
+
+        Private Function BuildDatabaseConnectionString(catalog As String) As String
+            Return RestaurantPOS14.Configuration.DatabaseConnectionSettings.Build(Me.cmbServerName.Text.Trim(), catalog, Me.cmbAuthentication.SelectedIndex = 0, Me.txtUserName.Text.Trim(), Me.txtPassword.Text)
+        End Function
+
+        Private Function CreateDatabaseFromScript(scriptFileName As String) As Boolean
+            Dim scriptPath As String = System.IO.Path.Combine(System.Windows.Forms.Application.StartupPath, scriptFileName)
+            If Not System.IO.File.Exists(scriptPath) Then
+                Throw New System.IO.FileNotFoundException("The database setup script was not found: " & scriptPath, scriptPath)
+            End If
+
+            Me.st = RestaurantPOS14.Configuration.DatabaseMaintenance.PrepareDatabaseScript(System.IO.File.ReadAllText(scriptPath))
+            Dim masterConnectionString As String = Me.BuildDatabaseConnectionString("master")
+            Dim databaseCreated As Boolean = False
+
             Try
-                RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection("Data source=" & Me.cmbServerName.Text & ";Initial Catalog=master;Integrated Security=True;MultipleActiveResultSets=True")
-                RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = RestaurantPOS14.Configuration.DatabaseMaintenance.CreateDatabaseExistsCommand(RestaurantPOS14.ModClasses.con)
-                RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader()
-                If RestaurantPOS14.ModClasses.rdr.Read() Then
-                    RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection("Data source=" & Me.cmbServerName.Text & ";Initial Catalog=master;Integrated Security=True;MultipleActiveResultSets=True")
-                    RestaurantPOS14.ModClasses.con.Open()
-                    RestaurantPOS14.ModClasses.cmd = RestaurantPOS14.Configuration.DatabaseMaintenance.CreateDropDatabaseCommand(RestaurantPOS14.ModClasses.con)
-                    RestaurantPOS14.ModClasses.cmd.ExecuteNonQuery()
-                    RestaurantPOS14.ModClasses.con.Close()
-                    RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection("Data source=" & Me.cmbServerName.Text & ";Initial Catalog=master;Integrated Security=True;MultipleActiveResultSets=True")
-                    RestaurantPOS14.ModClasses.con.Open()
-                    RestaurantPOS14.ModClasses.cmd = RestaurantPOS14.Configuration.DatabaseMaintenance.CreateDatabaseCommand(RestaurantPOS14.ModClasses.con)
-                    RestaurantPOS14.ModClasses.cmd.ExecuteNonQuery()
-                    RestaurantPOS14.ModClasses.con.Close()
-                    Using streamReader As System.IO.StreamReader = New System.IO.StreamReader(System.Windows.Forms.Application.StartupPath & "\DBScript.sql")
-                        Me.st = RestaurantPOS14.Configuration.DatabaseMaintenance.PrepareDatabaseScript(streamReader.ReadToEnd())
-                        Call New Microsoft.SqlServer.Management.Smo.Server(CType((New Microsoft.SqlServer.Management.Common.ServerConnection(CType((RestaurantPOS14.ModClasses.con), System.Data.SqlClient.SqlConnection))), Microsoft.SqlServer.Management.Common.ServerConnection)).ConnectionContext.ExecuteNonQuery(Me.st)
-                        Return
+                Using connection As New System.Data.SqlClient.SqlConnection(masterConnectionString)
+                    connection.Open()
+
+                    Using permissionCommand As System.Data.SqlClient.SqlCommand = RestaurantPOS14.Configuration.DatabaseMaintenance.CreateDatabasePermissionCommand(connection)
+                        If Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(permissionCommand.ExecuteScalar()) <> 1 Then
+                            Throw New System.UnauthorizedAccessException("The selected SQL Server login does not have permission to create databases. Grant it the dbcreator role or use an administrator login, then try again.")
+                        End If
                     End Using
+
+                    Dim databaseExists As Boolean
+                    Using existsCommand As System.Data.SqlClient.SqlCommand = RestaurantPOS14.Configuration.DatabaseMaintenance.CreateDatabaseExistsCommand(connection)
+                        databaseExists = existsCommand.ExecuteScalar() IsNot Nothing
+                    End Using
+
+                    If databaseExists Then
+                        Dim replaceMessage As String = "Database '" & RestaurantPOS14.Configuration.DatabaseMaintenance.GetCatalogName() & "' already exists." & Global.Microsoft.VisualBasic.Constants.vbCrLf & Global.Microsoft.VisualBasic.Constants.vbCrLf & "Continuing will permanently delete it and create a new database. Do you want to continue?"
+                        If System.Windows.Forms.MessageBox.Show(replaceMessage, "Replace Existing Database", System.Windows.Forms.MessageBoxButtons.YesNo, System.Windows.Forms.MessageBoxIcon.Warning, System.Windows.Forms.MessageBoxDefaultButton.Button2) <> System.Windows.Forms.DialogResult.Yes Then
+                            Return False
+                        End If
+
+                        Using dropCommand As System.Data.SqlClient.SqlCommand = RestaurantPOS14.Configuration.DatabaseMaintenance.CreateDropDatabaseCommand(connection)
+                            dropCommand.ExecuteNonQuery()
+                        End Using
+                    End If
+
+                    Using createCommand As System.Data.SqlClient.SqlCommand = RestaurantPOS14.Configuration.DatabaseMaintenance.CreateDatabaseCommand(connection)
+                        createCommand.ExecuteNonQuery()
+                    End Using
+
+                    databaseCreated = True
+                End Using
+
+                Using scriptConnection As New System.Data.SqlClient.SqlConnection(masterConnectionString)
+                    scriptConnection.Open()
+                    Dim serverConnection As New Microsoft.SqlServer.Management.Common.ServerConnection(scriptConnection)
+                    serverConnection.StatementTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
+                    Dim server As New Microsoft.SqlServer.Management.Smo.Server(serverConnection)
+                    server.ConnectionContext.ExecuteNonQuery(Me.st)
+                End Using
+
+                Using verificationConnection As New System.Data.SqlClient.SqlConnection(Me.BuildDatabaseConnectionString(RestaurantPOS14.Configuration.DatabaseMaintenance.GetCatalogName()))
+                    verificationConnection.Open()
+                    RestaurantPOS14.Configuration.DatabaseMaintenance.EnsureCompatibleSchema(verificationConnection)
+                    Using verificationCommand As System.Data.SqlClient.SqlCommand = RestaurantPOS14.Configuration.DatabaseMaintenance.CreateDatabaseProvisionedCommand(verificationConnection)
+                        If Microsoft.VisualBasic.CompilerServices.Conversions.ToInteger(verificationCommand.ExecuteScalar()) <> 1 Then
+                            Throw New System.InvalidOperationException("The database script ended before all required tables, defaults, and relationships were created.")
+                        End If
+                    End Using
+                End Using
+
+                Return True
+            Catch ex As System.Exception
+                If databaseCreated Then
+                    Try
+                        Me.DropDatabaseIfExists(masterConnectionString)
+                    Catch cleanupException As System.Exception
+                        Throw New System.InvalidOperationException(ex.Message & Global.Microsoft.VisualBasic.Constants.vbCrLf & "The incomplete database could not be removed: " & cleanupException.Message, ex)
+                    End Try
                 End If
 
-                RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection("Data source=" & Me.cmbServerName.Text & ";Initial Catalog=master;Integrated Security=True;MultipleActiveResultSets=True")
-                RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = RestaurantPOS14.Configuration.DatabaseMaintenance.CreateDatabaseCommand(RestaurantPOS14.ModClasses.con)
-                RestaurantPOS14.ModClasses.cmd.ExecuteNonQuery()
-                RestaurantPOS14.ModClasses.con.Close()
-                Using streamReader2 As System.IO.StreamReader = New System.IO.StreamReader(System.Windows.Forms.Application.StartupPath & "\DBScript.sql")
-                    Me.st = RestaurantPOS14.Configuration.DatabaseMaintenance.PrepareDatabaseScript(streamReader2.ReadToEnd())
-                    Call New Microsoft.SqlServer.Management.Smo.Server(CType((New Microsoft.SqlServer.Management.Common.ServerConnection(CType((RestaurantPOS14.ModClasses.con), System.Data.SqlClient.SqlConnection))), Microsoft.SqlServer.Management.Common.ServerConnection)).ConnectionContext.ExecuteNonQuery(Me.st)
-                End Using
-            Catch ex As System.Exception
-                Call System.Windows.Forms.MessageBox.Show(ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
+                Throw
             End Try
+        End Function
+
+        Private Sub DropDatabaseIfExists(masterConnectionString As String)
+            Using connection As New System.Data.SqlClient.SqlConnection(masterConnectionString)
+                connection.Open()
+                Using existsCommand As System.Data.SqlClient.SqlCommand = RestaurantPOS14.Configuration.DatabaseMaintenance.CreateDatabaseExistsCommand(connection)
+                    If existsCommand.ExecuteScalar() Is Nothing Then
+                        Return
+                    End If
+                End Using
+
+                Using dropCommand As System.Data.SqlClient.SqlCommand = RestaurantPOS14.Configuration.DatabaseMaintenance.CreateDropDatabaseCommand(connection)
+                    dropCommand.ExecuteNonQuery()
+                End Using
+            End Using
         End Sub
+
+        Private Sub ShowDatabaseError(summary As String, ex As System.Exception)
+            Me.Timer4.Enabled = False
+            MyBase.Cursor = System.Windows.Forms.Cursors.Default
+            Dim message As String = summary & Global.Microsoft.VisualBasic.Constants.vbCrLf & Global.Microsoft.VisualBasic.Constants.vbCrLf & Me.GetDatabaseErrorDetails(ex)
+            Call System.Windows.Forms.MessageBox.Show(message, "Database Setup Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
+        End Sub
+
+        Private Function GetDatabaseErrorDetails(ex As System.Exception) As String
+            Dim details As New System.Collections.Generic.List(Of String)()
+            Dim current As System.Exception = ex
+            While current IsNot Nothing
+                Dim sqlException As System.Data.SqlClient.SqlException = TryCast(current, System.Data.SqlClient.SqlException)
+                If sqlException IsNot Nothing Then
+                    For Each sqlError As System.Data.SqlClient.SqlError In sqlException.Errors
+                        Dim location As String = "SQL error " & sqlError.Number.ToString()
+                        If Not System.String.IsNullOrWhiteSpace(sqlError.Procedure) Then
+                            location &= " in " & sqlError.Procedure
+                        End If
+
+                        If sqlError.LineNumber > 0 Then
+                            location &= " at line " & sqlError.LineNumber.ToString()
+                        End If
+
+                        Dim sqlDetail As String = location & ": " & sqlError.Message
+                        If Not details.Contains(sqlDetail) Then
+                            details.Add(sqlDetail)
+                        End If
+                    Next
+                ElseIf Not System.String.IsNullOrWhiteSpace(current.Message) AndAlso Microsoft.VisualBasic.CompilerServices.Operators.CompareString(current.Message, "An exception occurred while executing a Transact-SQL statement or batch.", TextCompare:=False) <> 0 AndAlso Not details.Contains(current.Message) Then
+                    details.Add(current.Message)
+                End If
+
+                current = current.InnerException
+            End While
+
+            If details.Count = 0 Then
+                Return "An unknown database setup error occurred."
+            End If
+
+            Return System.String.Join(Global.Microsoft.VisualBasic.Constants.vbCrLf, details.ToArray())
+        End Function
 
         Private Sub cmbAuthentication_SelectedIndexChanged(sender As Object, e As System.EventArgs)
             If Me.cmbAuthentication.SelectedIndex = 0 Then
@@ -742,24 +842,22 @@ Namespace RestaurantPOS14
 
                     MyBase.Cursor = System.Windows.Forms.Cursors.WaitCursor
                     Me.Timer4.Enabled = True
-                    If Me.cmbAuthentication.SelectedIndex = 0 Then
-                        RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection("Data source=" & Me.cmbServerName.Text & ";Initial Catalog=master;Integrated Security=True;MultipleActiveResultSets=True")
-                    End If
+                    Using connection As New System.Data.SqlClient.SqlConnection(Me.BuildDatabaseConnectionString("master"))
+                        connection.Open()
+                    End Using
 
-                    If Me.cmbAuthentication.SelectedIndex = 1 Then
-                        RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection("Data Source=" & Me.cmbServerName.Text.Trim() & ";Initial Catalog=master;User ID=" & Me.txtUserName.Text.Trim() & ";Password=" & Me.txtPassword.Text & ";MultipleActiveResultSets=True")
-                    End If
-
-                    RestaurantPOS14.ModClasses.con.Open()
-                    If RestaurantPOS14.ModClasses.con.State <> System.Data.ConnectionState.Open OrElse Microsoft.VisualBasic.Interaction.MsgBox("It will create the DB and configure the sql server, Do you want to proceed?", Microsoft.VisualBasic.MsgBoxStyle.YesNo Or Microsoft.VisualBasic.MsgBoxStyle.Information) <> Microsoft.VisualBasic.MsgBoxResult.Yes Then
+                    If Microsoft.VisualBasic.Interaction.MsgBox("It will create the DB and configure the sql server, Do you want to proceed?", Microsoft.VisualBasic.MsgBoxStyle.YesNo Or Microsoft.VisualBasic.MsgBoxStyle.Information) <> Microsoft.VisualBasic.MsgBoxResult.Yes Then
                         Return
                     End If
 
                     Dim createBlankDatabaseConnectionString = RestaurantPOS14.Configuration.DatabaseConnectionSettings.Build(Me.cmbServerName.Text.Trim(), RestaurantPOS14.Configuration.SettingsHost.Current.Database.DefaultCatalog, Me.cmbAuthentication.SelectedIndex = 0, Me.txtUserName.Text.Trim(), Me.txtPassword.Text)
+                    If Not Me.CreateBlankDB() Then
+                        Return
+                    End If
+
                     RestaurantPOS14.Configuration.DatabaseConnectionSettings.Save(createBlankDatabaseConnectionString)
-                    Me.CreateBlankDB()
                     Call System.Windows.Forms.MessageBox.Show("DB has been created and SQL Server setting has been saved successfully..." & Global.Microsoft.VisualBasic.Constants.vbCrLf & "Application will be closed,Please start it again", "", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Asterisk)
-                    Call Microsoft.VisualBasic.CompilerServices.ProjectData.EndApp()
+                    RestaurantPOS14.Diagnostics.ApplicationLifecycle.ExitApplication()
                     Return
                 End If
 
@@ -804,49 +902,15 @@ Namespace RestaurantPOS14
                 Dim configureBlankExistingConnectionString = RestaurantPOS14.Configuration.DatabaseConnectionSettings.Build(Me.cmbServerName.Text.Trim(), RestaurantPOS14.Configuration.SettingsHost.Current.Database.DefaultCatalog, Me.cmbAuthentication.SelectedIndex = 0, Me.txtUserName.Text.Trim(), Me.txtPassword.Text)
                 RestaurantPOS14.Configuration.DatabaseConnectionSettings.Save(configureBlankExistingConnectionString)
                 Call System.Windows.Forms.MessageBox.Show("SQL Server setting has been saved successfully..." & Global.Microsoft.VisualBasic.Constants.vbCrLf & "Application will be closed,Please start it again", "", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Asterisk)
-                Call Microsoft.VisualBasic.CompilerServices.ProjectData.EndApp()
-            Catch __unusedException1__ As System.Exception
-                Call System.Windows.Forms.MessageBox.Show("Unable to connect to sql server" & Global.Microsoft.VisualBasic.Constants.vbCrLf & Microsoft.VisualBasic.Information.Err().Description, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
-            End Try
-        End Sub
-
-        Public Sub CreateBlankDB()
-            Try
-                RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection("Data source=" & Me.cmbServerName.Text & ";Initial Catalog=master;Integrated Security=True;MultipleActiveResultSets=True")
-                RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = RestaurantPOS14.Configuration.DatabaseMaintenance.CreateDatabaseExistsCommand(RestaurantPOS14.ModClasses.con)
-                RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader()
-                If RestaurantPOS14.ModClasses.rdr.Read() Then
-                    RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection("Data source=" & Me.cmbServerName.Text & ";Initial Catalog=master;Integrated Security=True;MultipleActiveResultSets=True")
-                    RestaurantPOS14.ModClasses.con.Open()
-                    RestaurantPOS14.ModClasses.cmd = RestaurantPOS14.Configuration.DatabaseMaintenance.CreateDropDatabaseCommand(RestaurantPOS14.ModClasses.con)
-                    RestaurantPOS14.ModClasses.cmd.ExecuteNonQuery()
-                    RestaurantPOS14.ModClasses.con.Close()
-                    RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection("Data source=" & Me.cmbServerName.Text & ";Initial Catalog=master;Integrated Security=True;MultipleActiveResultSets=True")
-                    RestaurantPOS14.ModClasses.con.Open()
-                    RestaurantPOS14.ModClasses.cmd = RestaurantPOS14.Configuration.DatabaseMaintenance.CreateDatabaseCommand(RestaurantPOS14.ModClasses.con)
-                    RestaurantPOS14.ModClasses.cmd.ExecuteNonQuery()
-                    RestaurantPOS14.ModClasses.con.Close()
-                    Using streamReader As System.IO.StreamReader = New System.IO.StreamReader(System.Windows.Forms.Application.StartupPath & "\BlankDBscript.sql")
-                        Me.st = RestaurantPOS14.Configuration.DatabaseMaintenance.PrepareDatabaseScript(streamReader.ReadToEnd())
-                        Call New Microsoft.SqlServer.Management.Smo.Server(CType((New Microsoft.SqlServer.Management.Common.ServerConnection(CType((RestaurantPOS14.ModClasses.con), System.Data.SqlClient.SqlConnection))), Microsoft.SqlServer.Management.Common.ServerConnection)).ConnectionContext.ExecuteNonQuery(Me.st)
-                        Return
-                    End Using
-                End If
-
-                RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection("Data source=" & Me.cmbServerName.Text & ";Initial Catalog=master;Integrated Security=True;MultipleActiveResultSets=True")
-                RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = RestaurantPOS14.Configuration.DatabaseMaintenance.CreateDatabaseCommand(RestaurantPOS14.ModClasses.con)
-                RestaurantPOS14.ModClasses.cmd.ExecuteNonQuery()
-                RestaurantPOS14.ModClasses.con.Close()
-                Using streamReader2 As System.IO.StreamReader = New System.IO.StreamReader(System.Windows.Forms.Application.StartupPath & "\BlankDBscript.sql")
-                    Me.st = RestaurantPOS14.Configuration.DatabaseMaintenance.PrepareDatabaseScript(streamReader2.ReadToEnd())
-                    Call New Microsoft.SqlServer.Management.Smo.Server(CType((New Microsoft.SqlServer.Management.Common.ServerConnection(CType((RestaurantPOS14.ModClasses.con), System.Data.SqlClient.SqlConnection))), Microsoft.SqlServer.Management.Common.ServerConnection)).ConnectionContext.ExecuteNonQuery(Me.st)
-                End Using
+                RestaurantPOS14.Diagnostics.ApplicationLifecycle.ExitApplication()
             Catch ex As System.Exception
-                Call System.Windows.Forms.MessageBox.Show(ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
+                Me.ShowDatabaseError("Unable to create or configure the database.", ex)
             End Try
         End Sub
+
+        Public Function CreateBlankDB() As Boolean
+            Return Me.CreateDatabaseFromScript("BlankDBscript.sql")
+        End Function
 
         Private Sub frmSqlServerSetting_Load(sender As Object, e As System.EventArgs)
             Me.Reset()

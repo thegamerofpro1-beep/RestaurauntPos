@@ -5,6 +5,7 @@ Imports System.Data.SqlClient
 Imports System.IO
 Imports System.Linq
 Imports System.Text
+Imports System.Xml.Linq
 Imports Microsoft.Win32
 Imports Newtonsoft.Json
 Imports Newtonsoft.Json.Linq
@@ -48,7 +49,27 @@ Namespace RestaurantPOS14.Configuration
             If configured IsNot Nothing AndAlso Not String.IsNullOrWhiteSpace(configured.ConnectionString) Then
                 Return ValidateConnectionString(configured.ConnectionString, "App.config")
             End If
+
+            Dim legacyConfigPath = System.IO.Path.Combine(_applicationDirectory, "RestaurantPOS14.exe.config.legacy")
+            Dim legacyConfigConnectionString = ReadConnectionStringFromLegacyConfig(legacyConfigPath)
+            If Not String.IsNullOrWhiteSpace(legacyConfigConnectionString) Then
+                Return ValidateConnectionString(legacyConfigConnectionString, legacyConfigPath)
+            End If
             Return String.Empty
+        End Function
+
+        Private Shared Function ReadConnectionStringFromLegacyConfig(path As String) As String
+            If Not File.Exists(path) Then Return String.Empty
+
+            Try
+                Dim document = XDocument.Load(path)
+                Dim entry = document.Descendants("add").FirstOrDefault(
+                    Function(element) String.Equals(CStr(element.Attribute("name")), ConnectionStringName, StringComparison.OrdinalIgnoreCase))
+                If entry Is Nothing Then Return String.Empty
+                Return CStr(entry.Attribute("connectionString"))
+            Catch ex As Exception When TypeOf ex Is System.Xml.XmlException OrElse TypeOf ex Is IOException
+                Return String.Empty
+            End Try
         End Function
 
         Private Sub MigrateConnectionString(root As JObject, sources As List(Of String))

@@ -55,6 +55,9 @@ Namespace RestaurantPOS14.My
         <System.Diagnostics.DebuggerHiddenAttribute>
         Friend Shared Sub Main(Args As String())
             Call System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(Microsoft.VisualBasic.ApplicationServices.WindowsFormsApplicationBase.UseCompatibleTextRendering)
+            System.Windows.Forms.Application.SetUnhandledExceptionMode(System.Windows.Forms.UnhandledExceptionMode.CatchException)
+            AddHandler System.Windows.Forms.Application.ThreadException, AddressOf RestaurantPOS14.Diagnostics.ApplicationDiagnostics.HandleUnhandledUiException
+            AddHandler System.AppDomain.CurrentDomain.UnhandledException, AddressOf RestaurantPOS14.Diagnostics.ApplicationDiagnostics.HandleUnhandledDomainException
             Call RestaurantPOS14.My.MyProject.Application.Run(Args)
         End Sub
 

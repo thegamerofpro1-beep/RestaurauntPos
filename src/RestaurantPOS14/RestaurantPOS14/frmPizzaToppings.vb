@@ -667,6 +667,8 @@ Namespace RestaurantPOS14
 
         <System.Diagnostics.DebuggerNonUserCodeAttribute>
         Public Sub New()
+            Call RestaurantPOS14.frmPizzaToppings.__ENCAddToList(Me)
+            Me.InitializeComponent()
             MyBase.Hide()
         End Sub
 
@@ -990,6 +992,7 @@ Namespace RestaurantPOS14
         Private Sub dgw_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Me.dgw.Rows.Count > 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     Me.txtToppingName.Text = dataGridViewRow.Cells(CInt((1))).Value.ToString()
                     Me.txtToppingID.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
@@ -1050,7 +1053,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT T_ID, RTRIM(ToppingName), RTRIM(PizzaSize),RTRIM(ToppingSize), RTRIM(Rate),BackColor from PizzaTopping where ToppingName like N'%" & Me.txtSearchByTopping.Text & "%' order by ToppingName", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT T_ID, RTRIM(ToppingName), RTRIM(PizzaSize),RTRIM(ToppingSize), RTRIM(Rate),BackColor from PizzaTopping where ToppingName like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtSearchByTopping.Text) & "%' order by ToppingName", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()

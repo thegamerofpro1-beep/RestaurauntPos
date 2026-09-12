@@ -1232,7 +1232,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT ID, RTRIM(DebitAccount), RTRIM(CreditAccount), Date, Amount, RTRIM(Remarks) from Journal where DebitAccount like N'%" & Me.txtDebitAccount.Text & "%' order by 1", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT ID, RTRIM(DebitAccount), RTRIM(CreditAccount), Date, Amount, RTRIM(Remarks) from Journal where DebitAccount like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtDebitAccount.Text) & "%' order by 1", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()
                 While RestaurantPOS14.ModClasses.rdr.Read()
@@ -1249,7 +1249,7 @@ Namespace RestaurantPOS14
             Try
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT ID, RTRIM(DebitAccount), RTRIM(CreditAccount), Date, Amount, RTRIM(Remarks) from Journal where CreditAccount like N'%" & Me.txtCreditAccount.Text & "%' order by 1", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT ID, RTRIM(DebitAccount), RTRIM(CreditAccount), Date, Amount, RTRIM(Remarks) from Journal where CreditAccount like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtCreditAccount.Text) & "%' order by 1", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()
                 While RestaurantPOS14.ModClasses.rdr.Read()
@@ -1323,6 +1323,7 @@ Namespace RestaurantPOS14
         Private Sub dgw_MouseClick(sender As Object, e As System.Windows.Forms.MouseEventArgs)
             Try
                 If Me.dgw.Rows.Count > 0 Then
+                    If Me.dgw.SelectedRows.Count = 0 Then Return
                     Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                     Me.txtID.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                     Me.cmbDebitAccount.Text = dataGridViewRow.Cells(CInt((1))).Value.ToString()

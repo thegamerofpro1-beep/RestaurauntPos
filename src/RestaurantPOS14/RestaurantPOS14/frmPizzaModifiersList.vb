@@ -421,6 +421,8 @@ Namespace RestaurantPOS14
         End Property
 
         Public Sub New()
+            Call RestaurantPOS14.frmPizzaModifiersList.__ENCAddToList(Me)
+            Me.InitializeComponent()
             MyBase.Hide()
         End Sub
 
@@ -478,7 +480,8 @@ Namespace RestaurantPOS14
                     If Not RestaurantPOS14.ModClasses.rdr.IsDBNull(1) Then
                         Try
                             argb = CInt(System.Math.Round(Microsoft.VisualBasic.Conversion.Val(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(RestaurantPOS14.ModClasses.rdr.GetValue(1)))))
-                        Catch
+                        Catch suppressedException As System.Exception
+                            RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmPizzaModifiersList", suppressedException)
                         End Try
                     End If
 

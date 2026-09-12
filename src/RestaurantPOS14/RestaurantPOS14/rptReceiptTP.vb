@@ -263,7 +263,8 @@ Namespace RestaurantPOS14
                     End Try
                 End If
 
-            Catch
+            Catch reportInitializationException As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Initialize rptReceiptTP", reportInitializationException)
             End Try
         End Sub
 

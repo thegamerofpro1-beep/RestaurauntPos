@@ -510,7 +510,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select RTRIM(Warehouse),RTRIM(ProductCode),RTRIM(ProductName),RTRIM(ExpiryDate),RTRIM(Convert(nvarchar(50),Qty) + ' ' + Convert(Nvarchar(50),Unit)),Price*Qty from temp_stock,Product where Temp_Stock.ProductID=Product.PID and Qty > 0 and Warehouse like N'%" & Me.txtWarehouse.Text & "%' order by Warehouse,ProductName", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select RTRIM(Warehouse),RTRIM(ProductCode),RTRIM(ProductName),RTRIM(ExpiryDate),RTRIM(Convert(nvarchar(50),Qty) + ' ' + Convert(Nvarchar(50),Unit)),Price*Qty from temp_stock,Product where Temp_Stock.ProductID=Product.PID and Qty > 0 and Warehouse like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtWarehouse.Text) & "%' order by Warehouse,ProductName", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()
@@ -529,7 +529,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select RTRIM(Warehouse),RTRIM(ProductCode),RTRIM(ProductName),RTRIM(ExpiryDate),RTRIM(Convert(nvarchar(50),Qty) + ' ' + Convert(Nvarchar(50),Unit)),Price*Qty from temp_stock,Product where Temp_Stock.ProductID=Product.PID and Qty > 0 and ProductName like N'%" & Me.txtProductName.Text & "%' order by Warehouse,ProductName", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select RTRIM(Warehouse),RTRIM(ProductCode),RTRIM(ProductName),RTRIM(ExpiryDate),RTRIM(Convert(nvarchar(50),Qty) + ' ' + Convert(Nvarchar(50),Unit)),Price*Qty from temp_stock,Product where Temp_Stock.ProductID=Product.PID and Qty > 0 and ProductName like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtProductName.Text) & "%' order by Warehouse,ProductName", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()

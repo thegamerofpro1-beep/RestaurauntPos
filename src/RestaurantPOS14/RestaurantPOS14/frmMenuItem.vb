@@ -1705,6 +1705,7 @@ Namespace RestaurantPOS14
                     Return
                 End If
 
+                If Me.dgw.SelectedRows.Count = 0 Then Return
                 Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.dgw.SelectedRows(0)
                 Me.txtItemName.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                 Me.txtDish.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
@@ -1789,7 +1790,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(DishName),RTRIM(DishNameArabic), RTRIM(Category),DIRate,TARate,HDRate,RTRIM(Barcode),BackColor,RTRIM(MI_Status),RTRIM(Photo),RTRIM(FColor) from Dish where DishName like N'%" & Me.txtSearchByDish.Text & "%' order by DishName", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(DishName),RTRIM(DishNameArabic), RTRIM(Category),DIRate,TARate,HDRate,RTRIM(Barcode),BackColor,RTRIM(MI_Status),RTRIM(Photo),RTRIM(FColor) from Dish where DishName like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtSearchByDish.Text) & "%' order by DishName", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()
@@ -1929,7 +1930,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(DishName),RTRIM(DishNameArabic), RTRIM(Category),DIRate,TARate,HDRate,RTRIM(Barcode),BackColor,RTRIM(MI_Status),RTRIM(Photo),RTRIM(FColor) from Dish where Category like N'%" & Me.txtSearchByCategory.Text & "%' order by DishName", RestaurantPOS14.ModClasses.con)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("SELECT RTRIM(DishName),RTRIM(DishNameArabic), RTRIM(Category),DIRate,TARate,HDRate,RTRIM(Barcode),BackColor,RTRIM(MI_Status),RTRIM(Photo),RTRIM(FColor) from Dish where Category like N'%" & RestaurantPOS14.Security.SqlInput.EscapeLiteral(Me.txtSearchByCategory.Text) & "%' order by DishName", RestaurantPOS14.ModClasses.con)
                 RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
                 RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection)
                 Me.dgw.Rows.Clear()

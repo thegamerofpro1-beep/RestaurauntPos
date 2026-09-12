@@ -92,7 +92,7 @@ The central Crystal print path now uses `IPrintService`. Its default remains the
 
 ## Database layer
 
-The optional general settings table is read with this contract:
+The general settings table is created during the automatic database upgrade and read with this contract:
 
 ```sql
 CREATE TABLE dbo.ApplicationSettings (
@@ -109,6 +109,17 @@ The provider also reads the recovered `dbo.OtherSetting` row for `EnableChecklis
 For the current Windows host, the provider imports `dbo.PosPrinterSetting` printer, cash-drawer, customer-display, caller-ID, weighing-scale, and Ingenico settings plus their feature flags. The POS consumes that merged snapshot instead of repeatedly querying the terminal row during payments or serial-device startup.
 
 Database settings are read during reload. A SQL connectivity failure is recorded as a diagnostic and lower layers remain active; malformed database setting data is rejected.
+
+Before the login screen opens, the configured database is upgraded to schema version 5. The migration supports the untouched original demo and blank schemas, preserves their existing rows, and adds the following compatibility features:
+
+- Advanced Setting Checklist and MyInvois fields in `dbo.OtherSetting`
+- `DisableColoredDisplaySingleScreen` in `dbo.PosPrinterSetting`
+- second and third printer fields in `dbo.Kitchen`
+- `dbo.EInvoiceQueue` plus MyInvois status fields on EB, HD, and TA invoices
+- `dbo.ApplicationSettings` and `dbo.POSSchemaMigrations`
+- `ShowSSTOnSecondaryDisplay` in `dbo.OtherSetting`, defaulting to `Yes` so existing colored customer displays keep their current layout
+
+Each migration is idempotent and transactional. Multiple terminals serialize the upgrade with a SQL application lock. An already current database takes a read-only fast path. The SQL login needs permission to alter the database for the first upgraded launch; later launches do not require migration writes.
 
 ## Legacy migration
 

@@ -11,6 +11,16 @@ Namespace RestaurantPOS14.Configuration
         Private Sub New()
         End Sub
 
+        ' Apply only after all bill charges and deductions. Never use this for
+        ' item prices, tax amounts, tendered cash, change, or historical reprints.
+        Public Shared Function RoundPayableTotal(value As Decimal) As Decimal
+            Return Decimal.Round(value, 1, MidpointRounding.AwayFromZero)
+        End Function
+
+        Public Shared Function FormatPayableTotal(value As Double) As String
+            Return RoundPayableTotal(Convert.ToDecimal(value)).ToString("F2", CultureInfo.InvariantCulture)
+        End Function
+
         Public Shared Function RoundCurrency(value As Decimal) As Decimal
             Return RoundCurrency(value, SettingsHost.Current.Tax)
         End Function
@@ -18,23 +28,26 @@ Namespace RestaurantPOS14.Configuration
         Public Shared Function RoundCurrency(value As Decimal, settings As TaxSettings) As Decimal
             If settings Is Nothing Then Throw New ArgumentNullException(NameOf(settings))
 
+            Dim decimalPlaces = Math.Max(0, Math.Min(6, settings.DecimalPlaces))
             Dim mode = ParseRoundingMode(settings.RoundingMode)
             Dim decimalStep As Decimal = 1D
-            For index = 1 To settings.DecimalPlaces
+            For index = 1 To decimalPlaces
                 decimalStep /= 10D
             Next
 
-            If settings.RoundingIncrement = decimalStep Then
-                Return Decimal.Round(value, settings.DecimalPlaces, mode)
+            Dim roundingIncrement = If(settings.RoundingIncrement > 0D, settings.RoundingIncrement, decimalStep)
+            If roundingIncrement = decimalStep Then
+                Return Decimal.Round(value, decimalPlaces, mode)
             End If
 
-            Dim incrementRounded = Decimal.Round(value / settings.RoundingIncrement, 0, mode) * settings.RoundingIncrement
-            Return Decimal.Round(incrementRounded, settings.DecimalPlaces, mode)
+            Dim incrementRounded = Decimal.Round(value / roundingIncrement, 0, mode) * roundingIncrement
+            Return Decimal.Round(incrementRounded, decimalPlaces, mode)
         End Function
 
         Public Shared Function FormatCurrency(value As Decimal) As String
             Dim settings = SettingsHost.Current.Tax
-            Return RoundCurrency(value, settings).ToString("F" & settings.DecimalPlaces.ToString(CultureInfo.InvariantCulture), CultureInfo.CurrentCulture)
+            Dim decimalPlaces = Math.Max(0, Math.Min(6, settings.DecimalPlaces))
+            Return RoundCurrency(value, settings).ToString("F" & decimalPlaces.ToString(CultureInfo.InvariantCulture), CultureInfo.CurrentCulture)
         End Function
 
         Private Shared Function ParseRoundingMode(value As String) As MidpointRounding

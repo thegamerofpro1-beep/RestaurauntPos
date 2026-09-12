@@ -197,7 +197,8 @@ Namespace RestaurantPOS14
                         End If
                     End If
 
-                Catch
+                Catch suppressedException As System.Exception
+                    RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmDatabase", suppressedException)
                 End Try
 
                 MyBase.Cursor = System.Windows.Forms.Cursors.WaitCursor

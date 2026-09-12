@@ -580,6 +580,7 @@ Namespace RestaurantPOS14
 
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblSet.Text, "Takeaway", TextCompare:=False) = 0 Then
                     If RestaurantPOS14.My.MyProject.Forms.frmPOS.DataGridView3.Rows.Count > 0 Then
+                        If RestaurantPOS14.My.MyProject.Forms.frmPOS.DataGridView3.SelectedRows.Count = 0 Then Return
                         Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = RestaurantPOS14.My.MyProject.Forms.frmPOS.DataGridView3.SelectedRows(0)
                         RestaurantPOS14.My.MyProject.Forms.frmPOS.txtFoodName.Text = dataGridViewRow.Cells(CInt((0))).Value.ToString()
                         RestaurantPOS14.My.MyProject.Forms.frmPOS.txtRate_Food.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtRate.Text))
@@ -620,7 +621,7 @@ Namespace RestaurantPOS14
                         Dim location As System.Drawing.Point = screen.Bounds.Location
                         Dim p As System.Drawing.Point = New System.Drawing.Point(100, 100)
                         obj.Location = location + CType(p, System.Drawing.Size)
-                        Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Add(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtFoodName.Text, Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtRate_Food.Text), Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtQty_Food.Text), Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtTotalAmt_Food.Text))
+                        Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.AddItem(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtFoodName.Text, Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtRate_Food.Text), Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtQty_Food.Text), Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtServiceTaxPer_Food.Text), Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtServiceTaxAmount_Food.Text), Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtTotalAmt_Food.Text))
                         RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.lblBalance1.Text))
                         RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblHST.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.H2()))
                         RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.CurrentCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Count - 1))).Cells(0)
@@ -640,6 +641,7 @@ Namespace RestaurantPOS14
 
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblSet.Text, "Express Billing", TextCompare:=False) = 0 Then
                     If RestaurantPOS14.My.MyProject.Forms.frmPOS.DataGridView5.Rows.Count > 0 Then
+                        If RestaurantPOS14.My.MyProject.Forms.frmPOS.DataGridView5.SelectedRows.Count = 0 Then Return
                         Dim dataGridViewRow2 As System.Windows.Forms.DataGridViewRow = RestaurantPOS14.My.MyProject.Forms.frmPOS.DataGridView5.SelectedRows(0)
                         RestaurantPOS14.My.MyProject.Forms.frmPOS.txtFoodName.Text = dataGridViewRow2.Cells(CInt((0))).Value.ToString()
                         RestaurantPOS14.My.MyProject.Forms.frmPOS.txtRate_Food.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtRate.Text))
@@ -680,7 +682,7 @@ Namespace RestaurantPOS14
                         Dim location2 As System.Drawing.Point = screen2.Bounds.Location
                         Dim p2 As System.Drawing.Point = New System.Drawing.Point(100, 100)
                         obj2.Location = location2 + CType(p2, System.Drawing.Size)
-                        Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Add(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtFoodName.Text, Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtRate_Food.Text), Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtQty_Food.Text), Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtTotalAmt_Food.Text))
+                        Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.AddItem(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtFoodName.Text, Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtRate_Food.Text), Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtQty_Food.Text), Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtServiceTaxPer_Food.Text), Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtServiceTaxAmount_Food.Text), Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtTotalAmt_Food.Text))
                         RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.lblBalance3.Text))
                         RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblHST.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.H4()))
                         RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.CurrentCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Count - 1))).Cells(0)
@@ -700,6 +702,7 @@ Namespace RestaurantPOS14
 
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblSet.Text, "Home Delivery", TextCompare:=False) = 0 Then
                     If RestaurantPOS14.My.MyProject.Forms.frmPOS.DataGridView4.Rows.Count > 0 Then
+                        If RestaurantPOS14.My.MyProject.Forms.frmPOS.DataGridView4.SelectedRows.Count = 0 Then Return
                         Dim dataGridViewRow3 As System.Windows.Forms.DataGridViewRow = RestaurantPOS14.My.MyProject.Forms.frmPOS.DataGridView4.SelectedRows(0)
                         RestaurantPOS14.My.MyProject.Forms.frmPOS.txtFoodName.Text = dataGridViewRow3.Cells(CInt((0))).Value.ToString()
                         RestaurantPOS14.My.MyProject.Forms.frmPOS.txtRate_Food.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtRate.Text))
@@ -740,7 +743,7 @@ Namespace RestaurantPOS14
                         Dim location3 As System.Drawing.Point = screen3.Bounds.Location
                         Dim p3 As System.Drawing.Point = New System.Drawing.Point(100, 100)
                         obj3.Location = location3 + CType(p3, System.Drawing.Size)
-                        Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Add(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtFoodName.Text, Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtRate_Food.Text), Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtQty_Food.Text), Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtTotalAmt_Food.Text))
+                        Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.AddItem(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtFoodName.Text, Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtRate_Food.Text), Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtQty_Food.Text), Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtServiceTaxPer_Food.Text), Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtServiceTaxAmount_Food.Text), Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtTotalAmt_Food.Text))
                         RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.lblBalance2.Text))
                         RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblHST.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.H3()))
                         RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.CurrentCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Count - 1))).Cells(0)
@@ -759,6 +762,7 @@ Namespace RestaurantPOS14
 
                 If Microsoft.VisualBasic.CompilerServices.Operators.CompareString(Me.lblSet.Text, "KOT", TextCompare:=False) = 0 Then
                     If RestaurantPOS14.My.MyProject.Forms.frmPOS.DataGridView1.Rows.Count > 0 Then
+                        If RestaurantPOS14.My.MyProject.Forms.frmPOS.DataGridView1.SelectedRows.Count = 0 Then Return
                         Dim dataGridViewRow4 As System.Windows.Forms.DataGridViewRow = RestaurantPOS14.My.MyProject.Forms.frmPOS.DataGridView1.SelectedRows(0)
                         RestaurantPOS14.My.MyProject.Forms.frmPOS.txtFoodName.Text = dataGridViewRow4.Cells(CInt((0))).Value.ToString()
                         RestaurantPOS14.My.MyProject.Forms.frmPOS.txtRate_Food.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtRate.Text))
@@ -796,7 +800,7 @@ Namespace RestaurantPOS14
                         Dim location4 As System.Drawing.Point = screen4.Bounds.Location
                         Dim p4 As System.Drawing.Point = New System.Drawing.Point(100, 100)
                         obj4.Location = location4 + CType(p4, System.Drawing.Size)
-                        Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Add(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtFoodName.Text, Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtRate_Food.Text), Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtQty_Food.Text), Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtTotalAmt_Food.Text))
+                        Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.AddItem(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtFoodName.Text, Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtRate_Food.Text), Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtQty_Food.Text), Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtServiceTaxPer_Food.Text), Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtServiceTaxAmount_Food.Text), Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.txtTotalAmt_Food.Text))
                         RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblTotal.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.lblBalance.Text))
                         RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.lblHST.Text = Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(RestaurantPOS14.My.MyProject.Forms.frmPOS.H1()))
                         RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.CurrentCell = RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows(CInt((RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Count - 1))).Cells(0)

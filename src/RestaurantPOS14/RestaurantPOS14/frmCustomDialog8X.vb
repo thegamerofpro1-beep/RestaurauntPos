@@ -185,7 +185,7 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModClasses.cmd = RestaurantPOS14.Configuration.DatabaseMaintenance.CreateBackupCommand(RestaurantPOS14.ModClasses.con, Me.Filename)
                 RestaurantPOS14.ModClasses.cmd.ExecuteReader()
                 RestaurantPOS14.ModClasses.con.Close()
-                Call Microsoft.VisualBasic.CompilerServices.ProjectData.EndApp()
+                RestaurantPOS14.Diagnostics.ApplicationLifecycle.ExitApplication()
             Catch ex As System.Exception
                 MetroFramework.MetroMessageBox.Show(Me, ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
             End Try
@@ -209,7 +209,8 @@ Namespace RestaurantPOS14
                         End If
                     End If
 
-                Catch
+                Catch suppressedException As System.Exception
+                    RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in frmCustomDialog8X", suppressedException)
                 End Try
 
                 MyBase.Cursor = System.Windows.Forms.Cursors.WaitCursor
@@ -220,7 +221,7 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModClasses.cmd = RestaurantPOS14.Configuration.DatabaseMaintenance.CreateBackupCommand(RestaurantPOS14.ModClasses.con, Me.Filename)
                 RestaurantPOS14.ModClasses.cmd.ExecuteReader()
                 RestaurantPOS14.ModClasses.con.Close()
-                Call Microsoft.VisualBasic.CompilerServices.ProjectData.EndApp()
+                RestaurantPOS14.Diagnostics.ApplicationLifecycle.ExitApplication()
             Catch ex As System.Exception
                 MetroFramework.MetroMessageBox.Show(Me, ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
             End Try
@@ -228,7 +229,7 @@ Namespace RestaurantPOS14
 
         <System.Runtime.CompilerServices.MethodImplAttribute(System.Runtime.CompilerServices.MethodImplOptions.NoInlining Or System.Runtime.CompilerServices.MethodImplOptions.NoOptimization)>
         Private Sub btnCancel_Click(sender As Object, e As System.EventArgs)
-            Call Microsoft.VisualBasic.CompilerServices.ProjectData.EndApp()
+            RestaurantPOS14.Diagnostics.ApplicationLifecycle.ExitApplication()
         End Sub
 
         Private Sub Timer2_Tick(sender As Object, e As System.EventArgs)

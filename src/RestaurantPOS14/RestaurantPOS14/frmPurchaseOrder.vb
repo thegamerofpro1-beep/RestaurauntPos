@@ -1795,7 +1795,7 @@ Namespace RestaurantPOS14
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into PurchaseOrder_Join(PurchaseOrderID,ProductID,Qty,PricePerUnit,Amount) VALUES (" & Me.txtPO_ID.Text & ",@d1,@d2,@d3,@d4)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into PurchaseOrder_Join(PurchaseOrderID,ProductID,Qty,PricePerUnit,Amount) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtPO_ID.Text, "Record ID") & ",@d1,@d2,@d3,@d4)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView1.Rows, System.Collections.IEnumerable)
@@ -2031,14 +2031,14 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModClasses.con.Close()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("delete from PurchaseOrder_Join where PurchaseOrderID=" & Me.txtPO_ID.Text)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("delete from PurchaseOrder_Join where PurchaseOrderID=" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtPO_ID.Text, "Record ID"))
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.ExecuteNonQuery()
                 RestaurantPOS14.ModClasses.con.Close()
                 Call System.Data.SqlClient.SqlConnection.ClearAllPools()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into PurchaseOrder_Join(PurchaseOrderID,ProductID,Qty,PricePerUnit,Amount) VALUES (" & Me.txtPO_ID.Text & ",@d1,@d2,@d3,@d4)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into PurchaseOrder_Join(PurchaseOrderID,ProductID,Qty,PricePerUnit,Amount) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtPO_ID.Text, "Record ID") & ",@d1,@d2,@d3,@d4)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView1.Rows, System.Collections.IEnumerable)

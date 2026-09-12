@@ -69,7 +69,7 @@ Namespace RestaurantPOS14
                 Using con As System.Data.SqlClient.SqlConnection = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                     con.Open()
                     Using cmd As System.Data.SqlClient.SqlCommand = New System.Data.SqlClient.SqlCommand("SELECT UIN, QRUrl FROM " & table & " WHERE Id=@id", con)
-                        cmd.Parameters.AddWithValue("@id", Me.billId)
+                        cmd.Parameters.Add("@id", System.Data.SqlDbType.Int).Value = Me.billId
                         Using r As System.Data.SqlClient.SqlDataReader = cmd.ExecuteReader()
                             If Not r.Read() Then
                                 Return
@@ -83,7 +83,8 @@ Namespace RestaurantPOS14
                                     Dim bmp As System.Drawing.Bitmap = New MessagingToolkit.QRCode.Codec.QRCodeEncoder().Encode(qr)
                                     Me.picQR.Image = bmp
                                     Return
-                                Catch
+                                Catch ex As System.Exception
+                                    RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Render e-invoice QR code", ex)
                                     Return
                                 End Try
                             End If
@@ -91,8 +92,10 @@ Namespace RestaurantPOS14
                     End Using
                 End Using
 
-            Catch
+            Catch ex As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Load e-invoice preview", ex)
                 Me.lblUIN.Text = String.Empty
+                If Me.picQR.Image IsNot Nothing Then Me.picQR.Image.Dispose()
                 Me.picQR.Image = Nothing
             End Try
         End Sub
@@ -103,20 +106,18 @@ Namespace RestaurantPOS14
                 Using con As System.Data.SqlClient.SqlConnection = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                     con.Open()
                     Using cmd As System.Data.SqlClient.SqlCommand = New System.Data.SqlClient.SqlCommand("SELECT QRUrl FROM " & table & " WHERE Id=@id", con)
-                        cmd.Parameters.AddWithValue("@id", Me.billId)
+                        cmd.Parameters.Add("@id", System.Data.SqlDbType.Int).Value = Me.billId
                         Dim val As String = TryCast(cmd.ExecuteScalar(), String)
                         If Not String.IsNullOrEmpty(val) Then
-                            Try
-                                Call System.Diagnostics.Process.Start(val)
-                                Return
-                            Catch
-                                Return
-                            End Try
+                            RestaurantPOS14.Security.ExternalResourceGuard.OpenWebUrl(val)
+                            Return
                         End If
                     End Using
                 End Using
 
-            Catch
+            Catch ex As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Open e-invoice QR URL", ex)
+                Call System.Windows.Forms.MessageBox.Show("The e-invoice link is missing or blocked and could not be opened.", "E-Invoice", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning)
             End Try
         End Sub
 

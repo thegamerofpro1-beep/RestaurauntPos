@@ -256,15 +256,38 @@ Namespace RestaurantPOS14.Configuration
             Try
                 Using connection As New SqlConnection(_connectionString)
                     connection.Open()
-                    LoadApplicationSettings(connection, result)
-                    LoadLegacyOtherSetting(connection, result)
-                    LoadLegacyTerminalSettings(connection, result)
+                    Try
+                        LoadApplicationSettings(connection, result)
+                    Catch ex As Exception
+                        AppendWarning("Application settings could not be loaded: " & ex.Message)
+                    End Try
+                    Try
+                        ' Printer and terminal settings are operationally critical and
+                        ' must not depend on optional feature columns being present.
+                        LoadLegacyTerminalSettings(connection, result)
+                    Catch ex As Exception
+                        AppendWarning("Terminal settings could not be loaded: " & ex.Message)
+                    End Try
+                    Try
+                        LoadLegacyOtherSetting(connection, result)
+                    Catch ex As Exception
+                        AppendWarning("Optional legacy settings could not be loaded: " & ex.Message)
+                    End Try
                 End Using
             Catch ex As SqlException
-                _lastWarning = "Database settings were unavailable: " & ex.Message
+                AppendWarning("Database settings were unavailable: " & ex.Message)
             End Try
             Return result
         End Function
+
+        Private Sub AppendWarning(message As String)
+            If String.IsNullOrWhiteSpace(message) Then Return
+            If String.IsNullOrWhiteSpace(_lastWarning) Then
+                _lastWarning = message
+            Else
+                _lastWarning &= " " & message
+            End If
+        End Sub
 
         Private Shared Sub LoadApplicationSettings(connection As SqlConnection, destination As JObject)
             Const sql = "IF OBJECT_ID('dbo.ApplicationSettings','U') IS NOT NULL SELECT SettingPath, JsonValue FROM dbo.ApplicationSettings WHERE IsEnabled=1"
@@ -286,6 +309,11 @@ Namespace RestaurantPOS14.Configuration
         End Sub
 
         Private Sub LoadLegacyOtherSetting(connection As SqlConnection, destination As JObject)
+            Const compatibleSchemaSql = "SELECT CASE WHEN OBJECT_ID('dbo.OtherSetting','U') IS NOT NULL AND COL_LENGTH('dbo.OtherSetting','EnableChecklist') IS NOT NULL AND COL_LENGTH('dbo.OtherSetting','EnableMyInvois') IS NOT NULL AND COL_LENGTH('dbo.OtherSetting','MyInvoisBaseUrl') IS NOT NULL AND COL_LENGTH('dbo.OtherSetting','MyInvoisClientId') IS NOT NULL AND COL_LENGTH('dbo.OtherSetting','MyInvoisClientSecret') IS NOT NULL AND COL_LENGTH('dbo.OtherSetting','MyInvoisEnvironment') IS NOT NULL THEN 1 ELSE 0 END"
+            Using schemaCommand As New SqlCommand(compatibleSchemaSql, connection)
+                If Convert.ToInt32(schemaCommand.ExecuteScalar()) <> 1 Then Return
+            End Using
+
             Const sql = "IF OBJECT_ID('dbo.OtherSetting','U') IS NOT NULL SELECT TOP 1 EnableChecklist, EnableMyInvois, MyInvoisBaseUrl, MyInvoisClientId, MyInvoisClientSecret, MyInvoisEnvironment FROM dbo.OtherSetting"
             Using command As New SqlCommand(sql, connection)
                 Using reader = command.ExecuteReader()

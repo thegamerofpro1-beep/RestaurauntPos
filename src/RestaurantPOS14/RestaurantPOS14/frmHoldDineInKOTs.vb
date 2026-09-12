@@ -261,6 +261,7 @@ Namespace RestaurantPOS14
                     Return
                 End If
 
+                If Me.DataGridView1.SelectedRows.Count = 0 Then Return
                 Dim dataGridViewRow As System.Windows.Forms.DataGridViewRow = Me.DataGridView1.SelectedRows(0)
                 MyBase.Hide()
                 Call RestaurantPOS14.My.MyProject.Forms.frmPOS.Reset()
@@ -304,7 +305,7 @@ Namespace RestaurantPOS14
                         Dim location2 As System.Drawing.Point = screen2.Bounds.Location
                         p = New System.Drawing.Point(100, 100)
                         obj2.Location = location2 + CType(p, System.Drawing.Size)
-                        Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.DataGridView1.Rows.Add(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(sqlDataReader(0)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(sqlDataReader(2)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(sqlDataReader(12)))
+                        Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.AddItem(System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(sqlDataReader(0)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(sqlDataReader(1)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(sqlDataReader(2)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(sqlDataReader(6)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(sqlDataReader(7)), System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(sqlDataReader(12)))
                         Call RestaurantPOS14.My.MyProject.Forms.frmSecondaryDisplay.Show()
                     End While
 

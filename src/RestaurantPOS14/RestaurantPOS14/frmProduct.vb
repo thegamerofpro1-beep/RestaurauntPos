@@ -1418,7 +1418,7 @@ Namespace RestaurantPOS14
 
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into Product(PID,ProductCode, Productname,Category, Description,Unit,Price,ReorderPoint,P_Supplier) VALUES (" & Me.txtID.Text & ",@d1,@d2,@d3,@d4,@d5,@d6," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtReorderPoint.Text)) & ",@d7)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into Product(PID,ProductCode, Productname,Category, Description,Unit,Price,ReorderPoint,P_Supplier) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtID.Text, "Record ID") & ",@d1,@d2,@d3,@d4,@d5,@d6," & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtReorderPoint.Text)) & ",@d7)")
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", Me.txtProductCode.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", Me.txtProductName.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d3", Me.cmbCategory.Text)
@@ -1431,7 +1431,7 @@ Namespace RestaurantPOS14
                 RestaurantPOS14.ModClasses.con.Close()
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into Product_OpeningStock(ProductID,Warehouse,Qty,HasExpiryDate,ExpiryDate) VALUES (" & Me.txtID.Text & " ,@d1,@d2,@d3,@d4)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into Product_OpeningStock(ProductID,Warehouse,Qty,HasExpiryDate,ExpiryDate) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtID.Text, "Record ID") & " ,@d1,@d2,@d3,@d4)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView1.Rows, System.Collections.IEnumerable)
@@ -1447,7 +1447,7 @@ Namespace RestaurantPOS14
 
                 RestaurantPOS14.ModClasses.con.Close()
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into Temp_Stock(ProductID,Warehouse,Qty,HasExpiryDate,ExpiryDate) VALUES (" & Me.txtID.Text & " ,@d1,@d2,@d3,@d4)")
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into Temp_Stock(ProductID,Warehouse,Qty,HasExpiryDate,ExpiryDate) VALUES (" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtID.Text, "Record ID") & " ,@d1,@d2,@d3,@d4)")
                 RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
                 RestaurantPOS14.ModClasses.cmd.Prepare()
                 For Each dataGridViewRow2 As System.Windows.Forms.DataGridViewRow In CType(Me.DataGridView1.Rows, System.Collections.IEnumerable)
@@ -1535,7 +1535,7 @@ Namespace RestaurantPOS14
 
                 RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
                 RestaurantPOS14.ModClasses.con.Open()
-                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Update Product set Productname=@d2, Category=@d3, Description=@d4,Unit=@d5,Price=@d6,ReorderPoint=" & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtReorderPoint.Text)) & ",ProductCode=@d1,P_Supplier=@d7 where PID=" & Me.txtID.Text)
+                RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Update Product set Productname=@d2, Category=@d3, Description=@d4,Unit=@d5,Price=@d6,ReorderPoint=" & Microsoft.VisualBasic.CompilerServices.Conversions.ToString(Microsoft.VisualBasic.Conversion.Val(Me.txtReorderPoint.Text)) & ",ProductCode=@d1,P_Supplier=@d7 where PID=" & RestaurantPOS14.Security.SqlInput.RequireInteger(Me.txtID.Text, "Record ID"))
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", Me.txtProductName.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d3", Me.cmbCategory.Text)
                 RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d4", Me.txtFeatures.Text)

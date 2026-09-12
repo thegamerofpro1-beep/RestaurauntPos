@@ -23,111 +23,169 @@ Namespace RestaurantPOS14
     <Microsoft.VisualBasic.CompilerServices.StandardModuleAttribute>
     Friend NotInheritable Class ModFunc
         Private Shared st As String
-        <System.Runtime.InteropServices.DllImportAttribute("kernel32", CharSet:=System.Runtime.InteropServices.CharSet.Ansi, ExactSpelling:=True, SetLastError:=True)>
-        Public Shared Function Wow64DisableWow64FsRedirection(ByRef oldvalue As Long) As Boolean
+        Private Shared ReadOnly UserRightsCacheSync As New Object()
+        Private Shared CachedUserRightsUserId As String = String.Empty
+        Private Shared CachedUserRightsLoaded As Boolean
+        Private Shared CachedUserRights As New System.Collections.Generic.Dictionary(Of String, UserPermissionFlags)(System.StringComparer.OrdinalIgnoreCase)
+
+        Private NotInheritable Class UserPermissionFlags
+            Public SaveAllowed As Boolean
+            Public UpdateAllowed As Boolean
+            Public DeleteAllowed As Boolean
+            Public ViewAllowed As Boolean
+        End Class
+        <System.Runtime.InteropServices.DllImportAttribute("kernel32.dll", SetLastError:=True)>
+        Private Shared Function Wow64DisableWow64FsRedirection(ByRef oldValue As System.IntPtr) As Boolean
         End Function
-        <System.Runtime.InteropServices.DllImportAttribute("kernel32", CharSet:=System.Runtime.InteropServices.CharSet.Ansi, ExactSpelling:=True, SetLastError:=True)>
-        Public Shared Function Wow64EnableWow64FsRedirection(ByRef oldvalue As Long) As Boolean
+        <System.Runtime.InteropServices.DllImportAttribute("kernel32.dll", SetLastError:=True)>
+        Private Shared Function Wow64RevertWow64FsRedirection(oldValue As System.IntPtr) As Boolean
         End Function
         Public Shared Sub OSKeyboard()
-            Dim num As Long = 0L
-            If System.Environment.Is64BitOperatingSystem Then
-                Call System.Diagnostics.Process.Start("osk.exe")
-            ElseIf RestaurantPOS14.ModFunc.Wow64DisableWow64FsRedirection(num) Then
-                Call System.Diagnostics.Process.Start("osk.exe")
-                Call RestaurantPOS14.ModFunc.Wow64EnableWow64FsRedirection(num)
-            End If
+            Dim oldValue As System.IntPtr = System.IntPtr.Zero
+            Dim redirectionDisabled As Boolean = False
+            Try
+                If System.Environment.Is64BitOperatingSystem AndAlso Not System.Environment.Is64BitProcess Then
+                    redirectionDisabled = RestaurantPOS14.ModFunc.Wow64DisableWow64FsRedirection(oldValue)
+                End If
+                Dim startInfo As New System.Diagnostics.ProcessStartInfo("osk.exe") With {.UseShellExecute = True}
+                Call System.Diagnostics.Process.Start(startInfo)
+            Catch ex As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Open on-screen keyboard", ex)
+                Call System.Windows.Forms.MessageBox.Show("The Windows on-screen keyboard could not be opened.", "Keyboard", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning)
+            Finally
+                If redirectionDisabled Then RestaurantPOS14.ModFunc.Wow64RevertWow64FsRedirection(oldValue)
+            End Try
         End Sub
 
         Public Shared Function CheckForInternetConnection() As Boolean
             Try
-                Using webClient As System.Net.WebClient = New System.Net.WebClient()
-                    Using webClient.OpenRead("http://www.google.com")
-                        Return True
-                    End Using
+                Dim uri = RestaurantPOS14.Security.ExternalResourceGuard.RequireHttpUri("https://www.google.com/generate_204", False)
+                Dim request = RestaurantPOS14.Security.ExternalResourceGuard.CreateRequest(uri, 5000)
+                request.Method = "HEAD"
+                Using response = DirectCast(request.GetResponse(), System.Net.HttpWebResponse)
+                    Return CInt(response.StatusCode) >= 200 AndAlso CInt(response.StatusCode) < 400
                 End Using
-            Catch __unusedException1__ As System.Exception
+            Catch ex As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Internet connectivity check", ex)
                 Return False
             End Try
         End Function
 
-        Public Shared Sub SendMail(s1 As String, s2 As String, s3 As String, s5 As String, s6 As String, s7 As Integer, s8 As String, s9 As String)
-            Dim mailMessage As System.Net.Mail.MailMessage = New System.Net.Mail.MailMessage()
+        Public Shared Function SendMail(s1 As String, s2 As String, s3 As String, s5 As String, s6 As String, s7 As Integer, s8 As String, s9 As String) As Boolean
             Try
-                mailMessage.From = New System.Net.Mail.MailAddress(s1)
-                mailMessage.[To].Add(s2)
-                mailMessage.Body = s3
-                mailMessage.IsBodyHtml = True
-                mailMessage.Subject = s5
-                Dim smtpClient As System.Net.Mail.SmtpClient = New System.Net.Mail.SmtpClient(s6)
-                smtpClient.Port = s7
-                smtpClient.Credentials = New System.Net.NetworkCredential(s8, s9)
-                smtpClient.EnableSsl = True
-                smtpClient.Send(mailMessage)
+                If String.IsNullOrWhiteSpace(s6) Then Throw New ArgumentException("The SMTP server is not configured.")
+                If s7 < 1 OrElse s7 > 65535 Then Throw New ArgumentOutOfRangeException(NameOf(s7), "The SMTP port is invalid.")
+                Using mailMessage As New System.Net.Mail.MailMessage()
+                    mailMessage.From = New System.Net.Mail.MailAddress(s1)
+                    mailMessage.[To].Add(New System.Net.Mail.MailAddress(s2))
+                    mailMessage.Body = If(s3, String.Empty)
+                    mailMessage.IsBodyHtml = True
+                    mailMessage.Subject = If(s5, String.Empty)
+                    Using smtpClient As New System.Net.Mail.SmtpClient(s6.Trim(), s7)
+                        smtpClient.Credentials = New System.Net.NetworkCredential(s8, s9)
+                        smtpClient.EnableSsl = True
+                        smtpClient.Timeout = 30000
+                        smtpClient.Send(mailMessage)
+                    End Using
+                End Using
+                Return True
             Catch ex As System.Exception
-                Call System.Windows.Forms.MessageBox.Show(ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Send email", ex)
+                Call System.Windows.Forms.MessageBox.Show("The email could not be sent. Check the email settings and connection.", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
+                Return False
             End Try
-        End Sub
+        End Function
 
         Public Shared Sub SendMail1(s1 As String, s2 As String, s3 As String, s4 As String, s5 As String, s6 As String, s7 As Integer, s8 As String, s9 As String)
-            Dim mailMessage As System.Net.Mail.MailMessage = New System.Net.Mail.MailMessage()
             Try
-                mailMessage.From = New System.Net.Mail.MailAddress(s1)
-                mailMessage.[To].Add(s2)
-                mailMessage.Body = s3
-                mailMessage.Attachments.Add(New System.Net.Mail.Attachment(s4))
-                mailMessage.IsBodyHtml = True
-                mailMessage.Subject = s5
-                Dim smtpClient As System.Net.Mail.SmtpClient = New System.Net.Mail.SmtpClient(s6)
-                smtpClient.Port = s7
-                smtpClient.Credentials = New System.Net.NetworkCredential(s8, s9)
-                smtpClient.EnableSsl = True
-                smtpClient.Send(mailMessage)
+                If String.IsNullOrWhiteSpace(s6) Then Throw New ArgumentException("The SMTP server is not configured.")
+                If s7 < 1 OrElse s7 > 65535 Then Throw New ArgumentOutOfRangeException(NameOf(s7), "The SMTP port is invalid.")
+                If String.IsNullOrWhiteSpace(s4) OrElse Not System.IO.File.Exists(s4) Then Throw New System.IO.FileNotFoundException("The email attachment was not found.", s4)
+                Using mailMessage As New System.Net.Mail.MailMessage()
+                    mailMessage.From = New System.Net.Mail.MailAddress(s1)
+                    mailMessage.[To].Add(New System.Net.Mail.MailAddress(s2))
+                    mailMessage.Body = If(s3, String.Empty)
+                    mailMessage.Attachments.Add(New System.Net.Mail.Attachment(s4))
+                    mailMessage.IsBodyHtml = True
+                    mailMessage.Subject = If(s5, String.Empty)
+                    Using smtpClient As New System.Net.Mail.SmtpClient(s6.Trim(), s7)
+                        smtpClient.Credentials = New System.Net.NetworkCredential(s8, s9)
+                        smtpClient.EnableSsl = True
+                        smtpClient.Timeout = 30000
+                        smtpClient.Send(mailMessage)
+                    End Using
+                End Using
             Catch ex As System.Exception
-                Call System.Windows.Forms.MessageBox.Show(ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Send email attachment", ex)
+                Call System.Windows.Forms.MessageBox.Show("The email could not be sent. Check the attachment, email settings, and connection.", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Hand)
             End Try
         End Sub
 
         Public Shared Function IsConnectionAvailable() As Boolean
-            Dim webRequest As System.Net.WebRequest = System.Net.WebRequest.Create(New System.Uri("http://www.google.com"))
-            Try
-                webRequest.GetResponse().Close()
-                Return True
-            Catch __unusedException1__ As System.Exception
-                Return False
-            End Try
+            Return CheckForInternetConnection()
         End Function
 
         Public Shared Sub LogFunc(st1 As String, st2 As String)
-            RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
-            RestaurantPOS14.ModClasses.con.Open()
-            RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("insert into Logs(UserID,Date,Operation) VALUES (@d1,@d2,@d3)")
-            RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
-            RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", st1)
-            RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", System.DateTime.Now)
-            RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d3", st2)
-            RestaurantPOS14.ModClasses.cmd.ExecuteReader()
-            RestaurantPOS14.ModClasses.con.Close()
+            Try
+                Using connection As New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
+                    connection.Open()
+                    Using command As New System.Data.SqlClient.SqlCommand("insert into Logs(UserID,Date,Operation) VALUES (@d1,@d2,@d3)", connection)
+                        command.Parameters.Add("@d1", System.Data.SqlDbType.NVarChar, 100).Value = If(st1, String.Empty)
+                        command.Parameters.Add("@d2", System.Data.SqlDbType.DateTime).Value = System.DateTime.Now
+                        command.Parameters.Add("@d3", System.Data.SqlDbType.NVarChar, -1).Value = If(st2, String.Empty)
+                        command.ExecuteNonQuery()
+                    End Using
+                End Using
+            Catch ex As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Write audit log", ex)
+            End Try
+        End Sub
+
+        Public Shared Sub LogFuncAsync(st1 As String, st2 As String)
+            ' Audit logging must not hold the navigation UI while SQL Server writes
+            ' a non-critical login record. LogFunc already records and contains any
+            ' database failure, so this fire-and-forget task is safe for the caller.
+            System.Threading.Tasks.Task.Run(Sub() LogFunc(st1, st2))
         End Sub
 
         Public Shared Sub SMSFunc(st1 As String, st2 As String, st3 As String)
-            System.Net.ServicePointManager.MaxServicePointIdleTime = 1000
-            System.Net.ServicePointManager.Expect100Continue = True
-            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls11 Or System.Net.SecurityProtocolType.Tls12
-            st3 = st3.Replace(CStr(("@MobileNo")), CStr((st1))).Replace("@Message", st2)
-            Dim response As System.Net.HttpWebResponse = CType(CType(System.Net.WebRequest.Create(New System.Uri(st3)), System.Net.HttpWebRequest).GetResponse(), System.Net.HttpWebResponse)
+            If String.IsNullOrWhiteSpace(st3) Then Throw New InvalidOperationException("The SMS service URL is not configured.")
+            Dim endpoint = st3.Replace("@MobileNo", System.Uri.EscapeDataString(If(st1, String.Empty))).Replace("@Message", System.Uri.EscapeDataString(If(st2, String.Empty)))
+            Dim uri = RestaurantPOS14.Security.ExternalResourceGuard.RequireHttpUri(endpoint, True)
+            Dim request = RestaurantPOS14.Security.ExternalResourceGuard.CreateRequest(uri, 15000)
+            request.Method = "GET"
+            Using response = DirectCast(request.GetResponse(), System.Net.HttpWebResponse)
+                If CInt(response.StatusCode) < 200 OrElse CInt(response.StatusCode) >= 300 Then
+                    Throw New System.Net.WebException("The SMS service returned HTTP " & CInt(response.StatusCode).ToString() & ".")
+                End If
+            End Using
         End Sub
 
         Public Shared Function Encrypt(password As String) As String
+            If password Is Nothing Then Throw New System.ArgumentNullException(NameOf(password))
             Return System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(password))
         End Function
 
         Public Shared Function Decrypt(encryptpwd As String) As String
+            If String.IsNullOrWhiteSpace(encryptpwd) Then Return String.Empty
+            If RestaurantPOS14.Security.PinSecurity.IsStrongHash(encryptpwd) Then Return "••••"
             Dim decoder As System.Text.Decoder = New System.Text.UTF8Encoding().GetDecoder()
-            Dim array As Byte() = System.Convert.FromBase64String(encryptpwd)
+            Dim array As Byte()
+            Try
+                array = System.Convert.FromBase64String(encryptpwd.Trim())
+            Catch ex As System.FormatException
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Decode legacy protected value", ex)
+                Return String.Empty
+            End Try
             Dim array2 As Char() = New Char(decoder.GetCharCount(array, 0, array.Length) - 1 + 1 - 1) {}
             decoder.GetChars(array, 0, array.Length, array2, 0)
             Return New String(array2)
+        End Function
+
+        Public Shared Function SafeDivide(numerator As Double, denominator As Double) As Double
+            If Double.IsNaN(numerator) OrElse Double.IsInfinity(numerator) Then Return 0.0
+            If Double.IsNaN(denominator) OrElse Double.IsInfinity(denominator) OrElse Math.Abs(denominator) < 0.000000000001 Then Return 0.0
+            Return numerator / denominator
         End Function
 
         Public Shared Sub RefreshRecord2()
@@ -553,27 +611,66 @@ Namespace RestaurantPOS14
         Public Shared Sub GetPrinterName(TillID As String, rpt As Object)
             Try
                 Call RestaurantPOS14.ModFunc.ApplyServiceChargeLabelFix(rpt)
-            Catch
+            Catch suppressedException As System.Exception
+                RestaurantPOS14.Diagnostics.ApplicationDiagnostics.ReportNonFatal("Suppressed exception in ModFunc", suppressedException)
             End Try
             Dim report = TryCast(rpt, CrystalDecisions.CrystalReports.Engine.ReportDocument)
             If report Is Nothing Then Return
 
             Dim settings = RestaurantPOS14.Configuration.SettingsHost.Current
-            Dim resolver As New RestaurantPOS14.Customization.ReportProfileResolver(settings.Reports, settings.Printing.DefaultPrinterName)
+            ' Terminal Setting is the source of truth for the current till. Read it
+            ' at print time so a printer changed during this session is used at once.
+            Dim terminalPrinterName = ResolveLegacyPrinterName(TillID)
+            Dim configuredPrinterName = If(String.IsNullOrWhiteSpace(terminalPrinterName), settings.Printing.DefaultPrinterName, terminalPrinterName)
+
+            Dim resolver As New RestaurantPOS14.Customization.ReportProfileResolver(settings.Reports, configuredPrinterName)
             Dim profile = resolver.Resolve(report.GetType().Name)
+            If String.IsNullOrWhiteSpace(profile.PrinterName) Then profile.PrinterName = configuredPrinterName
             Dim job As New RestaurantPOS14.Extensions.Printing.PrintJob With {
                 .DocumentName = profile.ReportName,
                 .PrinterName = profile.PrinterName,
                 .Copies = 1,
                 .Payload = report
             }
-            Call RestaurantPOS14.Extensions.Printing.PrintServiceHost.Current.Print(job)
+            Dim result = RestaurantPOS14.Extensions.Printing.PrintServiceHost.Current.Print(job)
+            If result Is Nothing OrElse Not result.Accepted Then
+                Dim message = If(result Is Nothing OrElse String.IsNullOrWhiteSpace(result.Message), "The print service did not accept the invoice.", result.Message)
+                Throw New InvalidOperationException(message)
+            End If
+
+            If System.IO.Path.IsPathRooted(result.Message) AndAlso System.IO.File.Exists(result.Message) Then
+                Call System.Windows.Forms.MessageBox.Show("Invoice PDF saved successfully:" & Global.Microsoft.VisualBasic.Constants.vbCrLf & result.Message, "Invoice saved", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Information)
+            End If
         End Sub
+
+        Private Shared Function ResolveLegacyPrinterName(tillID As String) As String
+            Dim resolvedTillID = If(tillID, String.Empty).Trim()
+            If String.IsNullOrWhiteSpace(resolvedTillID) Then resolvedTillID = System.Net.Dns.GetHostName()
+
+            Try
+                Using connection As New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
+                    connection.Open()
+                    Const sql = "SELECT TOP 1 RTRIM(PrinterName) FROM dbo.POSPrinterSetting WHERE TillID=@TillID AND IsEnabled='Yes' AND NULLIF(LTRIM(RTRIM(PrinterName)),'') IS NOT NULL"
+                    Using command As New System.Data.SqlClient.SqlCommand(sql, connection)
+                        command.Parameters.Add("@TillID", System.Data.SqlDbType.NVarChar, 100).Value = resolvedTillID
+                        Dim value = command.ExecuteScalar()
+                        If value Is Nothing OrElse value Is System.DBNull.Value Then Return String.Empty
+                        Return System.Convert.ToString(value).Trim()
+                    End Using
+                End Using
+            Catch ex As Exception
+                Throw New InvalidOperationException("The printer setting for till '" & resolvedTillID & "' could not be read. " & ex.Message, ex)
+            End Try
+        End Function
 
         Public Shared Sub ApplyServiceChargeLabelFix(rptObj As Object)
             Dim reportDocument As CrystalDecisions.CrystalReports.Engine.ReportDocument = TryCast(rptObj, CrystalDecisions.CrystalReports.Engine.ReportDocument)
             If reportDocument IsNot Nothing Then
                 Call RestaurantPOS14.ModFunc.FixDocApplyServiceChargeLabel(reportDocument)
+                ' The label cleanup above exists for reports recovered from the
+                ' original application. Always normalize receipt field formulas
+                ' afterwards so no legacy label conversion can make them invalid.
+                RestaurantPOS14.Reporting.ReceiptReportCompatibility.Apply(reportDocument)
             End If
         End Sub
 
@@ -601,76 +698,96 @@ Namespace RestaurantPOS14
             RestaurantPOS14.ModClasses.con.Close()
         End Sub
 
-        Public Shared Function IsSaveAllowed(UserID As String, ModuleName As String) As Boolean
-            RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
-            RestaurantPOS14.ModClasses.con.Open()
-            RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select UR_Save from UserRights where UserID=@d1 and ModuleName=@d2")
-            RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", UserID)
-            RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", ModuleName)
-            RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
-            RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
-            RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader()
-            Dim result As Boolean = False
-            If RestaurantPOS14.ModClasses.rdr.Read() Then
-                result = RestaurantPOS14.ModClasses.rdr.GetBoolean(0)
-            End If
+        Public Shared Sub ClearUserRightsCache()
+            SyncLock UserRightsCacheSync
+                CachedUserRightsUserId = String.Empty
+                CachedUserRightsLoaded = False
+                CachedUserRights = New System.Collections.Generic.Dictionary(Of String, UserPermissionFlags)(System.StringComparer.OrdinalIgnoreCase)
+            End SyncLock
+        End Sub
 
-            RestaurantPOS14.ModClasses.con.Close()
-            Return result
+        Public Shared Function LoadUserRightsCache(userId As String) As Boolean
+            Dim normalizedUserId = If(userId, String.Empty).Trim()
+            Dim permissions As New System.Collections.Generic.Dictionary(Of String, UserPermissionFlags)(System.StringComparer.OrdinalIgnoreCase)
+
+            Using connection As New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
+                connection.Open()
+                Using command As New System.Data.SqlClient.SqlCommand("SELECT RTRIM(ModuleName), ISNULL(UR_Save,0), ISNULL(UR_Update,0), ISNULL(UR_Delete,0), ISNULL(UR_View,0) FROM UserRights WHERE UserID=@userId", connection)
+                    command.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
+                    command.Parameters.Add("@userId", System.Data.SqlDbType.NVarChar, 100).Value = normalizedUserId
+                    Using reader = command.ExecuteReader()
+                        While reader.Read()
+                            Dim moduleName = If(reader.IsDBNull(0), String.Empty, reader.GetString(0).Trim())
+                            If moduleName.Length > 0 Then
+                                permissions(moduleName) = New UserPermissionFlags With {
+                                    .SaveAllowed = System.Convert.ToBoolean(reader.GetValue(1)),
+                                    .UpdateAllowed = System.Convert.ToBoolean(reader.GetValue(2)),
+                                    .DeleteAllowed = System.Convert.ToBoolean(reader.GetValue(3)),
+                                    .ViewAllowed = System.Convert.ToBoolean(reader.GetValue(4))
+                                }
+                            End If
+                        End While
+                    End Using
+                End Using
+            End Using
+
+            SyncLock UserRightsCacheSync
+                CachedUserRightsUserId = normalizedUserId
+                CachedUserRights = permissions
+                CachedUserRightsLoaded = True
+            End SyncLock
+            Return permissions.Count > 0
+        End Function
+
+        Public Shared Function HasAnyUserRights(userId As String) As Boolean
+            EnsureUserRightsCache(userId)
+            SyncLock UserRightsCacheSync
+                Return CachedUserRights.Count > 0
+            End SyncLock
+        End Function
+
+        Public Shared Function IsSaveAllowed(UserID As String, ModuleName As String) As Boolean
+            Return GetUserPermission(UserID, ModuleName, 0)
         End Function
 
         Public Shared Function IsViewAllowed(UserID As String, ModuleName As String) As Boolean
-            RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
-            RestaurantPOS14.ModClasses.con.Open()
-            RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select UR_View from UserRights where UserID=@d1 and ModuleName=@d2")
-            RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", UserID)
-            RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", ModuleName)
-            RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
-            RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
-            RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader()
-            Dim result As Boolean = False
-            If RestaurantPOS14.ModClasses.rdr.Read() Then
-                result = RestaurantPOS14.ModClasses.rdr.GetBoolean(0)
-            End If
-
-            RestaurantPOS14.ModClasses.con.Close()
-            Return result
+            Return GetUserPermission(UserID, ModuleName, 3)
         End Function
 
         Public Shared Function IsUpdateAllowed(UserID As String, ModuleName As String) As Boolean
-            RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
-            RestaurantPOS14.ModClasses.con.Open()
-            RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select UR_Update from UserRights where UserID=@d1 and ModuleName=@d2")
-            RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", UserID)
-            RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", ModuleName)
-            RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
-            RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
-            RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader()
-            Dim result As Boolean = False
-            If RestaurantPOS14.ModClasses.rdr.Read() Then
-                result = RestaurantPOS14.ModClasses.rdr.GetBoolean(0)
-            End If
-
-            RestaurantPOS14.ModClasses.con.Close()
-            Return result
+            Return GetUserPermission(UserID, ModuleName, 1)
         End Function
 
         Public Shared Function IsDeleteAllowed(UserID As String, ModuleName As String) As Boolean
-            RestaurantPOS14.ModClasses.con = New System.Data.SqlClient.SqlConnection(RestaurantPOS14.ConnectionString.cs)
-            RestaurantPOS14.ModClasses.con.Open()
-            RestaurantPOS14.ModClasses.cmd = New System.Data.SqlClient.SqlCommand("Select UR_Delete from UserRights where UserID=@d1 and ModuleName=@d2")
-            RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d1", UserID)
-            RestaurantPOS14.ModClasses.cmd.Parameters.AddWithValue("@d2", ModuleName)
-            RestaurantPOS14.ModClasses.cmd.Connection = RestaurantPOS14.ModClasses.con
-            RestaurantPOS14.ModClasses.cmd.CommandTimeout = RestaurantPOS14.Configuration.SettingsHost.Current.Database.CommandTimeoutSeconds
-            RestaurantPOS14.ModClasses.rdr = RestaurantPOS14.ModClasses.cmd.ExecuteReader()
-            Dim result As Boolean = False
-            If RestaurantPOS14.ModClasses.rdr.Read() Then
-                result = RestaurantPOS14.ModClasses.rdr.GetBoolean(0)
-            End If
+            Return GetUserPermission(UserID, ModuleName, 2)
+        End Function
 
-            RestaurantPOS14.ModClasses.con.Close()
-            Return result
+        Private Shared Sub EnsureUserRightsCache(userId As String)
+            Dim normalizedUserId = If(userId, String.Empty).Trim()
+            SyncLock UserRightsCacheSync
+                If CachedUserRightsLoaded AndAlso String.Equals(CachedUserRightsUserId, normalizedUserId, StringComparison.OrdinalIgnoreCase) Then Return
+            End SyncLock
+            LoadUserRightsCache(normalizedUserId)
+        End Sub
+
+        Private Shared Function GetUserPermission(userId As String, moduleName As String, permissionIndex As Integer) As Boolean
+            EnsureUserRightsCache(userId)
+            Dim flags As UserPermissionFlags = Nothing
+            SyncLock UserRightsCacheSync
+                If Not CachedUserRights.TryGetValue(If(moduleName, String.Empty).Trim(), flags) Then Return False
+                Select Case permissionIndex
+                    Case 0
+                        Return flags.SaveAllowed
+                    Case 1
+                        Return flags.UpdateAllowed
+                    Case 2
+                        Return flags.DeleteAllowed
+                    Case 3
+                        Return flags.ViewAllowed
+                    Case Else
+                        Return False
+                End Select
+            End SyncLock
         End Function
 
         Public Shared Function GetParamValue(st As String, st1 As System.DateTime, st2 As System.DateTime) As Double
@@ -825,6 +942,14 @@ Namespace RestaurantPOS14
                 Dim formulaFieldDefinition As CrystalDecisions.CrystalReports.Engine.FormulaFieldDefinition = d.DataDefinition.FormulaFields(i)
                 Dim text3 As String = formulaFieldDefinition.Text
                 If Equals(text3, Nothing) Then
+                    Continue For
+                End If
+
+                ' Never perform display-label replacement inside a formula that
+                ' references database fields. The old unrestricted Replace changed
+                ' {Restaurant_OrderedProduct.VATPer} into a non-existent field and
+                ' caused upgraded PCs to fail every receipt at render time.
+                If text3.IndexOf("{", System.StringComparison.Ordinal) >= 0 Then
                     Continue For
                 End If
 
