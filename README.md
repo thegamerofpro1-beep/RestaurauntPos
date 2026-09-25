@@ -27,6 +27,4 @@ Use Visual Studio 2022 Build Tools with the .NET desktop workload and target `Re
 
 The required application reference assemblies are kept under `src/RestaurantPOS14/lib`. A working machine also needs SQL Server access, .NET Framework 4.8, the 32-bit Crystal Reports runtime and the x86 Visual C++ runtime. See `docs/BUILD.md` for the validated versions and installer workflow.
 
-## Repository policy
 
-This is commercial application source and is published as a private repository. No open-source licence is granted. Do not make the repository public or redistribute bundled third-party assemblies without reviewing their licences.
